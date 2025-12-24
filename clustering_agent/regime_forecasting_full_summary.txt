@@ -1,0 +1,480 @@
+Regime Forecasting Project – Codebase Overview
+================================================
+
+This document summarizes the purpose and behavior of each core Python module in the
+Regime Forecasting / RFP DataAgent pipeline. The focus is on high-level functionality
+with enough detail to later turn these into resume bullets, documentation, or a
+technical write‑up.
+
+
+================================================
+1. __main__.py – RFP DataAgent Pipeline Runner
+================================================
+
+High‑level role:
+----------------
+`__main__.py` is the orchestration and CLI entrypoint for the entire data preparation
+flow used by the regime forecasting system. It wires together three major stages:
+
+  1. Data fetching (fetcher.py)
+  2. Feature engineering (engineer.py)
+  3. Feature selection & alignment (selector.py)
+
+It also owns workspace cleanup, runtime logging, and command‑line switches that let
+you run any subset of these steps in a reproducible way.
+
+Key responsibilities:
+---------------------
+- Defines a `run_pipeline` function that:
+  - Optionally cleans the workspace (old logs, diagnostics, and outputs) while
+    preserving code/config directories.
+  - Calls:
+      • `run_fetcher()` from `fetcher.py` to pull raw time series from external sources
+        and produce *cleaned* per‑feature Parquet files.
+      • `engineer_features()` from `engineer.py` to transform each cleaned feature into
+        a rich engineered feature set (returns, volatility, z‑scores, drawdowns, etc.),
+        stored as **one Parquet per original feature**.
+      • `run_selector()` from `selector.py` to align all engineered features on the
+        latest common start date and perform dimensionality reduction / feature
+        selection (PCA, correlation clustering, mRMR), producing a final aligned dataset.
+  - Measures and prints total runtime in minutes.
+
+- Implements `clean_workspace()` which:
+  - Walks through output and diagnostics directories.
+  - Deletes previous run artifacts (old logs, plots, Parquets in outputs/*) while
+    preserving:
+      • Code (e.g., `*.py`)
+      • Configs (e.g., YAML files)
+      • Any other whitelisted extensions.
+  - Also removes now‑empty directories.
+  - Prints a summary confirmation when cleanup completes.
+
+- Provides a small helper `divider(title)` that prints structured section dividers
+  for more readable console logs between steps.
+
+CLI / user interface:
+---------------------
+- Uses `argparse` to expose a simple command‑line interface with flags like:
+  - `--skip-fetch`     → Do not run the fetching stage.
+  - `--skip-engineer`  → Do not run the feature engineering stage.
+  - `--skip-selector`  → Do not run the feature selection stage.
+  - `--no-clean`       → Skip pre‑run workspace cleanup.
+- Handles:
+  - Normal successful completion (prints total runtime).
+  - KeyboardInterrupt (graceful exit with a warning).
+  - Generic exceptions (prints error type and message, then exits with non‑zero code).
+
+Why this matters:
+-----------------
+This file turns the codebase into a **reproducible pipeline** instead of loose scripts.
+It lets you:
+
+- Run full or partial data preparation with a single command.
+- Ensure a clean, conflict‑free workspace between runs.
+- Provide a “production‑like” entrypoint that mirrors how a scheduled/agentic pipeline
+  would run in practice (cron, Airflow, Prefect, etc.).
+
+
+================================================
+2. fetcher.py – Data Fetching & Initial Cleaning
+================================================
+
+High‑level role:
+----------------
+`fetcher.py` is responsible for **pulling raw time‑series features from external data
+providers**, standardizing their format, and writing them out to disk as per‑feature
+Parquet files in both “raw” and “cleaned” flavors. It is the ingestion layer for the
+regime forecasting system.
+
+Data sources & configuration:
+-----------------------------
+- Reads a YAML configuration file (e.g., `configs/data_sources.yaml`) that describes:
+  - Each feature’s name and source type (e.g., Yahoo Finance, FRED).
+  - Symbol / code needed to fetch the series.
+  - Date range to pull (global `start_date` / `end_date`).
+- Uses this config to loop over all requested features and route to the appropriate
+  fetch function.
+
+Core fetch functions:
+---------------------
+- `fetch_yahoo(symbol, start, end)`:
+  - Uses `yfinance` (and `pandas_datareader` conventions) to download OHLCV price data.
+  - Handles variations in returned column names by:
+    - Normalizing MultiIndex columns into flat names.
+    - Preferentially selecting a “close”‑like column (e.g., `CLOSE`, `ADJ_CLOSE`).
+  - Renames the final column to a normalized, consistent feature name using utilities
+    like `normalize_symbol()` and `normalize_columns()`.
+  - Ensures the index is a proper datetime index.
+
+- `fetch_fred(code, start, end)`:
+  - Uses `pandas_datareader.DataReader` with `"fred"` as the source to pull macro,
+    rates, and credit indicators.
+  - Ensures a single normalized column with a standardized feature name.
+  - Converts the index to datetime and enforces string column names.
+
+- Both fetch routines:
+  - Return an empty DataFrame and log a warning if the fetch fails or returns no data,
+    so that a single bad series does not crash the whole pipeline.
+
+Cleaning and diagnostics:
+-------------------------
+In the main `run_fetcher()` function, for each configured feature:
+- Calls the source‑specific fetch function to obtain a DataFrame with a single feature
+  column and a datetime index.
+- Invokes utilities from `utils.py` to:
+  - Normalize column names.
+  - Detect missingness patterns and generate basic diagnostics.
+  - Optionally perform lightweight cleaning (e.g., dropping all‑NA rows, basic sorting).
+
+Outputs:
+--------
+- Creates output directories for:
+  - `outputs/fetched/raw/`    → Raw fetched series as Parquet.
+  - `outputs/fetched/cleaned/`→ Cleaned and standardized series as Parquet.
+- Saves **one Parquet per feature** in both raw and cleaned folders, using the normalized
+  feature name as the filename.
+- Prints progress and a final success message:
+  “All features fetched and cleaned successfully.”
+
+Why this matters:
+-----------------
+This module turns a heterogeneous mix of market and macro data sources into a **uniform,
+analyzable set of per‑feature time series**, which is the foundation for consistent
+downstream engineering and regime modeling.
+
+
+================================================
+3. engineer.py – Feature Engineering per Raw Series
+================================================
+
+High‑level role:
+----------------
+`engineer.py` reads the cleaned per‑feature Parquet files produced by `fetcher.py` and
+explodes each raw time series into a **rich engineered feature set** (returns, rolling
+volatility, z‑scores, drawdowns, etc.). Each original feature is transformed into a
+small feature “universe”, then saved back as a single Parquet file per feature.
+
+Core components:
+----------------
+- Loader:
+  - `load_yaml(path)` reads configuration options such as:
+    - Missingness policy (e.g., imputation method like `ffill_bfill`).
+    - Any per‑feature or global parameters for rolling windows.
+
+- Basic transformations:
+  - `compute_returns(s, window)`:
+    - Computes percentage returns over multiple horizons:
+      • 1‑day, and multi‑day windows such as 5, 10, 21, 63 days.
+    - Used to generate features like `ret_FEATURE_1d`, `ret_FEATURE_5d`, etc.
+  - `compute_zscore(s, window)`:
+    - Standardizes the series using rolling mean and rolling standard deviation.
+    - Encodes how “unusual” the current value is relative to a recent history window.
+  - `compute_drawdown(s, window)`:
+    - Computes rolling maximum over a given window and expresses the current value as
+      a percentage drop from that max.
+    - Captures local peak‑to‑trough behavior (risk/pressure indicator).
+
+Main engineering loop (`engineer_features()`):
+----------------------------------------------
+- Establishes directories:
+  - Reads cleaned inputs from `outputs/fetched/cleaned/`.
+  - Writes engineered outputs to `outputs/engineered/`.
+  - Writes diagnostics to `outputs/diagnostics/engineer/`.
+- Loads missingness policy from YAML config (e.g., which imputation strategy to apply).
+- Iterates over all cleaned Parquet files:
+  - For each file:
+    - Reads the DataFrame and extracts the single series column.
+    - Calls `summarize_feature()` and `detect_missingness()` from `utils.py` to log:
+      • Shape, missingness percentage, and date range.
+      • Detailed missingness statistics and visualizations.
+    - Constructs a new DataFrame `feat_df` that:
+      - Always includes the original base column.
+      - Adds multi‑horizon returns.
+      - Adds volatility / rolling statistics (e.g. rolling std).
+      - Adds z‑scores and drawdown metrics.
+    - Passes `feat_df` through `sanitize_numerics()` to:
+      - Replace `inf` / `-inf` with NaN.
+      - Optionally forward/back‑fill small gaps.
+      - Log how many values were affected.
+    - Runs a second round of missingness diagnostics on the engineered features.
+    - Saves the complete engineered bundle for that base feature as:
+      `outputs/engineered/<feature_name>.parquet`.
+
+Outputs:
+--------
+- One **engineered Parquet per original feature**, each containing:
+  - The original series.
+  - Multiple return horizons.
+  - Volatility‑style features.
+  - Z‑score and drawdown variants.
+- Console‑level logs and diagnostics plots/CSVs in `outputs/diagnostics/engineer/`.
+
+Why this matters:
+-----------------
+This module converts raw market and macro signals into a **high‑information feature
+library** suitable for regime classification and forecasting, while keeping features
+organized per original series (which matches your design choice to keep per‑feature
+data separate because of different availability windows).
+
+
+================================================
+4. selector.py – Feature Alignment & Selection
+================================================
+
+High‑level role:
+----------------
+`selector.py` takes the engineered per‑feature Parquet files and:
+
+  1. Aligns all features on a **common start date** so that the modeling dataset only
+     uses periods where all selected features are present.
+  2. Performs multi‑stage feature reduction:
+     - PCA (variance‑based dimensionality reduction).
+     - Correlation clustering to remove redundant, highly correlated features.
+     - mRMR (minimum redundancy, maximum relevance) style selection.
+  3. Produces a final, compact set of features and an aligned modeling dataset.
+
+Loading and alignment:
+----------------------
+- `load_engineered_features()`:
+  - Scans `outputs/engineered/` for `.parquet` files.
+  - For each file:
+    - Reads the DataFrame.
+    - Adds it to a dictionary keyed by feature name.
+    - Calls `summarize_feature()` to log basic stats and date range.
+  - Computes the **latest common start date** across all engineered features:
+    - For each DataFrame, records its minimum index (first date).
+    - Takes the maximum of these dates → the earliest date where all features coexist.
+  - Truncates each feature’s DataFrame to start from this common date and concatenates
+    them along columns into a single `master` DataFrame.
+  - Deduplicates columns to remove accidental overlaps.
+  - Logs the final aligned shape and returns both `master` and the common start date.
+
+Feature diagnostics:
+--------------------
+- Contains utilities to compute and log:
+  - Feature correlation matrix and derived distance matrix (1 − |corr|).
+  - Explained variance from PCA components.
+  - Cluster assignments from hierarchical clustering.
+
+PCA‑based reduction:
+--------------------
+- Computes PCA on standardized features.
+- Determines the minimal number of components needed to explain a configurable share
+  of variance (e.g., 90–95%).
+- Logs:
+  - Cumulative variance explained.
+  - Number of components retained.
+- Saves a scree plot (`pca_scree.png`) under `outputs/diagnostics/selector/`.
+
+Correlation clustering:
+-----------------------
+- Uses `AgglomerativeClustering` with:
+  - Precomputed distance matrix derived from absolute correlations.
+  - No fixed number of clusters; uses a distance threshold based on a correlation
+    threshold (e.g., 0.9).
+- Groups highly correlated variables into clusters and, for each cluster:
+  - Selects a representative feature (e.g., highest variance or strongest relevance).
+  - Produces a mapping from cluster to representative feature.
+- This step ensures that the final feature set is not dominated by redundant signals.
+
+mRMR‑style selection:
+---------------------
+- Implements a simple mutual information based selection:
+  - Uses `mutual_info_regression` to measure relevance between each candidate feature
+    and a target variable (e.g., regime label or future return).
+  - Uses cached pairwise mutual information to estimate redundancy between selected
+    features and candidates.
+  - Iteratively selects features that maximize:
+      **score = relevance − redundancy_weight × redundancy**
+  - Produces an ordered list of top‑k features based on this score.
+
+Final selection logic:
+----------------------
+- Combines the outputs of:
+  - PCA (features heavily loading on key components).
+  - Correlation clustering (cluster representatives).
+  - mRMR (highest relevance‑minus‑redundancy scores).
+- Constructs a final feature set as the union of features that are “approved” by at
+  least two of the three methods (PCA, clustering, mRMR).
+- Writes:
+  - `outputs/selected/features_selected.csv` → list of final selected features.
+  - `outputs/selected/aligned_dataset.parquet` → aligned dataset restricted to the
+    selected columns.
+
+Why this matters:
+-----------------
+This module distills a wide engineered feature library down to a **compact, stable,
+and less redundant subset** that is ready to be used by downstream models:
+regime classifiers, 10‑day regime forecasters, and 5‑day rolling shift detectors.
+
+
+================================================
+5. utils.py – Shared Utilities & Diagnostics
+================================================
+
+High‑level role:
+----------------
+`utils.py` centralizes cross‑cutting utilities for:
+
+- Text and symbol normalization.
+- Directory management.
+- Missingness detection and visualization.
+- Numeric sanitization (handling inf/NaN).
+- Basic statistics and progress summaries.
+
+It is used across `fetcher.py`, `engineer.py`, and `selector.py` to keep core logic
+clean and to standardize diagnostics.
+
+Key utilities:
+--------------
+1. **Normalization helpers**
+   - `normalize_text(text)`:
+     - Lowercases, trims whitespace, and removes problematic characters.
+   - `normalize_symbol(name)`:
+     - Converts feature names into safe filesystem‑friendly strings (e.g., replaces
+       spaces and special characters with underscores).
+   - `normalize_columns(df)`:
+     - Flattens MultiIndex columns into single strings like `"OPEN_CLOSE"`.
+     - Applies `normalize_text` to every column name.
+   - `enforce_string_columns(df)`:
+     - Ensures all column names are strings, guarding against subtle pandas issues.
+
+2. **Filesystem helpers**
+   - `ensure_dir(path)`:
+     - Creates a directory if it does not exist (no‑op if it already exists).
+   - `_safe_write_csv(...)`, `_safe_to_parquet(...)`, `_safe_savefig(...)`:
+     - Write CSV, Parquet, and figures to disk while:
+       • Ensuring parent directories exist.
+       • Catching and logging basic I/O errors.
+
+3. **Missingness & diagnostics**
+   - `pct(a, b)`:
+     - Computes a percentage helper (used throughout logs).
+   - `detect_missingness(df, name, outdir)`:
+     - Computes counts and percentages of missing values.
+     - Saves a summary CSV for the feature.
+     - Optionally generates a heatmap or simple plot to visualize gaps.
+     - Uses `normalize_symbol(name)` for safe filenames.
+   - `summarize_feature(df, name)`:
+     - Prints a compact console summary:
+       • Shape of the DataFrame.
+       • Percentage of missing values.
+       • Date range of the index.
+
+4. **Numeric sanitization**
+   - `sanitize_numerics(df, fill=True, report=True, outdir=None, name="unknown")`:
+     - Detects infinite values, logs how many there are, and replaces them with NaN.
+     - If `fill=True`:
+       • Applies forward fill and backward fill to patch small missing gaps.
+     - Optionally writes a diagnostic report to `outdir`.
+     - Returns a cleaned copy of the DataFrame.
+
+Why this matters:
+-----------------
+By centralizing these operations, `utils.py` ensures that every stage of the pipeline
+(fetching, engineering, selection) adheres to the same standards for:
+
+- Naming conventions.
+- Missingness handling.
+- Numeric stability.
+- Diagnostics and logging.
+
+This makes the whole project feel like a **cohesive, production‑minded data platform**
+rather than a collection of ad‑hoc scripts.
+
+
+================================================
+How to reuse this summary
+================================================
+
+You can now use this document to:
+
+- Write resume bullets that emphasize:
+  - End‑to‑end data ingestion and preparation.
+  - Feature engineering depth (multi‑horizon returns, volatility, drawdowns).
+  - Robust feature selection (PCA + correlation clustering + mRMR).
+  - Production‑like orchestration (CLI, workspace cleanup, diagnostics).
+
+- Build project descriptions for:
+  - Regime forecasting and regime‑shift alerting (10‑day forecast, 5‑day sliding window
+    detection).
+  - Market/macro signal pipelines that could plug into any downstream ML stack.
+
+
+
+
+================================================
+New Modules Added – validate.py, clustering.py, __main__.py (viz)
+================================================
+
+1. validate.py – Model Validation & Visualization Toolkit
+---------------------------------------------------------
+High-level role:
+- Provides a complete diagnostic and validation layer for the regime forecasting system.
+- Focuses on visualization of predicted regimes, accuracy evaluation, overlaying regimes on features, and generating diagnostic plots.
+
+Key responsibilities:
+- `plot_regimes(...)`:  
+  Creates a time‑series plot with regime colors behind the feature curve. Helps visually inspect regime consistency and transitions.
+- `plot_distribution_by_regime`:  
+  Plots histograms or KDE distributions of a given feature separated by regime classes to examine separability.
+- `plot_confusion_matrix`:  
+  Generates confusion matrices for classifier outputs.
+- `visualize_regimes(feature_for_overlay="ret_GSPC")`:  
+  End‑to‑end visualization pipeline — loads aligned dataset + predictions and produces interpretive plots for sanity‑checking model behavior.
+- Writes PNGs under diagnostics folders.
+
+Why it matters:
+- Makes the pipeline interpretable.
+- Helps verify whether regimes behave economically (clusters correlate with volatility, drawdowns, etc.).
+- Essential for debugging regime‑shift alerts (5‑day windows).
+
+
+2. clustering.py – HMM‑Based Regime Clustering Module
+-----------------------------------------------------
+High-level role:
+- Performs **unsupervised market regime discovery** using Gaussian HMM clustering.
+- Produces regime labels that become targets for downstream forecasting and shift‑detection.
+
+Core functionality:
+- `run_hmm_clustering()`:
+  - Loads aligned engineered dataset.
+  - Standardizes features.
+  - Runs GaussianHMM with configurable number of states (regimes).
+  - Learns unsupervised market regimes from historical data.
+  - Computes regime probabilities + Viterbi decoding.
+  - Saves:
+      • `regimes.csv`  
+      • `hmm_model.pkl`  
+      • diagnostics like regime‑wise statistics.
+
+- `analyze_regime_stats(df, labels)`:
+  - Computes volatility, mean returns, drawdown behavior per regime.
+  - Ensures regimes correspond to meaningful market phases (e.g., high‑vol, low‑vol, neutral).
+
+Outputs:
+- Regime labels DataFrame (`regimes.parquet`)
+- Transition matrix diagnostics
+- Regime‑specific summary statistics
+- Visualization-ready artifacts used by validate.py
+
+Why it matters:
+- Provides the *foundation* for your 10‑day regime forecasting model.
+- Defines ground‑truth regimes used for classification and shift‑detection windows.
+
+
+3. __main__.py (Visualization Entrypoint for Validation)
+--------------------------------------------------------
+High-level role:
+- CLI entrypoint for validation + visualization workflows.
+- Runs end‑to‑end pipeline for checking model behavior after clustering/forecasting steps.
+
+Core:
+- Calls:
+    • `visualize_regimes()` from validate.py  
+- Provides clean logging and confirms completion with:
+    “✅ Visualization completed.”
+
+Why it matters:
+- Separates visualization workflows from data‑engineering pipeline.
+- Aligns with modular agent design (validation agent separate from ingestion/engineering agent).

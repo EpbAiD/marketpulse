@@ -1,0 +1,57 @@
+# ============================================================
+# 📊 BigQuery Configuration — Forecasting Pipeline
+# ============================================================
+# Configuration for Google BigQuery integration
+# ============================================================
+
+bigquery:
+  # GCP Project and Dataset
+  project_id: "regime01"
+  dataset_id: "forecasting_pipeline"
+
+  # Credentials
+  credentials_path: "/Users/eeshanbhanap/Desktop/RFP/regime01-b5321d26c433.json"
+
+  # Location (region) for BigQuery dataset
+  # Options: us-central1, us-east1, europe-west1, asia-southeast1, etc.
+  location: "us-central1"
+
+  # Table Names
+  tables:
+    # Input tables (source data)
+    raw_features: "raw_features"
+    engineered_features: "engineered_features"
+    selected_features: "selected_features"
+
+    # Output tables (results)
+    forecast_results: "forecast_results"
+    model_metrics: "model_metrics"
+    cluster_assignments: "cluster_assignments"
+    classification_results: "classification_results"
+    model_versions: "model_versions"
+
+    # Progress tracking
+    pipeline_runs: "pipeline_runs"
+
+  # Performance Settings
+  batch_size: 1000              # Rows per batch write
+  query_timeout: 300            # Query timeout in seconds
+  use_legacy_sql: false         # Use Standard SQL (recommended)
+  max_results: 100000           # Max rows to fetch in single query
+
+  # Caching (local cache for performance)
+  enable_cache: true
+  cache_dir: "outputs/cache/bigquery"
+  cache_ttl: 3600               # Cache TTL in seconds (1 hour)
+
+  # Write Settings
+  write_disposition: "WRITE_APPEND"     # WRITE_APPEND, WRITE_TRUNCATE, WRITE_EMPTY
+  create_disposition: "CREATE_IF_NEEDED" # CREATE_IF_NEEDED, CREATE_NEVER
+
+  # Data Transfer
+  use_storage_api: true         # Use BigQuery Storage API for faster reads
+  max_parallelism: 4            # Parallel streams for reading
+
+  # Error Handling
+  retry_attempts: 3
+  retry_delay: 5                # Seconds between retries

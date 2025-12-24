@@ -1,0 +1,79 @@
+# ============================================================
+# 📊 Feature Frequency & Horizon Mapping — Forecasting Pipeline
+# ============================================================
+# Per-cadence horizons, validation sizes, and ensemble weighting rules.
+# 'ensemble.weight_metric' controls how per-model weights are learned on VAL.
+# Options: mae | rmse | smape
+# ============================================================
+
+# ----------------------------------------------------------------------
+# DAILY FEATURES
+# ----------------------------------------------------------------------
+daily:
+  horizon: 10          # forecast H
+  val_size: 90         # validation window length
+  nf_loss: mae         # loss used by NeuralForecast models (mae|mse|quantile)
+  ensemble:
+    weight_metric: smape     # mae|rmse|smape  ← change here when you want
+    tie_breaker: mae         # secondary metric if weights tie/degenerate
+    learn_on: val_last_h     # val_last_h | val_all  (keep val_last_h for H-ahead alignment)
+    normalize_weights: true  # ensure weights sum to 1 and are non-negative
+  features:
+    - GSPC          # S&P 500 Index
+    - IXIC          # NASDAQ Composite
+    - DXY           # US Dollar Index
+    - UUP           # Dollar Index ETF
+    - VIX           # CBOE Volatility Index
+    - VIX3M         # 3-Month Volatility Index
+    - VIX9D         # 9-Day Volatility Index
+    - TNX           # 10-Year Treasury Yield Index
+    - DGS10         # 10-Year Treasury Constant Maturity
+    - DGS2          # 2-Year Treasury Constant Maturity
+    - DGS3MO        # 3-Month Treasury Constant Maturity
+    - HY_YIELD      # ICE BofA High Yield Effective Yield
+    - IG_YIELD      # ICE BofA Investment Grade Effective Yield
+    - T10Y2Y        # 10Y–2Y Treasury Spread
+    - DFF           # Effective Federal Funds Rate
+    - GOLD          # Gold
+    - OIL           # WTI Crude
+    - COPPER        # Copper
+
+# ----------------------------------------------------------------------
+# WEEKLY FEATURES
+# ----------------------------------------------------------------------
+weekly:
+  horizon: 2
+  val_size: 26
+  nf_loss: mae
+  ensemble:
+    weight_metric: mae
+    tie_breaker: smape
+    learn_on: val_last_h
+    normalize_weights: true
+  features:
+    - NFCI          # Chicago Fed National Financial Conditions Index
+
+# ----------------------------------------------------------------------
+# MONTHLY FEATURES
+# ----------------------------------------------------------------------
+monthly:
+  horizon: 2
+  val_size: 12
+  nf_loss: mae
+  ensemble:
+    weight_metric: smape
+    tie_breaker: mae
+    learn_on: val_last_h
+    normalize_weights: true
+  features:
+    - CPI           # Consumer Price Index (All Urban Consumers)
+    - UNRATE        # Unemployment Rate
+    - INDPRO        # Industrial Production Index
+
+# ----------------------------------------------------------------------
+# Notes:
+# - Change 'ensemble.weight_metric' per cadence to switch weighting logic.
+# - 'learn_on: val_last_h' matches the H-step-ahead semantics; use 'val_all'
+#   only if you want weights from the full validation span.
+# - 'nf_loss' controls NeuralForecast training loss; independent of weighting.
+# ----------------------------------------------------------------------

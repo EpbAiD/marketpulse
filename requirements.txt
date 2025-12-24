@@ -1,0 +1,8 @@
+# Dashboard visualization
+streamlit==1.51.0
+plotly==6.3.1
+
+# Data processing (dashboard only needs to read parquet files)
+pandas==2.2.3
+numpy==1.26.4
+pyarrow==17.0.0

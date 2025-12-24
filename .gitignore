@@ -1,0 +1,79 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment variables
+.env
+.env.local
+
+# Project specific
+outputs/
+lightning_logs/
+*.json
+!configs/*.json
+*.log
+*.jsonl
+!logs/.gitkeep
+
+# Screenshots for README (allow these)
+!screenshots/
+!dashboard_screenshots/
+
+# BigQuery credentials
+regime01-*.json
+*credentials*.json
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
+
+# Model files (too large for git)
+models/
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+
+# Data files
+*.parquet
+*.csv
+*.tsv
+data/
+INTERVIEW_PREP.md

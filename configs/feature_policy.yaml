@@ -1,0 +1,53 @@
+# ======================================================================
+# Feature Engineering Policy
+# ======================================================================
+# This configuration defines all rolling and derived features applied
+# to each cleaned raw feature individually before modeling.
+# ======================================================================
+
+# ----------------------------------------------------------------------
+# Rolling windows (industry-aligned time horizons)
+# ----------------------------------------------------------------------
+rolling_windows:
+  volatility: [10, 20, 60, 120, 252]  # for realized volatility (short → long term)
+  zscore: [63, 126, 252]              # 3-month, 6-month, 1-year lookback
+  drawdown: [63, 126, 252]            # medium → long-term max drawdowns
+
+# ----------------------------------------------------------------------
+# Temporal change metrics
+# ----------------------------------------------------------------------
+yoy_window: 252     # year-over-year change window
+mom_window: 21      # month-over-month (21 trading days)
+
+# ----------------------------------------------------------------------
+# Multi-horizon returns
+# ----------------------------------------------------------------------
+return_horizons: [1, 5, 10, 21, 63]  # daily → 3-month returns
+
+# ----------------------------------------------------------------------
+# Missingness handling (uses data_agent/utils.impute)
+# ----------------------------------------------------------------------
+missingness_policy:
+  imputation_method: "ffill_bfill"   # options: ffill_bfill | interpolate | none
+  visualize: true                    # generate missingness heatmap
+  threshold_alert_%: 5.0             # log warning if >5% missing
+
+# ----------------------------------------------------------------------
+# Output control
+# ----------------------------------------------------------------------
+output_dirs:
+  engineered: "outputs/engineered"
+  diagnostics: "outputs/diagnostics/engineer"
+
+# ----------------------------------------------------------------------
+# Notes
+# ----------------------------------------------------------------------
+# Each raw feature (e.g. GSPC, IXIC, GOLD) is processed independently.
+# The output is one Parquet per feature, containing all engineered
+# columns:
+#
+#   ['GSPC', 'ret_GSPC', 'rv_GSPC_10d', 'z_GSPC_63d', 'dd_GSPC_252d', ...]
+#
+# This ensures internal consistency and removes date misalignment issues.
+# Later, selector.py aligns and merges these engineered sets by the
+# common available date range for modeling.

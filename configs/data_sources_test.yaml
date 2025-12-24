@@ -1,0 +1,17 @@
+end_date: null
+fred:
+  CPI: CPIAUCSL
+  NFCI: NFCI
+frequency: B
+missingness_policy:
+  detection_window: 5
+  imputation_method: ffill_bfill
+  threshold_alert_%: 5.0
+  visualize: true
+output_dirs:
+  cleaned_features: outputs/fetched/cleaned
+  diagnostics: outputs/diagnostics/fetcher
+  raw_features: outputs/fetched/raw
+start_date: '1990-01-01'
+yahoo_finance:
+  GSPC: ^GSPC
