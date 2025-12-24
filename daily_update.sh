@@ -10,6 +10,13 @@ echo "📊 MarketPulse Daily Automation"
 echo "Started: $(date)"
 echo "================================================================================"
 
+# Ensure correct git author configuration (prevent accidental Claude/other contributor)
+echo ""
+echo "[0/5] Verifying git configuration..."
+git config user.name "EpbAiD"
+git config user.email "eeshanpbhanap@gmail.com"
+echo "   ✅ Git author: $(git config user.name) <$(git config user.email)>"
+
 # Step 1: Run daily inference pipeline
 echo ""
 echo "[1/5] Running inference pipeline..."
@@ -110,10 +117,21 @@ else:
     # Commit
     git commit -m "$COMMIT_MSG"
 
+    # Verify commit author is correct (safety check)
+    COMMIT_AUTHOR=$(git log -1 --format="%an <%ae>")
+    if [[ "$COMMIT_AUTHOR" != "EpbAiD <eeshanpbhanap@gmail.com>" ]]; then
+        echo "   ⚠️  WARNING: Commit author mismatch!"
+        echo "   Expected: EpbAiD <eeshanpbhanap@gmail.com>"
+        echo "   Got: $COMMIT_AUTHOR"
+        echo "   ❌ Aborting push - please check git config"
+        exit 1
+    fi
+
     # Push to remote
     git push origin main
 
     echo "   ✅ Changes committed and pushed to GitHub"
+    echo "   ✅ Verified: Commit author is EpbAiD <eeshanpbhanap@gmail.com>"
 else
     echo "   ℹ️  No changes to commit"
 fi
