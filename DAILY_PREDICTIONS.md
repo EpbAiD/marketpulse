@@ -1,0 +1,247 @@
+# Daily Market Regime Predictions Log
+
+This file tracks daily regime forecasts from the MarketPulse system.
+
+## 2025-12-20 17:44:27
+
+**Source:** BigQuery
+
+**Forecast Period:** 2025-12-19 to 2025-12-29
+
+**Total Days:** 11
+
+### Regime Distribution
+
+- **Transitional**: 11 days (100.0%) - Avg confidence: 0.739
+
+### Daily Predictions
+
+| Date | Regime | Confidence |
+|------|--------|------------|
+| 2025-12-19 | Transitional | 0.742 |
+| 2025-12-20 | Transitional | 0.752 |
+| 2025-12-21 | Transitional | 0.746 |
+| 2025-12-22 | Transitional | 0.734 |
+| 2025-12-23 | Transitional | 0.736 |
+| 2025-12-24 | Transitional | 0.742 |
+| 2025-12-25 | Transitional | 0.736 |
+| 2025-12-26 | Transitional | 0.736 |
+| 2025-12-27 | Transitional | 0.738 |
+| 2025-12-28 | Transitional | 0.730 |
+| 2025-12-29 | Transitional | 0.738 |
+
+---
+
+## 2025-12-22 22:13:26
+
+**Source:** BigQuery
+
+**Forecast Period:** 2025-12-19 to 2025-12-29
+
+**Total Days:** 11
+
+### Regime Distribution
+
+- **Transitional**: 11 days (100.0%) - Avg confidence: 0.739
+
+### Daily Predictions
+
+| Date | Regime | Confidence |
+|------|--------|------------|
+| 2025-12-19 | Transitional | 0.742 |
+| 2025-12-20 | Transitional | 0.752 |
+| 2025-12-21 | Transitional | 0.746 |
+| 2025-12-22 | Transitional | 0.734 |
+| 2025-12-23 | Transitional | 0.736 |
+| 2025-12-24 | Transitional | 0.742 |
+| 2025-12-25 | Transitional | 0.736 |
+| 2025-12-26 | Transitional | 0.736 |
+| 2025-12-27 | Transitional | 0.738 |
+| 2025-12-28 | Transitional | 0.730 |
+| 2025-12-29 | Transitional | 0.738 |
+
+---
+
+## 2025-12-23 10:55:23
+
+**Source:** BigQuery
+
+**Forecast Period:** 2025-12-19 to 2025-12-29
+
+**Total Days:** 11
+
+### Regime Distribution
+
+- **Transitional**: 11 days (100.0%) - Avg confidence: 0.739
+
+### Daily Predictions
+
+| Date | Regime | Confidence |
+|------|--------|------------|
+| 2025-12-19 | Transitional | 0.742 |
+| 2025-12-20 | Transitional | 0.752 |
+| 2025-12-21 | Transitional | 0.746 |
+| 2025-12-22 | Transitional | 0.734 |
+| 2025-12-23 | Transitional | 0.736 |
+| 2025-12-24 | Transitional | 0.742 |
+| 2025-12-25 | Transitional | 0.736 |
+| 2025-12-26 | Transitional | 0.736 |
+| 2025-12-27 | Transitional | 0.738 |
+| 2025-12-28 | Transitional | 0.730 |
+| 2025-12-29 | Transitional | 0.738 |
+
+---
+
+## 2025-12-23 11:10:50
+
+**Source:** BigQuery
+
+**Forecast Period:** 2025-12-19 to 2025-12-29
+
+**Total Days:** 11
+
+### Regime Distribution
+
+- **Transitional**: 11 days (100.0%) - Avg confidence: 0.740
+
+### Daily Predictions
+
+| Date | Regime | Confidence |
+|------|--------|------------|
+| 2025-12-19 | Transitional | 0.744 |
+| 2025-12-20 | Transitional | 0.746 |
+| 2025-12-21 | Transitional | 0.734 |
+| 2025-12-22 | Transitional | 0.736 |
+| 2025-12-23 | Transitional | 0.744 |
+| 2025-12-24 | Transitional | 0.740 |
+| 2025-12-25 | Transitional | 0.736 |
+| 2025-12-26 | Transitional | 0.740 |
+| 2025-12-27 | Transitional | 0.736 |
+| 2025-12-28 | Transitional | 0.736 |
+| 2025-12-29 | Transitional | 0.746 |
+
+---
+
+## 2025-12-23 11:38:15
+
+**Source:** BigQuery
+
+**Forecast Period:** 2025-12-20 to 2026-01-01
+
+**Total Days:** 13
+
+### Regime Distribution
+
+- **Transitional**: 13 days (100.0%) - Avg confidence: 0.739
+
+### Daily Predictions
+
+| Date | Regime | Confidence |
+|------|--------|------------|
+| 2025-12-20 | Transitional | 0.744 |
+| 2025-12-21 | Transitional | 0.728 |
+| 2025-12-22 | Transitional | 0.728 |
+| 2025-12-23 | Transitional | 0.742 |
+| 2025-12-24 | Transitional | 0.740 |
+| 2025-12-25 | Transitional | 0.752 |
+| 2025-12-26 | Transitional | 0.740 |
+| 2025-12-27 | Transitional | 0.738 |
+| 2025-12-28 | Transitional | 0.738 |
+| 2025-12-29 | Transitional | 0.734 |
+| 2025-12-30 | Transitional | 0.740 |
+| 2025-12-31 | Transitional | 0.740 |
+| 2026-01-01 | Transitional | 0.744 |
+
+---
+
+## 2025-12-23 15:33:55
+
+**Source:** BigQuery
+
+**Forecast Period:** 2025-12-20 to 2026-01-01
+
+**Total Days:** 13
+
+### Regime Distribution
+
+- **Transitional**: 13 days (100.0%) - Avg confidence: 0.739
+
+### Daily Predictions
+
+| Date | Regime | Confidence |
+|------|--------|------------|
+| 2025-12-20 | Transitional | 0.744 |
+| 2025-12-21 | Transitional | 0.728 |
+| 2025-12-22 | Transitional | 0.728 |
+| 2025-12-23 | Transitional | 0.742 |
+| 2025-12-24 | Transitional | 0.740 |
+| 2025-12-25 | Transitional | 0.752 |
+| 2025-12-26 | Transitional | 0.740 |
+| 2025-12-27 | Transitional | 0.738 |
+| 2025-12-28 | Transitional | 0.738 |
+| 2025-12-29 | Transitional | 0.734 |
+| 2025-12-30 | Transitional | 0.740 |
+| 2025-12-31 | Transitional | 0.740 |
+| 2026-01-01 | Transitional | 0.744 |
+
+---
+
+## 2025-12-24 08:47:12
+
+**Source:** BigQuery
+
+**Forecast Period:** 2025-12-23 to 2026-01-02
+
+**Total Days:** 11
+
+### Regime Distribution
+
+- **Transitional**: 11 days (100.0%) - Avg confidence: 0.740
+
+### Daily Predictions
+
+| Date | Regime | Confidence |
+|------|--------|------------|
+| 2025-12-23 | Transitional | 0.740 |
+| 2025-12-24 | Transitional | 0.738 |
+| 2025-12-25 | Transitional | 0.742 |
+| 2025-12-26 | Transitional | 0.746 |
+| 2025-12-27 | Transitional | 0.740 |
+| 2025-12-28 | Transitional | 0.740 |
+| 2025-12-29 | Transitional | 0.742 |
+| 2025-12-30 | Transitional | 0.734 |
+| 2025-12-31 | Transitional | 0.732 |
+| 2026-01-01 | Transitional | 0.738 |
+| 2026-01-02 | Transitional | 0.744 |
+
+---
+
+## 2025-12-24 09:13:05
+
+**Source:** BigQuery
+
+**Forecast Period:** 2025-12-23 to 2026-01-02
+
+**Total Days:** 11
+
+### Regime Distribution
+
+- **Transitional**: 11 days (100.0%) - Avg confidence: 0.740
+
+### Daily Predictions
+
+| Date | Regime | Confidence |
+|------|--------|------------|
+| 2025-12-23 | Transitional | 0.740 |
+| 2025-12-24 | Transitional | 0.738 |
+| 2025-12-25 | Transitional | 0.742 |
+| 2025-12-26 | Transitional | 0.746 |
+| 2025-12-27 | Transitional | 0.740 |
+| 2025-12-28 | Transitional | 0.740 |
+| 2025-12-29 | Transitional | 0.742 |
+| 2025-12-30 | Transitional | 0.734 |
+| 2025-12-31 | Transitional | 0.732 |
+| 2026-01-01 | Transitional | 0.738 |
+| 2026-01-02 | Transitional | 0.744 |
+
+---

@@ -1,0 +1,56 @@
+# ======================================================================
+# Data Sources Configuration
+# ======================================================================
+
+start_date: "1990-01-01"
+end_date: null          # null → defaults to today
+frequency: "B"          # business days
+
+# ----------------------------------------------------------------------
+# Yahoo Finance sources (daily market data)
+# ----------------------------------------------------------------------
+yahoo_finance:
+  GSPC: "^GSPC"          # S&P 500 Index
+  IXIC: "^IXIC"          # NASDAQ Composite
+  VIX: "^VIX"
+  VIX3M: "^VIX3M"
+  VIX9D: "^VIX9D"
+  GOLD: "GC=F"
+  OIL: "CL=F"
+  COPPER: "HG=F"
+  DXY: "DX-Y.NYB"
+  UUP: "UUP"
+  TNX: "^TNX"            # 10-Year Treasury Yield (Yahoo)
+
+
+# ----------------------------------------------------------------------
+# FRED sources (macro + credit + rates)
+# ----------------------------------------------------------------------
+fred:
+  DGS10: "DGS10"          # 10-Year Treasury
+  DGS2: "DGS2"
+  DGS3MO: "DGS3MO"
+  DFF: "DFF"              # Fed Funds Rate
+  HY_Yield: "BAMLH0A0HYM2EY"
+  IG_Yield: "BAMLC0A0CM"
+  CPI: "CPIAUCSL"
+  UNRATE: "UNRATE"
+  NFCI: "NFCI"
+  INDPRO: "INDPRO"
+  T10Y2Y: "T10Y2Y"       # 10y–2y Treasury Spread
+# ----------------------------------------------------------------------
+# Missingness & imputation policy
+# ----------------------------------------------------------------------
+missingness_policy:
+  detection_window: 5              # days to check surrounding missing blocks
+  imputation_method: "ffill_bfill" # options: ffill_bfill | interpolate | none
+  threshold_alert_%: 5.0           # log warning if >5% data missing
+  visualize: true                  # whether to save missingness heatmap
+
+# ----------------------------------------------------------------------
+# Output directories (relative to project root)
+# ----------------------------------------------------------------------
+output_dirs:
+  raw_features: "outputs/fetched/raw"
+  cleaned_features: "outputs/fetched/cleaned"
+  diagnostics: "outputs/diagnostics/fetcher"
