@@ -72,18 +72,26 @@ fi
 echo ""
 echo "[4/5] Updating README with latest metrics..."
 
-# Get latest forecast date
+# Get latest forecast date from BigQuery
 LATEST_FORECAST=$(python -c "
-import pandas as pd
-from pathlib import Path
-import glob
+try:
+    from data_agent.storage import get_storage
+    import pandas as pd
 
-files = sorted(glob.glob('outputs/inference/regime_predictions_*.parquet'))
-if files:
-    df = pd.read_parquet(files[-1])
-    print(df['ds'].max().strftime('%B %d, %Y'))
-else:
-    print('N/A')
+    storage = get_storage()
+    if hasattr(storage, 'get_latest_forecasts'):
+        latest_forecasts = storage.get_latest_forecasts(limit=1)
+        if len(latest_forecasts) > 0:
+            forecast_id = latest_forecasts.iloc[0]['forecast_id']
+            predictions = storage.get_forecast_by_id(forecast_id)
+            latest_date = pd.to_datetime(predictions['ds']).max()
+            print(latest_date.strftime('%B %d, %Y'))
+        else:
+            print('N/A - No forecasts in BigQuery')
+    else:
+        print('N/A - BigQuery not available')
+except Exception as e:
+    print(f'N/A - Error: {str(e)[:50]}')
 " 2>/dev/null)
 
 echo "   ✅ Latest forecast: $LATEST_FORECAST"
@@ -104,14 +112,21 @@ if [ -n "$(git status --porcelain)" ]; then
 - Latest forecast: $LATEST_FORECAST
 - Dashboard updated with current market data
 - Validation metrics: $(python -c "
-import pandas as pd
-import glob
-files = sorted(glob.glob('outputs/inference/regime_predictions_*.parquet'))
-if files:
-    df = pd.read_parquet(files[-1])
-    print(f'{len(df)} days forecasted')
-else:
-    print('N/A')
+try:
+    from data_agent.storage import get_storage
+    storage = get_storage()
+    if hasattr(storage, 'get_latest_forecasts'):
+        latest_forecasts = storage.get_latest_forecasts(limit=1)
+        if len(latest_forecasts) > 0:
+            forecast_id = latest_forecasts.iloc[0]['forecast_id']
+            predictions = storage.get_forecast_by_id(forecast_id)
+            print(f'{len(predictions)} days forecasted')
+        else:
+            print('No forecasts available')
+    else:
+        print('BigQuery unavailable')
+except Exception as e:
+    print(f'Error: {str(e)[:30]}')
 " 2>/dev/null)"
 
     # Commit
