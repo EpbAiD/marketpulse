@@ -11,13 +11,15 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 
-def capture_dashboard_screenshot(url="http://localhost:8501", output_dir="dashboard_screenshots"):
+def capture_dashboard_screenshot(url="http://localhost:8501", output_dir="dashboard_screenshots",
+                                  copy_to_assets=True):
     """
     Capture screenshot of the Streamlit dashboard
 
     Args:
         url: Dashboard URL
-        output_dir: Directory to save screenshots
+        output_dir: Directory to save timestamped screenshots (local backup)
+        copy_to_assets: If True, also copy to assets/dashboard.png for README
     """
     # Create output directory
     output_path = Path(output_dir)
@@ -50,6 +52,16 @@ def capture_dashboard_screenshot(url="http://localhost:8501", output_dir="dashbo
             print(f"   ✅ Screenshot saved: {screenshot_file}")
             print(f"   📁 File size: {screenshot_file.stat().st_size / 1024:.1f} KB")
 
+            # Copy to assets folder for README (overwrites previous)
+            if copy_to_assets:
+                assets_dir = Path("assets")
+                assets_dir.mkdir(exist_ok=True)
+                assets_file = assets_dir / "dashboard.png"
+
+                import shutil
+                shutil.copy2(screenshot_file, assets_file)
+                print(f"   📋 Copied to README assets: {assets_file}")
+
             return screenshot_file
 
     except Exception as e:
@@ -63,10 +75,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Capture dashboard screenshot")
     parser.add_argument("--url", default="http://localhost:8501", help="Dashboard URL")
     parser.add_argument("--output-dir", default="dashboard_screenshots", help="Output directory")
+    parser.add_argument("--no-assets", action="store_true",
+                       help="Don't copy to assets/ folder (disable README update)")
 
     args = parser.parse_args()
 
-    result = capture_dashboard_screenshot(args.url, args.output_dir)
+    result = capture_dashboard_screenshot(args.url, args.output_dir,
+                                         copy_to_assets=not args.no_assets)
 
     if result:
         print(f"\n✅ Screenshot capture complete!")

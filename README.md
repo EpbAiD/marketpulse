@@ -80,7 +80,7 @@ Interactive Streamlit dashboard showing:
 - Regime-specific allocation strategies
 - Historical performance by regime
 
-![Dashboard Overview](dashboard_overview.png)
+![Dashboard Overview](assets/dashboard.png)
 
 ```bash
 streamlit run dashboard/app.py
