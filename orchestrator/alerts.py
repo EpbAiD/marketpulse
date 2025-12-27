@@ -48,8 +48,8 @@ class AlertSystem:
                     return None, None
 
                 return (
-                    latest_forecasts.iloc[0]['forecast_id'],
-                    latest_forecasts.iloc[1]['forecast_id']
+                    latest_forecasts.iloc[1]['forecast_id'],  # Previous (older)
+                    latest_forecasts.iloc[0]['forecast_id']   # Latest (newer)
                 )
             else:
                 # Local storage - check CSV files
@@ -137,7 +137,7 @@ class AlertSystem:
                     'latest_confidence': float(row['regime_probability_latest'])
                 })
 
-        return shifts
+        return shifts, len(merged)  # Return shifts and overlap count
 
     def check_for_alerts(
         self,
@@ -174,7 +174,7 @@ class AlertSystem:
             }
 
         # Detect shifts date-by-date
-        shifts = self.detect_shifts_by_date(
+        shifts, overlap_count = self.detect_shifts_by_date(
             previous_forecast,
             latest_forecast
         )
@@ -192,7 +192,7 @@ class AlertSystem:
             'previous_forecast_id': previous_id,
             'latest_forecast_id': latest_id,
             'min_confidence': min_confidence,
-            'overlapping_dates': len(shifts) if shifts else 0,
+            'overlapping_dates': overlap_count,
             'timestamp': datetime.now().isoformat()
         }
 

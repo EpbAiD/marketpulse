@@ -2,6 +2,8 @@
 
 Autonomous market regime forecasting system that predicts regime changes 10 days ahead using neural ensembles and LangGraph orchestration.
 
+📚 **[Full Documentation](docs/)** | [Architecture](docs/architecture.md) | [Usage Guide](docs/usage_guide.md) | [Automation Guide](docs/automation_guide.md)
+
 ---
 
 ## ⚡ Quick Start
