@@ -50,9 +50,9 @@ lightning_logs/
 *.jsonl
 !logs/.gitkeep
 
-# Screenshots for README (allow these)
-!screenshots/
-!dashboard_screenshots/
+# Screenshots - only track latest in assets/
+dashboard_screenshots/
+!assets/
 
 # BigQuery credentials
 regime01-*.json
