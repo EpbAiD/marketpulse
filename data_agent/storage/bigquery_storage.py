@@ -625,13 +625,14 @@ class BigQueryStorage(StorageBackend):
     def get_latest_forecasts(self, limit: int = 10) -> pd.DataFrame:
         """Get latest N forecasts from BigQuery"""
         query = f"""
-            SELECT DISTINCT
+            SELECT
                 forecast_id,
-                forecast_generated_at,
-                forecast_start_date,
-                forecast_end_date,
-                horizon_days
+                MAX(forecast_generated_at) as forecast_generated_at,
+                MAX(forecast_start_date) as forecast_start_date,
+                MAX(forecast_end_date) as forecast_end_date,
+                MAX(horizon_days) as horizon_days
             FROM `{self.dataset_id}.regime_forecasts`
+            GROUP BY forecast_id
             ORDER BY forecast_generated_at DESC
             LIMIT {limit}
         """
