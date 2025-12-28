@@ -23,6 +23,8 @@ from sklearn.metrics import (
     confusion_matrix,
 )
 import matplotlib.pyplot as plt
+from pandas.tseries.offsets import CustomBusinessDay
+from pandas.tseries.holiday import USFederalHolidayCalendar
 
 # -----------------------------------------------------------
 # PATH CONFIGURATION
@@ -37,6 +39,59 @@ os.makedirs(DIAG_DIR, exist_ok=True)
 
 REPORT_PATH = os.path.join(DIAG_DIR, "metrics_report.json")
 IMPORTANCE_PLOT = os.path.join(DIAG_DIR, "feature_importances.png")
+
+# -----------------------------------------------------------
+# TRADING DAY FILTER
+# -----------------------------------------------------------
+def filter_trading_days(df, target_trading_days=10):
+    """
+    Ensure forecast contains exactly N trading days.
+    Excludes weekends and US federal holidays (NYSE calendar).
+
+    If fewer than N trading days after filtering, returns what's available.
+    This handles the case where calendar-day forecasts don't produce enough
+    trading days (e.g., holiday weeks).
+
+    Args:
+        df: DataFrame with 'ds' column containing forecast dates
+        target_trading_days: Target number of trading days (default: 10)
+
+    Returns:
+        DataFrame with only trading days
+    """
+    print(f"🗓️  Filtering to trading days (target: {target_trading_days})...")
+    original_count = len(df)
+
+    # Ensure ds is datetime
+    df['ds'] = pd.to_datetime(df['ds'])
+
+    # Remove weekends (Saturday=5, Sunday=6)
+    df = df[df['ds'].dt.dayofweek < 5].copy()
+
+    # Remove federal holidays
+    holidays = USFederalHolidayCalendar().holidays(
+        start=df['ds'].min(),
+        end=df['ds'].max()
+    )
+    df = df[~df['ds'].isin(holidays)].copy()
+
+    filtered_count = original_count - len(df)
+    trading_days_count = len(df)
+
+    if filtered_count > 0:
+        print(f"   ⚠️  Filtered out {filtered_count} non-trading days ({filtered_count/original_count*100:.1f}%)")
+
+    if trading_days_count < target_trading_days:
+        print(f"   ⚠️  Only {trading_days_count} trading days available (target: {target_trading_days})")
+        print(f"   💡 Holiday/weekend heavy period - consider increasing calendar horizon")
+    elif trading_days_count == target_trading_days:
+        print(f"   ✅ Perfect: {trading_days_count} trading days")
+    else:
+        print(f"   ✅ {trading_days_count} trading days (truncating to {target_trading_days})")
+        # Take only first N trading days to match target
+        df = df.head(target_trading_days)
+
+    return df
 
 # -----------------------------------------------------------
 # MAIN PIPELINE
@@ -251,6 +306,11 @@ def predict_regimes_from_forecast(
     n_classes = regime_probabilities.shape[1]
     for i in range(n_classes):
         results_df[f'regime_{i}_prob'] = regime_probabilities[:, i]
+
+    # ============================================================
+    # 🗓️ FILTER TO TRADING DAYS ONLY (exclude weekends + holidays)
+    # ============================================================
+    results_df = filter_trading_days(results_df)
 
     # Save results
     output_dir = os.path.join(BASE_DIR, "outputs", "forecasting", "inference")
