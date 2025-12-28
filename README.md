@@ -1,6 +1,6 @@
 # MarketPulse: Multi-Agent Regime Intelligence Platform
 
-Autonomous market regime forecasting system that predicts regime changes 10 days ahead using neural ensembles and LangGraph orchestration.
+Autonomous market regime forecasting system that predicts regime changes 10 trading days ahead using neural ensembles and LangGraph orchestration.
 
 📚 **[Full Documentation](docs/)** | [Architecture](docs/architecture.md) | [Usage Guide](docs/usage_guide.md) | [Automation Guide](docs/automation_guide.md)
 
@@ -23,7 +23,7 @@ streamlit run dashboard/app.py
 
 ## 🎯 What It Does
 
-Forecasts market regimes (Bull, Bear, Transitional) 10 days in advance using 22 macroeconomic indicators:
+Forecasts market regimes (Bull, Bear, Transitional) 10 trading days in advance using 22 macroeconomic indicators:
 - VIX volatility indices, treasury yields, credit spreads
 - Equity indices (S&P 500, NASDAQ), commodities (Gold, Oil, Copper)
 - Dollar strength (DXY, UUP)
@@ -35,7 +35,7 @@ Forecasts market regimes (Bull, Bear, Transitional) 10 days in advance using 22 
 - LangGraph multi-agent orchestration
 - BigQuery data warehouse
 
-**Use Case:** Portfolio managers get 10-day advance warning for regime shifts, enabling proactive allocation adjustments.
+**Use Case:** Portfolio managers get 10 trading-day advance warning for regime shifts, enabling proactive allocation adjustments.
 
 ---
 
@@ -58,13 +58,14 @@ One command runs complete pipeline:
 ```
 
 **What happens:**
-1. Forecasts 18 features × 10 days (ensemble predictions)
+1. Forecasts 18 features × 10 trading days (ensemble predictions)
 2. Engineers 294 features → selects 31 optimal
 3. Predicts regimes using Random Forest
-4. Validates forecasts (SMAPE)
-5. Logs predictions to `DAILY_PREDICTIONS.md`
-6. Captures dashboard screenshot
-7. Commits and pushes to GitHub
+4. Filters to trading days only (excludes weekends/holidays)
+5. Validates forecasts (SMAPE)
+6. Logs predictions to `DAILY_PREDICTIONS.md`
+7. Captures dashboard screenshot
+8. Commits and pushes to GitHub
 
 **Cron job setup (6 AM daily):**
 ```bash
