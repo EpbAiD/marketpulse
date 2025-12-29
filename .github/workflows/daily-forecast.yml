@@ -1,0 +1,74 @@
+name: Daily Market Regime Forecast
+
+on:
+  schedule:
+    # Run at 6 AM UTC daily (1 AM EST, 10 PM PST)
+    - cron: '0 6 * * *'
+  workflow_dispatch:  # Allow manual trigger from Actions tab
+
+jobs:
+  forecast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run daily forecast pipeline
+        env:
+          # Uncomment if using BigQuery:
+          # GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+          PYTHONUNBUFFERED: 1
+        run: |
+          echo "Starting daily market regime forecast..."
+          python run_daily_update.py
+
+      - name: Commit and push results
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "GitHub Actions Bot"
+
+          # Add only the files that should be updated daily
+          git add DAILY_PREDICTIONS.md || true
+          git add assets/dashboard.png || true
+
+          # Commit if there are changes
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "🤖 Daily forecast update $(date +'%Y-%m-%d %H:%M UTC')"
+            git push
+            echo "✅ Forecast results committed and pushed"
+          fi
+
+      - name: Upload forecast artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forecast-${{ github.run_number }}
+          path: |
+            DAILY_PREDICTIONS.md
+            assets/dashboard.png
+          retention-days: 7
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "✅ Daily forecast completed successfully!"
+          echo "📅 Timestamp: $(date +'%Y-%m-%d %H:%M UTC')"
+          echo "🔗 View results: https://github.com/${{ github.repository }}/blob/main/DAILY_PREDICTIONS.md"
