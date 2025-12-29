@@ -21,7 +21,7 @@ This directory contains automated workflows for the MarketPulse project.
 2. Select "Daily Market Regime Forecast"
 3. Click "Run workflow"
 
-**Runtime:** ~5-10 minutes
+**Runtime:** ~10-15 minutes (includes Streamlit + screenshot)
 **Cost:** FREE (well under 2,000 min/month limit)
 
 ---
@@ -73,28 +73,61 @@ This directory contains automated workflows for the MarketPulse project.
 
 ## Setup Instructions
 
-### If Using Local Files (No BigQuery):
+### ⚠️ REQUIRED: BigQuery Credentials
 
-No additional setup needed! Workflows are ready to use.
+**This project uses BigQuery for data storage. You MUST configure credentials before running workflows.**
 
-### If Using BigQuery:
+#### Step 1: Get Your Credentials File
 
-1. **Create Service Account:**
-   - Go to Google Cloud Console
-   - IAM & Admin → Service Accounts
-   - Create service account with BigQuery access
-   - Create and download JSON key
+Your local BigQuery credentials are at:
+```
+/Users/eeshanbhanap/Desktop/RFP/regime01-b5321d26c433.json
+```
 
-2. **Add Secret to GitHub:**
-   - Go to: `https://github.com/EpbAiD/marketpulse/settings/secrets/actions`
+View the contents:
+```bash
+cat /Users/eeshanbhanap/Desktop/RFP/regime01-b5321d26c433.json
+```
+
+Copy the **entire JSON output** (you'll need it in Step 2).
+
+#### Step 2: Add Secret to GitHub
+
+1. **Go to GitHub Secrets page:**
+   ```
+   https://github.com/EpbAiD/marketpulse/settings/secrets/actions
+   ```
+
+2. **Create new secret:**
    - Click "New repository secret"
-   - Name: `GCP_CREDENTIALS`
-   - Value: Paste entire JSON content
+   - **Name:** `GCP_CREDENTIALS` (exact name, case-sensitive)
+   - **Value:** Paste the entire JSON file contents from Step 1
    - Click "Add secret"
 
-3. **Uncomment in workflows:**
-   - Edit `daily-forecast.yml` and `manual-retrain.yml`
-   - Uncomment the line: `GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}`
+3. **Verify secret added:**
+   - You should see `GCP_CREDENTIALS` in the list of secrets
+   - The value will be hidden (shows as `***`)
+
+#### Step 3: Verify Setup
+
+✅ **No code changes needed!** Workflows are already configured to use this secret.
+
+The workflows will automatically:
+- Load `GCP_CREDENTIALS` secret
+- Create temporary credentials file at `/tmp/gcp_credentials.json`
+- Set `GOOGLE_APPLICATION_CREDENTIALS` environment variable
+- Connect to BigQuery using these credentials
+
+---
+
+### Additional Dependencies (Auto-Installed)
+
+The workflows automatically install:
+- ✅ **Playwright** - For dashboard screenshot capture
+- ✅ **Chromium browser** - For rendering dashboard
+- ✅ **Streamlit** - For dashboard server (runs in background)
+
+No manual configuration required for these.
 
 ---
 
@@ -120,10 +153,10 @@ https://github.com/EpbAiD/marketpulse/actions
 ## Costs
 
 **Current usage estimate:**
-- Daily forecast: 5 min × 30 days = 150 min/month
+- Daily forecast: 12 min × 30 days = 360 min/month (includes Streamlit + Playwright)
 - Tests: 2 min × 20 commits = 40 min/month
 - Monthly retrain: 90 min × 1 = 90 min/month
-- **Total:** ~280 minutes/month
+- **Total:** ~490 minutes/month
 
 **Free tier:** 2,000 minutes/month (private repo) or unlimited (public)
 
@@ -189,6 +222,6 @@ Comment out entire file or delete it
 
 ---
 
-**Last Updated:** December 27, 2024
-**Status:** ✅ Ready to use
+**Last Updated:** December 29, 2025
+**Status:** ⚠️ REQUIRES SETUP - Add `GCP_CREDENTIALS` secret first
 **Cost:** $0/month
