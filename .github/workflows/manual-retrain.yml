@@ -29,10 +29,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Create credentials file from secret
+        if: ${{ secrets.GCP_CREDENTIALS }}
+        run: |
+          echo '${{ secrets.GCP_CREDENTIALS }}' > /tmp/gcp_credentials.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp_credentials.json" >> $GITHUB_ENV
+
       - name: Run full training pipeline
         env:
-          # Uncomment if using BigQuery:
-          # GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
           PYTHONUNBUFFERED: 1
         run: |
           echo "Starting full model retraining..."

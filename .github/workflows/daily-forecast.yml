@@ -29,14 +29,41 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Install Playwright for screenshots
+        run: |
+          pip install playwright
+          playwright install chromium
+          playwright install-deps
+
+      - name: Create credentials file from secret
+        if: ${{ secrets.GCP_CREDENTIALS }}
+        run: |
+          echo '${{ secrets.GCP_CREDENTIALS }}' > /tmp/gcp_credentials.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp_credentials.json" >> $GITHUB_ENV
+
+      - name: Start Streamlit dashboard in background
+        run: |
+          nohup streamlit run dashboard/app.py --server.port 8501 --server.headless true > streamlit.log 2>&1 &
+          echo "Waiting for Streamlit to start..."
+          sleep 15
+          curl -f http://localhost:8501 || (cat streamlit.log && exit 1)
+          echo "✓ Streamlit server running"
+
       - name: Run daily forecast pipeline
         env:
-          # Uncomment if using BigQuery:
-          # GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
           PYTHONUNBUFFERED: 1
         run: |
           echo "Starting daily market regime forecast..."
           python run_daily_update.py
+
+      - name: Capture dashboard screenshot
+        run: |
+          python capture_dashboard_screenshot.py --url http://localhost:8501
+
+      - name: Stop Streamlit server
+        if: always()
+        run: |
+          pkill -f streamlit || true
 
       - name: Commit and push results
         run: |

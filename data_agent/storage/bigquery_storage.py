@@ -34,11 +34,25 @@ class BigQueryStorage(StorageBackend):
             self.config = yaml.safe_load(f)['bigquery']
 
         # Set credentials
-        creds_path = self.config['credentials_path']
-        if not os.path.isabs(creds_path):
-            # Make relative to project root
-            creds_path = str(Path(__file__).parent.parent.parent / creds_path)
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = creds_path
+        # Priority: 1) GitHub Actions secret (env var), 2) Local credentials file
+        if 'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ:
+            # Running locally - use credentials file from config
+            creds_path = self.config['credentials_path']
+            if not os.path.isabs(creds_path):
+                # Make relative to project root
+                creds_path = str(Path(__file__).parent.parent.parent / creds_path)
+
+            if os.path.exists(creds_path):
+                os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = creds_path
+                print(f"✓ Using local BigQuery credentials: {creds_path}")
+            else:
+                raise FileNotFoundError(
+                    f"BigQuery credentials not found at: {creds_path}\n"
+                    "For local development: Ensure credentials file exists.\n"
+                    "For GitHub Actions: Add GCP_CREDENTIALS secret."
+                )
+        else:
+            print(f"✓ Using BigQuery credentials from environment (GitHub Actions)")
 
         # Initialize client
         self.client = bigquery.Client(project=self.config['project_id'])
