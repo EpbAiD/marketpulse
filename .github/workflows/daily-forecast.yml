@@ -10,6 +10,8 @@ jobs:
   forecast:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: write  # Allow git push
 
     steps:
       - name: Checkout repository
