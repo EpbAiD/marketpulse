@@ -30,7 +30,6 @@ jobs:
           pip install -r requirements.txt
 
       - name: Create credentials file from secret
-        if: secrets.GCP_CREDENTIALS != ''
         run: |
           echo '${{ secrets.GCP_CREDENTIALS }}' > /tmp/gcp_credentials.json
           echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp_credentials.json" >> $GITHUB_ENV
