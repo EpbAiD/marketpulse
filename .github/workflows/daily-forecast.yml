@@ -2,14 +2,14 @@ name: Daily Market Regime Forecast
 
 on:
   schedule:
-    # Run at 6 AM UTC daily (1 AM EST, 10 PM PST)
-    - cron: '0 6 * * *'
+    # Run at 8 AM EST daily (1 PM UTC)
+    - cron: '0 13 * * *'
   workflow_dispatch:  # Allow manual trigger from Actions tab
 
 jobs:
   forecast:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45  # Increased for full inference pipeline
     permissions:
       contents: write  # Allow git push
 
