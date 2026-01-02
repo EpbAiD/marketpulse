@@ -69,36 +69,22 @@ def load_data():
 
     # Try storage layer first for forecast data
     try:
-        # Set a timeout for storage initialization
-        import signal
+        storage = get_storage()
 
-        def timeout_handler(signum, frame):
-            raise TimeoutError("Storage initialization timeout")
+        if hasattr(storage, 'get_latest_forecasts'):
+            latest_forecasts = storage.get_latest_forecasts(limit=1)
 
-        # Only set timeout on Unix systems (not Windows)
-        if hasattr(signal, 'SIGALRM'):
-            signal.signal(signal.SIGALRM, timeout_handler)
-            signal.alarm(10)  # 10 second timeout
-
-        try:
-            storage = get_storage()
-
-            if hasattr(storage, 'get_latest_forecasts'):
-                latest_forecasts = storage.get_latest_forecasts(limit=1)
-
-                if len(latest_forecasts) > 0:
-                    forecast_id = latest_forecasts.iloc[0]['forecast_id']
-                    df = storage.get_forecast_by_id(forecast_id)
-                    df = df.rename(columns={'predicted_date': 'ds', 'predicted_regime': 'regime'})
-                    df['ds'] = pd.to_datetime(df['ds'])
-                    data['forecast'] = df.sort_values('ds').reset_index(drop=True)
-                    data['forecast_source'] = 'bigquery'
-        finally:
-            if hasattr(signal, 'SIGALRM'):
-                signal.alarm(0)  # Cancel timeout
-    except (TimeoutError, Exception) as e:
-        st.warning(f"BigQuery error: {type(e).__name__}: {str(e)}")
-        # No CSV files available on Streamlit Cloud
+            if len(latest_forecasts) > 0:
+                forecast_id = latest_forecasts.iloc[0]['forecast_id']
+                df = storage.get_forecast_by_id(forecast_id)
+                df = df.rename(columns={'predicted_date': 'ds', 'predicted_regime': 'regime'})
+                df['ds'] = pd.to_datetime(df['ds'])
+                data['forecast'] = df.sort_values('ds').reset_index(drop=True)
+                data['forecast_source'] = 'bigquery'
+                print(f"✓ Loaded forecast from BigQuery: {forecast_id}")
+    except Exception as e:
+        print(f"⚠️ BigQuery error: {type(e).__name__}: {str(e)}")
+        # No CSV files available on Streamlit Cloud - this is expected
         pass
 
     # Historical data (still from local)
