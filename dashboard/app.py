@@ -66,12 +66,18 @@ def get_latest_file(pattern):
 def load_data():
     """Load data from storage (BigQuery primary, local files fallback)"""
     data = {}
+    storage = None
 
-    # Try storage layer first for forecast data
+    # Initialize storage connection
     try:
         storage = get_storage()
+        print(f"✓ Connected to storage: {type(storage).__name__}")
+    except Exception as e:
+        print(f"⚠️ Storage initialization error: {type(e).__name__}: {str(e)}")
 
-        if hasattr(storage, 'get_latest_forecasts'):
+    # Try loading forecast data
+    if storage and hasattr(storage, 'get_latest_forecasts'):
+        try:
             latest_forecasts = storage.get_latest_forecasts(limit=1)
 
             if len(latest_forecasts) > 0:
@@ -82,15 +88,12 @@ def load_data():
                 data['forecast'] = df.sort_values('ds').reset_index(drop=True)
                 data['forecast_source'] = 'bigquery'
                 print(f"✓ Loaded forecast from BigQuery: {forecast_id}")
-    except Exception as e:
-        print(f"⚠️ BigQuery error: {type(e).__name__}: {str(e)}")
-        # No CSV files available on Streamlit Cloud - this is expected
-        pass
+        except Exception as e:
+            print(f"⚠️ Failed to load forecast: {type(e).__name__}: {str(e)}")
 
     # Historical data - try BigQuery first, fallback to local
-    try:
-        if hasattr(storage, '_execute_query'):
-            # Try loading from BigQuery
+    if storage and hasattr(storage, '_execute_query'):
+        try:
             query = f"SELECT * FROM `{storage.dataset_id}.cluster_assignments` ORDER BY timestamp"
             df = storage._execute_query(query)
             if len(df) > 0:
@@ -98,8 +101,8 @@ def load_data():
                 df['ds'] = pd.to_datetime(df['ds'])
                 data['history'] = df
                 print(f"✓ Loaded {len(df)} historical regime rows from BigQuery")
-    except:
-        pass
+        except Exception as e:
+            print(f"⚠️ Failed to load history from BigQuery: {type(e).__name__}: {str(e)}")
 
     # Fallback to local historical data
     if 'history' not in data:
@@ -114,8 +117,8 @@ def load_data():
 
     # Market data - try BigQuery first, fallback to local
     market_data = {}
-    try:
-        if hasattr(storage, '_execute_query'):
+    if storage and hasattr(storage, '_execute_query'):
+        try:
             # Get list of features from BigQuery
             query = f"SELECT DISTINCT feature_name FROM `{storage.dataset_id}.raw_features`"
             features_df = storage._execute_query(query)
@@ -131,8 +134,8 @@ def load_data():
             if len(market_data) > 0:
                 data['market'] = market_data
                 print(f"✓ Loaded {len(market_data)} market features from BigQuery")
-    except:
-        pass
+        except Exception as e:
+            print(f"⚠️ Failed to load market data from BigQuery: {type(e).__name__}: {str(e)}")
 
     # Fallback to local market data
     if 'market' not in data:
