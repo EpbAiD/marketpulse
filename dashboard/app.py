@@ -62,47 +62,44 @@ def get_latest_file(pattern):
     files = glob.glob(str(BASE_DIR / pattern))
     return Path(max(files, key=lambda f: Path(f).stat().st_mtime)) if files else None
 
+@st.cache_data(ttl=300)  # Cache for 5 minutes
 def load_data():
     """Load data from storage (BigQuery primary, local files fallback)"""
     data = {}
-    storage = get_storage()
 
     # Try storage layer first for forecast data
     try:
-        if hasattr(storage, 'get_latest_forecasts'):
-            latest_forecasts = storage.get_latest_forecasts(limit=1)
+        # Set a timeout for storage initialization
+        import signal
 
-            if len(latest_forecasts) > 0:
-                forecast_id = latest_forecasts.iloc[0]['forecast_id']
-                df = storage.get_forecast_by_id(forecast_id)
-                df = df.rename(columns={'predicted_date': 'ds', 'predicted_regime': 'regime'})
-                df['ds'] = pd.to_datetime(df['ds'])
-                data['forecast'] = df.sort_values('ds').reset_index(drop=True)
-                data['forecast_source'] = 'bigquery'
-            else:
-                # Fallback to CSV
-                forecast_file = get_latest_file("outputs/inference/regime_forecast_*.csv")
-                if forecast_file:
-                    df = pd.read_csv(forecast_file)
+        def timeout_handler(signum, frame):
+            raise TimeoutError("Storage initialization timeout")
+
+        # Only set timeout on Unix systems (not Windows)
+        if hasattr(signal, 'SIGALRM'):
+            signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(10)  # 10 second timeout
+
+        try:
+            storage = get_storage()
+
+            if hasattr(storage, 'get_latest_forecasts'):
+                latest_forecasts = storage.get_latest_forecasts(limit=1)
+
+                if len(latest_forecasts) > 0:
+                    forecast_id = latest_forecasts.iloc[0]['forecast_id']
+                    df = storage.get_forecast_by_id(forecast_id)
+                    df = df.rename(columns={'predicted_date': 'ds', 'predicted_regime': 'regime'})
                     df['ds'] = pd.to_datetime(df['ds'])
-                    data['forecast'] = df
-                    data['forecast_source'] = 'csv'
-        else:
-            # Local storage - use CSV
-            forecast_file = get_latest_file("outputs/inference/regime_forecast_*.csv")
-            if forecast_file:
-                df = pd.read_csv(forecast_file)
-                df['ds'] = pd.to_datetime(df['ds'])
-                data['forecast'] = df
-                data['forecast_source'] = 'csv'
-    except Exception as e:
-        # Fallback to CSV on any error
-        forecast_file = get_latest_file("outputs/inference/regime_forecast_*.csv")
-        if forecast_file:
-            df = pd.read_csv(forecast_file)
-            df['ds'] = pd.to_datetime(df['ds'])
-            data['forecast'] = df
-            data['forecast_source'] = 'csv'
+                    data['forecast'] = df.sort_values('ds').reset_index(drop=True)
+                    data['forecast_source'] = 'bigquery'
+        finally:
+            if hasattr(signal, 'SIGALRM'):
+                signal.alarm(0)  # Cancel timeout
+    except (TimeoutError, Exception) as e:
+        st.warning(f"BigQuery not available (this is normal for first deployment): {type(e).__name__}")
+        # No CSV files available on Streamlit Cloud
+        pass
 
     # Historical data (still from local)
     cluster_file = BASE_DIR / "outputs" / "clustering" / "cluster_assignments.parquet"
@@ -129,11 +126,33 @@ def load_data():
 
     return data
 
-# Load data
-data = load_data()
+# Load data with timeout protection
+try:
+    with st.spinner("Loading forecast data from BigQuery..."):
+        data = load_data()
+except Exception as e:
+    st.error(f"Failed to load data: {str(e)}")
+    st.info("The dashboard will be available once the first forecast runs. Check back after the next scheduled run at 6 AM EST.")
+    st.stop()
 
 if not data or 'forecast' not in data:
-    st.warning("No forecast data available")
+    st.warning("No forecast data available yet")
+    st.info("""
+    **Dashboard Setup Complete!**
+
+    The dashboard is ready, but no forecast data has been generated yet.
+
+    **Next Steps:**
+    1. Wait for the next scheduled forecast run (daily at 6 AM EST)
+    2. Or manually trigger a forecast run via GitHub Actions
+    3. Once data is in BigQuery, refresh this page
+
+    Your dashboard will display:
+    - 10-day market regime forecasts
+    - Historical regime analysis
+    - Risk-return profiles
+    - Market volatility insights
+    """)
     st.stop()
 
 forecast = data['forecast']
