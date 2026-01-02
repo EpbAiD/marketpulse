@@ -2,8 +2,8 @@ name: Daily Market Regime Forecast
 
 on:
   schedule:
-    # Run at 8 AM EST daily (1 PM UTC)
-    - cron: '0 13 * * *'
+    # Run at 6 AM EST daily (11 AM UTC)
+    - cron: '0 11 * * *'
   workflow_dispatch:  # Allow manual trigger from Actions tab
 
 jobs:
