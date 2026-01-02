@@ -31,24 +31,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Install Playwright for screenshots
-        run: |
-          pip install playwright
-          playwright install chromium
-          playwright install-deps
-
       - name: Create credentials file from secret
         run: |
           echo '${{ secrets.GCP_CREDENTIALS }}' > /tmp/gcp_credentials.json
           echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp_credentials.json" >> $GITHUB_ENV
-
-      - name: Start Streamlit dashboard in background
-        run: |
-          nohup streamlit run dashboard/app.py --server.port 8501 --server.headless true > streamlit.log 2>&1 &
-          echo "Waiting for Streamlit to start..."
-          sleep 15
-          curl -f http://localhost:8501 || (cat streamlit.log && exit 1)
-          echo "✓ Streamlit server running"
 
       - name: Run daily forecast pipeline
         env:
@@ -61,23 +47,13 @@ jobs:
         run: |
           python log_daily_predictions.py --output DAILY_PREDICTIONS.md
 
-      - name: Capture dashboard screenshot
-        run: |
-          python capture_dashboard_screenshot.py --url http://localhost:8501
-
-      - name: Stop Streamlit server
-        if: always()
-        run: |
-          pkill -f streamlit || true
-
       - name: Commit and push results
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "GitHub Actions Bot"
 
-          # Add only the files that should be updated daily
+          # Add daily predictions file
           git add DAILY_PREDICTIONS.md || true
-          git add assets/dashboard.png || true
 
           # Commit if there are changes
           if git diff --staged --quiet; then
@@ -95,7 +71,6 @@ jobs:
           name: forecast-${{ github.run_number }}
           path: |
             DAILY_PREDICTIONS.md
-            assets/dashboard.png
           retention-days: 7
 
       - name: Summary

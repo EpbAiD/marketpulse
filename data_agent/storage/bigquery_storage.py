@@ -12,6 +12,7 @@ from google.cloud import bigquery
 from typing import Optional
 from pathlib import Path
 from .base import StorageBackend
+from .streamlit_credentials import setup_streamlit_credentials
 
 
 class BigQueryStorage(StorageBackend):
@@ -34,8 +35,14 @@ class BigQueryStorage(StorageBackend):
             self.config = yaml.safe_load(f)['bigquery']
 
         # Set credentials
-        # Priority: 1) GitHub Actions secret (env var), 2) Local credentials file
-        if 'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ:
+        # Priority: 1) Streamlit Cloud secrets, 2) GitHub Actions secret (env var), 3) Local credentials file
+
+        # First check for Streamlit Cloud
+        if setup_streamlit_credentials():
+            print(f"✓ Using BigQuery credentials from Streamlit Cloud secrets")
+        elif 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ:
+            print(f"✓ Using BigQuery credentials from environment (GitHub Actions)")
+        else:
             # Running locally - use credentials file from config
             creds_path = self.config['credentials_path']
             if not os.path.isabs(creds_path):
@@ -49,10 +56,9 @@ class BigQueryStorage(StorageBackend):
                 raise FileNotFoundError(
                     f"BigQuery credentials not found at: {creds_path}\n"
                     "For local development: Ensure credentials file exists.\n"
-                    "For GitHub Actions: Add GCP_CREDENTIALS secret."
+                    "For GitHub Actions: Add GCP_CREDENTIALS secret.\n"
+                    "For Streamlit Cloud: Add gcp_service_account to secrets."
                 )
-        else:
-            print(f"✓ Using BigQuery credentials from environment (GitHub Actions)")
 
         # Initialize client
         self.client = bigquery.Client(project=self.config['project_id'])
