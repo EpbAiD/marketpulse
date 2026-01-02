@@ -1,8 +1,2 @@
-# System-level dependencies for Streamlit Cloud
-# These are installed via apt-get
-
-# Required for Python scientific computing
 build-essential
-
-# Required for some Python packages
 python3-dev
