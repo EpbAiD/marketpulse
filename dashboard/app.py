@@ -87,28 +87,66 @@ def load_data():
         # No CSV files available on Streamlit Cloud - this is expected
         pass
 
-    # Historical data (still from local)
-    cluster_file = BASE_DIR / "outputs" / "clustering" / "cluster_assignments.parquet"
-    if cluster_file.exists():
-        df = pd.read_parquet(cluster_file)
-        if isinstance(df.index, pd.DatetimeIndex):
-            df = df.reset_index()
-            df.rename(columns={df.columns[0]: 'ds'}, inplace=True)
-        df['ds'] = pd.to_datetime(df['ds'])
-        data['history'] = df
+    # Historical data - try BigQuery first, fallback to local
+    try:
+        if hasattr(storage, '_execute_query'):
+            # Try loading from BigQuery
+            query = f"SELECT * FROM `{storage.dataset_id}.cluster_assignments` ORDER BY timestamp"
+            df = storage._execute_query(query)
+            if len(df) > 0:
+                df.rename(columns={'timestamp': 'ds'}, inplace=True)
+                df['ds'] = pd.to_datetime(df['ds'])
+                data['history'] = df
+                print(f"✓ Loaded {len(df)} historical regime rows from BigQuery")
+    except:
+        pass
 
-    # Market data (still from local)
-    market_files = list((BASE_DIR / "outputs" / "fetched" / "cleaned").glob("*.parquet"))
-    if market_files:
-        market_data = {}
-        for f in market_files:
-            df = pd.read_parquet(f)
+    # Fallback to local historical data
+    if 'history' not in data:
+        cluster_file = BASE_DIR / "outputs" / "clustering" / "cluster_assignments.parquet"
+        if cluster_file.exists():
+            df = pd.read_parquet(cluster_file)
             if isinstance(df.index, pd.DatetimeIndex):
                 df = df.reset_index()
                 df.rename(columns={df.columns[0]: 'ds'}, inplace=True)
             df['ds'] = pd.to_datetime(df['ds'])
-            market_data[f.stem] = df
-        data['market'] = market_data
+            data['history'] = df
+
+    # Market data - try BigQuery first, fallback to local
+    market_data = {}
+    try:
+        if hasattr(storage, '_execute_query'):
+            # Get list of features from BigQuery
+            query = f"SELECT DISTINCT feature_name FROM `{storage.dataset_id}.raw_features`"
+            features_df = storage._execute_query(query)
+
+            for feature_name in features_df['feature_name'].unique():
+                df = storage.load_raw_feature(feature_name, 'daily')
+                if df is not None and len(df) > 0:
+                    df = df.reset_index()
+                    df.rename(columns={df.columns[0]: 'ds'}, inplace=True)
+                    df['ds'] = pd.to_datetime(df['ds'])
+                    market_data[feature_name] = df
+
+            if len(market_data) > 0:
+                data['market'] = market_data
+                print(f"✓ Loaded {len(market_data)} market features from BigQuery")
+    except:
+        pass
+
+    # Fallback to local market data
+    if 'market' not in data:
+        market_files = list((BASE_DIR / "outputs" / "fetched" / "cleaned").glob("*.parquet"))
+        if market_files:
+            for f in market_files:
+                df = pd.read_parquet(f)
+                if isinstance(df.index, pd.DatetimeIndex):
+                    df = df.reset_index()
+                    df.rename(columns={df.columns[0]: 'ds'}, inplace=True)
+                df['ds'] = pd.to_datetime(df['ds'])
+                market_data[f.stem] = df
+            if len(market_data) > 0:
+                data['market'] = market_data
 
     return data
 
