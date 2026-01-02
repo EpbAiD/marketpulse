@@ -57,6 +57,10 @@ jobs:
           echo "Starting daily market regime forecast..."
           python run_daily_update.py
 
+      - name: Log daily predictions
+        run: |
+          python log_daily_predictions.py --output DAILY_PREDICTIONS.md
+
       - name: Capture dashboard screenshot
         run: |
           python capture_dashboard_screenshot.py --url http://localhost:8501
