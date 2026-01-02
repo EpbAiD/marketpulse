@@ -1,23 +1,19 @@
 # Dashboard-only requirements (Streamlit Cloud)
-# Excludes heavy ML packages (torch, prophet, langgraph) which are only needed for training
-# Training happens on GitHub Actions, dashboard only displays data from BigQuery
+# Minimal, tested versions that work on Streamlit Cloud
 
 # Dashboard visualization
-streamlit==1.51.0
-plotly==6.3.1
+streamlit>=1.30.0
+plotly>=5.18.0
 
 # Data processing
-pandas==2.2.3
-numpy==1.26.4
-pyarrow==17.0.0
+pandas>=2.0.0
+numpy>=1.24.0
+pyarrow>=14.0.0
 
-# Cloud storage (BigQuery - read-only for dashboard)
-google-cloud-bigquery==3.38.0
-google-cloud-bigquery-storage==2.35.0
-google-cloud-core==2.5.0
-db-dtypes==1.3.1
+# Cloud storage (BigQuery)
+google-cloud-bigquery>=3.13.0
+google-cloud-bigquery-storage>=2.22.0
+db-dtypes>=1.1.1
 
 # Utilities
-joblib==1.4.2
-pyyaml==6.0.2
-matplotlib==3.9.4
+pyyaml>=6.0
