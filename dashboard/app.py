@@ -97,7 +97,7 @@ def load_data():
             if hasattr(signal, 'SIGALRM'):
                 signal.alarm(0)  # Cancel timeout
     except (TimeoutError, Exception) as e:
-        st.warning(f"BigQuery not available (this is normal for first deployment): {type(e).__name__}")
+        st.warning(f"BigQuery error: {type(e).__name__}: {str(e)}")
         # No CSV files available on Streamlit Cloud
         pass
 

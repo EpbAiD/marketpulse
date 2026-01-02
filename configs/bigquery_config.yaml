@@ -25,6 +25,7 @@ bigquery:
 
     # Output tables (results)
     forecast_results: "forecast_results"
+    regime_forecasts: "regime_forecasts"
     model_metrics: "model_metrics"
     cluster_assignments: "cluster_assignments"
     classification_results: "classification_results"
