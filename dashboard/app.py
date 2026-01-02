@@ -155,6 +155,14 @@ current_conf = current['regime_probability']
 st.title("Market Condition Forecast")
 st.caption("Latest Market Outlook")
 
+# Show info banner if historical/market data is missing
+if history is None or len(market) == 0:
+    st.info("""
+    **Note:** This dashboard is displaying forecast-only data from BigQuery.
+    Historical regime analysis and market data visualizations require additional setup.
+    The 10-day forecast below is fully functional.
+    """, icon="ℹ️")
+
 # === ALERTS ===
 if ALERTS_AVAILABLE:
     try:
