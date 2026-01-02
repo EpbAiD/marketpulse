@@ -15,7 +15,14 @@ import json
 
 sys.path.append(str(Path(__file__).parent.parent))
 from data_agent.storage import get_storage
-from orchestrator.alerts import AlertSystem
+
+# Try to import AlertSystem, but don't fail if orchestrator dependencies aren't available
+try:
+    from orchestrator.alerts import AlertSystem
+    ALERTS_AVAILABLE = True
+except ImportError:
+    ALERTS_AVAILABLE = False
+    AlertSystem = None
 
 st.set_page_config(
     page_title="Market Regime Analysis",
@@ -144,15 +151,23 @@ st.title("Market Condition Forecast")
 st.caption("Latest Market Outlook")
 
 # === ALERTS ===
-try:
-    # Use consolidated alert system from orchestrator
-    alert_system = AlertSystem()
-    alert_result = alert_system.check_for_alerts(period_days=7, min_confidence=0.6)
-except Exception as e:
-    # Simple fallback if alerts fail
+if ALERTS_AVAILABLE:
+    try:
+        # Use consolidated alert system from orchestrator
+        alert_system = AlertSystem()
+        alert_result = alert_system.check_for_alerts(period_days=7, min_confidence=0.6)
+    except Exception as e:
+        # Simple fallback if alerts fail
+        alert_result = {
+            'alert': False,
+            'message': 'Alert system unavailable',
+            'shifts': []
+        }
+else:
+    # No alert system available (lightweight deployment)
     alert_result = {
         'alert': False,
-        'message': 'Alert system unavailable',
+        'message': 'No recent regime shifts detected',
         'shifts': []
     }
 
