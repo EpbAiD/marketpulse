@@ -68,7 +68,7 @@ client_x509_cert_url = "..."
 
 To get your credentials:
 ```bash
-cat /Users/eeshanbhanap/Desktop/RFP/regime01-b5321d26c433.json
+cat regime01-*.json
 ```
 
 4. Click **"Save"**

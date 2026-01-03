@@ -81,12 +81,12 @@ This directory contains automated workflows for the MarketPulse project.
 
 Your local BigQuery credentials are at:
 ```
-/Users/eeshanbhanap/Desktop/RFP/regime01-b5321d26c433.json
+regime01-*.json
 ```
 
 View the contents:
 ```bash
-cat /Users/eeshanbhanap/Desktop/RFP/regime01-b5321d26c433.json
+cat regime01-*.json
 ```
 
 Copy the **entire JSON output** (you'll need it in Step 2).
