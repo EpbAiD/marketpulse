@@ -10,7 +10,7 @@ bigquery:
   dataset_id: "forecasting_pipeline"
 
   # Credentials
-  credentials_path: "/Users/eeshanbhanap/Desktop/RFP/regime01-b5321d26c433.json"
+  credentials_path: "regime01-b5321d26c433.json"
 
   # Location (region) for BigQuery dataset
   # Options: us-central1, us-east1, europe-west1, asia-southeast1, etc.

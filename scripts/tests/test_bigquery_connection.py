@@ -8,7 +8,7 @@ from google.cloud import bigquery
 import os
 
 # Set credentials
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/eeshanbhanap/Desktop/RFP/regime01-b5321d26c433.json'
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'regime01-*.json'
 
 try:
     # Initialize client
