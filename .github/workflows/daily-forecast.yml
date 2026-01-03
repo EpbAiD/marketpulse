@@ -31,6 +31,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements_github_actions.txt
 
+      - name: Verify critical packages
+        run: |
+          echo "Verifying critical package installation..."
+          python -c "import google.cloud.bigquery; print('✓ google-cloud-bigquery installed')"
+          python -c "import db_dtypes; print('✓ db-dtypes installed')"
+          python -c "import pandas; print('✓ pandas installed')"
+          echo "✓ All critical packages verified"
+
       - name: Create credentials file from secret
         run: |
           echo '${{ secrets.GCP_CREDENTIALS }}' > /tmp/gcp_credentials.json
@@ -45,6 +53,8 @@ jobs:
 
       - name: Log daily predictions
         run: |
+          # Ensure db-dtypes is available before logging
+          python -c "import db_dtypes" || pip install db-dtypes==1.3.1
           python log_daily_predictions.py --output DAILY_PREDICTIONS.md
 
       - name: Commit and push results
