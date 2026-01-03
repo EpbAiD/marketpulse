@@ -19,6 +19,13 @@ def log_daily_predictions(output_file="DAILY_PREDICTIONS.md"):
     """
     print(f"📝 Logging daily predictions...")
 
+    # Verify db-dtypes is available for BigQuery
+    try:
+        import db_dtypes
+        print("   ✓ db-dtypes package available")
+    except ImportError:
+        print("   ⚠️  db-dtypes not available, will use local files only")
+
     try:
         # Try to load from BigQuery first
         from data_agent.storage import get_storage
