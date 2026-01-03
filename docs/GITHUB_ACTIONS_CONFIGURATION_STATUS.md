@@ -46,7 +46,7 @@ def get_storage(use_bigquery: bool = True, base_path: str = "outputs"):
 ### 1. BigQuery Integration (If You Want It)
 
 **Current Issue:**
-- Credentials path: `/Users/eeshanbhanap/Desktop/RFP/regime01-b5321d26c433.json`
+- Credentials path: `regime01-*.json`
 - This path only exists on **your Mac**, not GitHub's servers
 
 **Solution Options:**
@@ -55,7 +55,7 @@ def get_storage(use_bigquery: bool = True, base_path: str = "outputs"):
 
 1. **Get your credentials:**
    ```bash
-   cat /Users/eeshanbhanap/Desktop/RFP/regime01-b5321d26c433.json
+   cat regime01-*.json
    ```
 
 2. **Add to GitHub Secrets:**
