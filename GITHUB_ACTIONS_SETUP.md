@@ -19,14 +19,14 @@ Your GitHub Actions workflows are configured, but they **won't work** until you 
 Open Terminal and run:
 
 ```bash
-cat /Users/eeshanbhanap/Desktop/RFP/regime01-b5321d26c433.json
+cat regime01-*.json
 ```
 
 You'll see output like this:
 ```json
 {
   "type": "service_account",
-  "project_id": "regime01",
+  "project_id": "your-project-id",
   "private_key_id": "...",
   "private_key": "-----BEGIN PRIVATE KEY-----\n...",
   "client_email": "...",
@@ -175,9 +175,10 @@ You can also run manually anytime:
 - Secrets are not accessible to forked repositories
 
 ✅ **Best practices:**
-- Never commit the `regime01-b5321d26c433.json` file to GitHub (already in `.gitignore`)
+- Never commit credential files to GitHub (already protected in `.gitignore`)
 - Don't share your GCP credentials file with anyone
 - Rotate credentials periodically (every 90 days recommended)
+- Keep local credential files outside of publicly accessible directories
 
 ---
 

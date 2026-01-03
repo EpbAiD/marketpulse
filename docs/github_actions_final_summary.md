@@ -135,7 +135,7 @@ else:
 
 1. **Get credentials:**
    ```bash
-   cat /Users/eeshanbhanap/Desktop/RFP/regime01-b5321d26c433.json
+   cat regime01-*.json
    ```
 
 2. **Add to GitHub:**

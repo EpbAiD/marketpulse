@@ -126,7 +126,7 @@
 2. Click "Settings" → "Secrets"
 3. Copy your BigQuery credentials:
    ```bash
-   cat /Users/eeshanbhanap/Desktop/RFP/regime01-b5321d26c433.json
+   cat regime01-*.json
    ```
 4. Convert to TOML format (see template in `.streamlit/secrets.toml.template`)
 5. Paste into Streamlit secrets

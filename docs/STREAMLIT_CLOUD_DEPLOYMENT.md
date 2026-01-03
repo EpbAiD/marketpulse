@@ -54,7 +54,7 @@ The app will:
 On your local machine:
 
 ```bash
-cat /Users/eeshanbhanap/Desktop/RFP/regime01-b5321d26c433.json
+cat regime01-*.json
 ```
 
 **Copy the ENTIRE JSON output** (all of it, including curly braces)
