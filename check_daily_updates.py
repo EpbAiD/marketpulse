@@ -40,17 +40,17 @@ def check_bigquery_updates(days=14):
         # Query forecast history
         query = f"""
         SELECT
-            DATE(timestamp) as forecast_date,
+            DATE(forecast_generated_at) as forecast_date,
             forecast_id,
-            timestamp,
+            forecast_generated_at as timestamp,
             COUNT(*) as num_predictions,
             MIN(predicted_date) as first_prediction_date,
             MAX(predicted_date) as last_prediction_date,
             AVG(confidence) as avg_confidence
         FROM `{storage.dataset_id}.regime_forecasts`
-        WHERE timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL {days} DAY)
-        GROUP BY DATE(timestamp), forecast_id, timestamp
-        ORDER BY forecast_date DESC, timestamp DESC
+        WHERE forecast_generated_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL {days} DAY)
+        GROUP BY DATE(forecast_generated_at), forecast_id, forecast_generated_at
+        ORDER BY forecast_date DESC, forecast_generated_at DESC
         """
 
         df = storage._execute_query(query)
