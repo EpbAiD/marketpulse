@@ -82,12 +82,15 @@ def load_data():
 
             if len(latest_forecasts) > 0:
                 forecast_id = latest_forecasts.iloc[0]['forecast_id']
+                forecast_time = latest_forecasts.iloc[0]['forecast_generated_at']
                 df = storage.get_forecast_by_id(forecast_id)
                 df = df.rename(columns={'predicted_date': 'ds', 'predicted_regime': 'regime'})
                 df['ds'] = pd.to_datetime(df['ds'])
+                df['timestamp'] = forecast_time  # Add timestamp to every row for display
                 data['forecast'] = df.sort_values('ds').reset_index(drop=True)
                 data['forecast_source'] = 'bigquery'
-                print(f"✓ Loaded forecast from BigQuery: {forecast_id}")
+                data['forecast_time'] = forecast_time  # Store for easy access
+                print(f"✓ Loaded forecast from BigQuery: {forecast_id} (generated at {forecast_time})")
         except Exception as e:
             print(f"⚠️ Failed to load forecast: {type(e).__name__}: {str(e)}")
 
@@ -198,10 +201,15 @@ st.title("Market Condition Forecast")
 # Show data freshness prominently
 if 'forecast' in data and len(data['forecast']) > 0:
     try:
-        # Try to get timestamp from forecast data
-        if 'timestamp' in data['forecast'].columns:
+        # Try to get timestamp from data dict first, then from forecast dataframe
+        forecast_time = None
+        if 'forecast_time' in data:
+            forecast_time = pd.to_datetime(data['forecast_time'])
+        elif 'timestamp' in data['forecast'].columns:
             forecast_time = pd.to_datetime(data['forecast']['timestamp'].iloc[0])
-            hours_old = (pd.Timestamp.now() - forecast_time).total_seconds() / 3600
+
+        if forecast_time:
+            hours_old = (pd.Timestamp.now(tz='UTC') - forecast_time).total_seconds() / 3600
 
             if hours_old < 24:
                 freshness_color = "green"
@@ -214,7 +222,8 @@ if 'forecast' in data and len(data['forecast']) > 0:
                 freshness_text = f"⚠️ Data is {int(hours_old/24)} days old"
 
             st.markdown(f"**Last Update:** :{freshness_color}[{forecast_time.strftime('%Y-%m-%d %H:%M UTC')}] - {freshness_text}")
-    except:
+    except Exception as e:
+        print(f"Could not display timestamp: {e}")
         pass
 
 st.caption("10-Day Market Regime Forecast")
