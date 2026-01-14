@@ -150,7 +150,8 @@ def engineer_node(state: PipelineState) -> PipelineState:
         from data_agent.engineer import engineer_features
 
         # Run feature engineering
-        engineer_features()
+        # Always use BigQuery in production (GitHub Actions always has BigQuery credentials)
+        engineer_features(use_bigquery=True)
 
         # Update state
         elapsed = time.time() - start_time
@@ -210,7 +211,8 @@ def select_node(state: PipelineState) -> PipelineState:
         from data_agent.selector import run_selector
 
         # Run feature selection
-        run_selector()
+        # Always use BigQuery in production
+        run_selector(use_bigquery=True)
 
         # Update state
         elapsed = time.time() - start_time
@@ -271,7 +273,8 @@ def cluster_node(state: PipelineState) -> PipelineState:
         from clustering_agent.validate import visualize_regimes
 
         # Run HMM clustering
-        df_out, stats = run_hmm_clustering()
+        # Always use BigQuery in production
+        df_out, stats = run_hmm_clustering(use_bigquery=True)
 
         # Visualize regimes
         print("\n📈 Generating regime visualization...")
@@ -336,7 +339,8 @@ def classify_node(state: PipelineState) -> PipelineState:
         from classification_agent.classifier import train_regime_classifier
 
         # Train classifier
-        train_regime_classifier()
+        # Always use BigQuery in production
+        train_regime_classifier(use_bigquery=True)
 
         # Update state
         elapsed = time.time() - start_time
