@@ -26,6 +26,31 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
+      - name: Download previous models from artifacts
+        uses: dawidd6/action-download-artifact@v3
+        continue-on-error: true
+        with:
+          workflow: daily-forecast.yml
+          name: trained-models
+          path: .
+          if_no_artifact_found: warn
+
+      - name: Verify downloaded models
+        run: |
+          echo "Checking for downloaded models..."
+          if [ -d "outputs/models" ]; then
+            echo "✓ Models directory found"
+            ls -lh outputs/models/ || echo "Models directory empty"
+          else
+            echo "⚠️ No models directory (will train from scratch)"
+          fi
+          if [ -d "outputs/clustering" ]; then
+            echo "✓ Clustering directory found"
+            ls -lh outputs/clustering/ || echo "Clustering directory empty"
+          else
+            echo "⚠️ No clustering directory"
+          fi
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -50,6 +75,17 @@ jobs:
         run: |
           echo "Starting daily market regime forecast..."
           python run_daily_update.py
+
+      - name: Upload trained models
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trained-models
+          path: |
+            outputs/models/*.joblib
+            outputs/clustering/*.parquet
+            outputs/forecasting/models/*/nf_bundle_v*/**
+          retention-days: 90
 
       - name: Log daily predictions
         run: |
