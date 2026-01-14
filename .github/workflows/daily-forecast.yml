@@ -74,6 +74,13 @@ jobs:
             echo "✅ Forecast results committed and pushed"
           fi
 
+      - name: Keep Streamlit dashboard awake
+        if: success()
+        run: |
+          echo "Pinging Streamlit dashboard to prevent sleep..."
+          curl -I https://marketpulsedashboard.streamlit.app || true
+          echo "✓ Dashboard pinged successfully"
+
       - name: Upload forecast artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -89,3 +96,4 @@ jobs:
           echo "✅ Daily forecast completed successfully!"
           echo "📅 Timestamp: $(date +'%Y-%m-%d %H:%M UTC')"
           echo "🔗 View results: https://github.com/${{ github.repository }}/blob/main/DAILY_PREDICTIONS.md"
+          echo "📊 Dashboard: https://marketpulsedashboard.streamlit.app"

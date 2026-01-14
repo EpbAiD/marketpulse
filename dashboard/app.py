@@ -194,7 +194,30 @@ current_regime = int(current['regime'])
 current_conf = current['regime_probability']
 
 st.title("Market Condition Forecast")
-st.caption("Latest Market Outlook")
+
+# Show data freshness prominently
+if 'forecast' in data and len(data['forecast']) > 0:
+    try:
+        # Try to get timestamp from forecast data
+        if 'timestamp' in data['forecast'].columns:
+            forecast_time = pd.to_datetime(data['forecast']['timestamp'].iloc[0])
+            hours_old = (pd.Timestamp.now() - forecast_time).total_seconds() / 3600
+
+            if hours_old < 24:
+                freshness_color = "green"
+                freshness_text = f"Updated {hours_old:.1f} hours ago"
+            elif hours_old < 48:
+                freshness_color = "orange"
+                freshness_text = f"⚠️ Updated {hours_old:.1f} hours ago (check if today's run completed)"
+            else:
+                freshness_color = "red"
+                freshness_text = f"⚠️ Data is {int(hours_old/24)} days old"
+
+            st.markdown(f"**Last Update:** :{freshness_color}[{forecast_time.strftime('%Y-%m-%d %H:%M UTC')}] - {freshness_text}")
+    except:
+        pass
+
+st.caption("10-Day Market Regime Forecast")
 
 # Show info banner if historical/market data is missing
 if history is None or len(market) == 0:
