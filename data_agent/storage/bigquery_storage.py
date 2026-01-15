@@ -344,6 +344,12 @@ class BigQueryStorage(StorageBackend):
         # Convert from NARROW to WIDE format (pivot)
         df_narrow['timestamp'] = pd.to_datetime(df_narrow['timestamp']).dt.tz_localize(None)
 
+        # Remove duplicates (keep last) in case of incremental uploads with overlapping data
+        df_narrow = df_narrow.drop_duplicates(
+            subset=['timestamp', 'derived_feature_name'],
+            keep='last'
+        )
+
         df_wide = df_narrow.pivot(
             index='timestamp',
             columns='derived_feature_name',
