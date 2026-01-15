@@ -1152,8 +1152,29 @@ def run_forecasting_agent(mode="all", config_path=None, single_daily=None, singl
     print(f"🎯 Mode: {mode}")
     if mode == "single":
         print(f"🔹 Selected: daily={single_daily or 'auto'}, weekly={single_weekly or 'auto'}, monthly={single_monthly or 'auto'}")
-    if not os.path.exists(RAW_DIR): raise FileNotFoundError(f"Input dir not found → {RAW_DIR}")
-    name_to_path = collect_feature_files()
+
+    # Collect features from BigQuery or local files
+    if use_bigquery:
+        print("📡 Loading feature list from BigQuery...")
+        from data_agent.storage import get_storage
+        from google.cloud import bigquery
+        storage = get_storage(use_bigquery=True)
+        client = bigquery.Client()
+        query = f"""
+            SELECT DISTINCT feature_name
+            FROM `{storage.dataset_id}.raw_features`
+            ORDER BY feature_name
+        """
+        result = client.query(query).to_dataframe()
+        feature_names = result['feature_name'].tolist()
+        # In BigQuery mode, we don't use file paths - pass feature names
+        name_to_path = {name: name for name in feature_names}
+        print(f"📦 Found {len(feature_names)} features in BigQuery")
+    else:
+        if not os.path.exists(RAW_DIR): raise FileNotFoundError(f"Input dir not found → {RAW_DIR}")
+        name_to_path = collect_feature_files()
+        print(f"📦 Found {len(name_to_path)} local feature files")
+
     cad = load_yaml_config(config_path)
     import torch
     # Keep MPS from hogging unified memory (lower than default 0.8)
