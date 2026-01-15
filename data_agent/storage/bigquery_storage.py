@@ -197,6 +197,9 @@ class BigQueryStorage(StorageBackend):
         for timestamp in df.index:
             for col in df.columns:
                 value = df.loc[timestamp, col]
+                # Handle case where df.loc returns a Series (duplicate index)
+                if isinstance(value, pd.Series):
+                    value = value.iloc[0] if len(value) > 0 else None
                 data_rows.append({
                     'base_feature': feature_name,
                     'timestamp': timestamp,
