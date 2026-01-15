@@ -276,9 +276,12 @@ def cluster_node(state: PipelineState) -> PipelineState:
         # Always use BigQuery in production
         df_out, stats = run_hmm_clustering(use_bigquery=True)
 
-        # Visualize regimes
-        print("\n📈 Generating regime visualization...")
-        visualize_regimes(feature_for_overlay="ret_GSPC")
+        # Visualize regimes (optional - skip if files not available)
+        try:
+            print("\n📈 Generating regime visualization...")
+            visualize_regimes(feature_for_overlay="ret_GSPC")
+        except FileNotFoundError as e:
+            print(f"⚠️  Skipping visualization (files not available): {e}")
 
         # Update state
         elapsed = time.time() - start_time
