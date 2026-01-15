@@ -423,6 +423,8 @@ def forecast_node(state: PipelineState) -> PipelineState:
             single_daily=single_daily,
             single_weekly=single_weekly,
             single_monthly=single_monthly,
+            use_bigquery=True,  # Always use BigQuery in production
+            force_retrain=False  # Let auto-detection decide
         )
 
         # Update state
