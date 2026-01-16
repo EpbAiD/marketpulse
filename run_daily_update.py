@@ -64,7 +64,7 @@ def run_daily_update(retrain_if_needed: bool = False, use_local: bool = False, u
 
     # Execute the pipeline
     try:
-        result = subprocess.run(cmd, timeout=3600)  # 1 hour timeout
+        result = subprocess.run(cmd, timeout=21600)  # 6 hour timeout - allows for training 66 neural network models
 
         if result.returncode != 0:
             print("\n❌ Daily update failed\n")
