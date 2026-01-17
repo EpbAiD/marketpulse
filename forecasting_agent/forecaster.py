@@ -66,8 +66,8 @@ def _mps_gc():
     gc.collect()
     gc.collect()
     gc.collect()
-#from contextlib import contextmanager
-#from concurrent.futures import ProcessPoolExecutor, as_completed
+from contextlib import contextmanager
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 # ===========================================================
 # 🧩 Multiprocessing Safety Setup (prevents abrupt worker kills)
@@ -271,20 +271,28 @@ def _build_nf_models(cadence, horizon, half, accelerator, loss_name):
     from neuralforecast.models import NBEATSx, NHITS, PatchTST
     from neuralforecast.losses.pytorch import MQLoss, MAE, MSE
     loss = MSE() if loss_name == "mse" else MAE() if loss_name == "mae" else MQLoss(level=[0.5])
+
+    # Early stopping configuration to reduce training time
+    # Monitor validation loss, stop if no improvement for 50 epochs
+    early_stop_config = {
+        'early_stop_patience_steps': 50,
+        'max_steps': 1000  # Reduced from default (~3000-5000) for faster training
+    }
+
     if cadence == "daily":
         return [
-            NBEATSx(h=horizon, input_size=min(7*horizon, half), loss=loss, accelerator=accelerator, devices=1),
-            NHITS(h=horizon, input_size=min(28*(horizon//7+1), half), loss=loss, accelerator=accelerator, devices=1),
-            PatchTST(h=horizon, input_size=min(60, half), loss=loss, accelerator=accelerator, devices=1)
+            NBEATSx(h=horizon, input_size=min(7*horizon, half), loss=loss, accelerator=accelerator, devices=1, **early_stop_config),
+            NHITS(h=horizon, input_size=min(28*(horizon//7+1), half), loss=loss, accelerator=accelerator, devices=1, **early_stop_config),
+            PatchTST(h=horizon, input_size=min(60, half), loss=loss, accelerator=accelerator, devices=1, **early_stop_config)
         ]
     if cadence == "weekly":
         return [
-            NHITS(h=horizon, input_size=min(16, half), loss=loss, accelerator=accelerator, devices=1),
-            NBEATSx(h=horizon, input_size=min(12, half), loss=loss, accelerator=accelerator, devices=1)
+            NHITS(h=horizon, input_size=min(16, half), loss=loss, accelerator=accelerator, devices=1, **early_stop_config),
+            NBEATSx(h=horizon, input_size=min(12, half), loss=loss, accelerator=accelerator, devices=1, **early_stop_config)
         ]
     if cadence == "monthly":
         return [
-            NBEATSx(h=horizon, input_size=min(12, half), loss=loss, accelerator=accelerator, devices=1)
+            NBEATSx(h=horizon, input_size=min(12, half), loss=loss, accelerator=accelerator, devices=1, **early_stop_config)
         ]
     raise ValueError(f"Unknown cadence '{cadence}'")
 
@@ -1191,31 +1199,44 @@ def run_forecasting_agent(mode="all", config_path=None, single_daily=None, singl
     print(f"⚙️ Accelerator selected: {accelerator.upper()}")
     force_cpu = accelerator == "cpu"
     quiet = True
-    verify_parallel = False  # we won’t run pool anymore
     runs = build_run_list_single(cad, name_to_path, single_daily, single_weekly, single_monthly) if mode == "single" else build_run_list_all(cad, name_to_path)
     if not runs:
         print("⚠️ Nothing to run.")
         return
     print(f"📦 Features to run: {len(runs)}")
-    #max_workers = 1 #min(1, os.cpu_count() or 1)
+
+    # Enable parallel training with 8 workers to fit within 6-hour timeout
+    max_workers = 8
+    print(f"🧩 Running in parallel with {max_workers} workers.")
+
     stop_evt = threading.Event()
-    if verify_parallel:
-        threading.Thread(target=_status_printer, args=(stop_evt, len(runs), 3.0), daemon=True).start()
     all_metrics = []
     start = time.time()
+
     try:
-        print("🧩 Running sequentially (no multiprocessing).")
-        all_metrics = []
-        for (f, fpath, cadence, h, v, t) in runs:
-            print(f"\n🚀 Starting {f} [{cadence}]...")
-            res = train_forecaster_for_feature(
-                fpath, cadence, h, v, force_cpu, quiet, t,
-                cad[cadence]["nf_loss"], cad[cadence]["arima"], cad[cadence]["prophet"],
-                cad[cadence]["multi_backtest"], cad[cadence]["ensemble"],
-                use_bigquery=use_bigquery, feature_name=f, force_retrain=force_retrain
-            )
-            if res:
-                all_metrics.append(res)
+        # Use ThreadPoolExecutor for parallel training
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all training tasks
+            future_to_feature = {
+                executor.submit(
+                    train_forecaster_for_feature,
+                    fpath, cadence, h, v, force_cpu, quiet, t,
+                    cad[cadence]["nf_loss"], cad[cadence]["arima"], cad[cadence]["prophet"],
+                    cad[cadence]["multi_backtest"], cad[cadence]["ensemble"],
+                    use_bigquery, f, force_retrain
+                ): f for (f, fpath, cadence, h, v, t) in runs
+            }
+
+            # Process completed tasks as they finish
+            for future in as_completed(future_to_feature):
+                feature_name = future_to_feature[future]
+                try:
+                    res = future.result()
+                    if res:
+                        all_metrics.append(res)
+                        print(f"\n✅ Completed: {feature_name}")
+                except Exception as e:
+                    print(f"\n❌ Failed: {feature_name} - {e}")
     finally:
         stop_evt.set()
     elapsed = time.time() - start
