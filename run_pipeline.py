@@ -233,22 +233,22 @@ Examples:
 
     # Auto-detect workflow if requested
     if args.workflow == "auto":
-        from orchestrator.model_checker import are_models_ready_for_inference, print_model_status
+        from orchestrator.intelligent_model_checker import get_intelligent_recommendation, print_intelligent_status
 
         print("\n" + "=" * 80)
         print("🔍 AUTO MODE: Detecting required workflow...")
         print("=" * 80)
 
-        status = print_model_status(max_age_days=args.max_model_age)
+        recommendation = print_intelligent_status()
 
-        if status['recommendation'] == 'inference':
-            print(f"✅ Models ready! Running inference workflow...\n")
+        if recommendation['workflow'] == 'inference':
+            print(f"✅ All models ready! Running inference workflow...\n")
             args.workflow = "inference"
-        elif status['recommendation'] == 'retrain':
-            print(f"🔄 Models outdated! Running full workflow (retrain + inference)...\n")
+        elif recommendation['workflow'] == 'partial_train':
+            print(f"🎯 Partial training needed ({len(recommendation['features_to_train'])} features)! Running full workflow with selective training...\n")
             args.workflow = "full"
-        else:  # train
-            print(f"🆕 No models found! Running full workflow (train + inference)...\n")
+        else:  # train (full retraining)
+            print(f"🔄 Full training needed! Running complete workflow...\n")
             args.workflow = "full"
 
     # Route to appropriate workflow
