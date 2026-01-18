@@ -16,6 +16,7 @@ from typing import Dict, Any
 from datetime import datetime
 
 from orchestrator.state import PipelineState
+from utils.realtime_logger import get_logger
 
 
 # ============================================================
@@ -404,12 +405,19 @@ def forecast_node(state: PipelineState) -> PipelineState:
         from forecasting_agent import forecaster
         from orchestrator.intelligent_model_checker import get_intelligent_recommendation
 
+        # Real-time logging
+        logger = get_logger()
+        logger.stage("Forecasting - Intelligent Model Check")
+
         # Get intelligent recommendation for selective training
         recommendation = get_intelligent_recommendation()
 
         print(f"\n🧠 Intelligent Model Checker Results:")
         print(f"   Workflow: {recommendation['workflow']}")
         print(f"   Reason: {recommendation['reason']}")
+
+        logger.info(f"Intelligent Decision: {recommendation['workflow']}")
+        logger.info(f"Reason: {recommendation['reason']}")
 
         # Determine if we should train forecasting models
         if recommendation['workflow'] == 'inference':
@@ -440,9 +448,12 @@ def forecast_node(state: PipelineState) -> PipelineState:
         if recommendation['workflow'] == 'partial_train' and recommendation['features_to_train']:
             selective_features = recommendation['features_to_train']
             print(f"🎯 Partial training mode: {len(selective_features)} features need training\n")
+            logger.info(f"Partial training: {len(selective_features)} features ({', '.join(selective_features[:5])}...)")
 
         print(f"📄 Using config: {config_path}")
         print(f"🎯 Forecast mode: {mode}\n")
+
+        logger.stage(f"Forecasting - Training Models")
 
         forecaster.run_forecasting_agent(
             mode=mode,
