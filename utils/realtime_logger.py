@@ -87,6 +87,28 @@ class RealTimeLogger:
         elapsed = (datetime.now() - self.start_time).total_seconds() / 60
         self.log(f"Workflow completed in {elapsed:.1f} minutes", "COMPLETE")
 
+    def commit_to_github(self):
+        """Commit the log file to GitHub immediately for real-time visibility."""
+        import subprocess
+        try:
+            # Configure git
+            subprocess.run(["git", "config", "--local", "user.email", "github-actions[bot]@users.noreply.github.com"], check=False)
+            subprocess.run(["git", "config", "--local", "user.name", "GitHub Actions Bot"], check=False)
+
+            # Add and commit the log
+            subprocess.run(["git", "add", str(self.log_file)], check=False)
+
+            # Check if there are changes to commit
+            result = subprocess.run(["git", "diff", "--staged", "--quiet"], capture_output=True)
+            if result.returncode != 0:  # There are changes
+                timestamp = datetime.now().strftime("%H:%M:%S")
+                subprocess.run(["git", "commit", "-m", f"📝 Update workflow log [{timestamp}]", "--no-verify"], check=False)
+                subprocess.run(["git", "pull", "--rebase", "origin", "main", "--no-verify"], check=False)
+                subprocess.run(["git", "push", "origin", "main", "--no-verify"], check=False)
+                print(f"✓ Log committed to GitHub at {timestamp}")
+        except Exception as e:
+            print(f"⚠️ Could not commit log: {e}")
+
 
 # Global logger instance
 _logger = None

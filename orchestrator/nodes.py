@@ -79,6 +79,10 @@ def fetch_node(state: PipelineState) -> PipelineState:
     print("🚀 STAGE 1: Data Fetching")
     print("=" * 70 + "\n")
 
+    # Real-time logging
+    logger = get_logger()
+    logger.stage("Data Fetching")
+
     start_time = time.time()
 
     try:
@@ -86,6 +90,7 @@ def fetch_node(state: PipelineState) -> PipelineState:
 
         # Run the fetcher with BigQuery enabled (always use BigQuery in production)
         use_bigquery = not state.get("use_local_storage", False)
+        logger.info(f"Starting data fetch (BigQuery: {use_bigquery})")
         run_fetcher(use_bigquery=use_bigquery)
 
         # Small delay to ensure BigQuery updates are committed
@@ -103,6 +108,8 @@ def fetch_node(state: PipelineState) -> PipelineState:
         state["cleaned_data_path"] = "outputs/fetched/cleaned"
 
         print(f"✅ Data fetching completed successfully in {elapsed:.2f}s\n")
+        logger.success(f"Data fetch completed ({elapsed:.1f}s) - Saved to BigQuery")
+        logger.commit_to_github()  # Commit log immediately after stage completes
 
     except Exception as e:
         elapsed = time.time() - start_time
@@ -118,6 +125,8 @@ def fetch_node(state: PipelineState) -> PipelineState:
             "elapsed_seconds": elapsed,
         }
         print(f"❌ Data fetching failed: {e}\n")
+        logger.error(f"Data fetch FAILED: {e}")
+        logger.commit_to_github()  # Commit log even on failure
 
     return state
 
@@ -145,6 +154,10 @@ def engineer_node(state: PipelineState) -> PipelineState:
     print("🚀 STAGE 2: Feature Engineering")
     print("=" * 70 + "\n")
 
+    # Real-time logging
+    logger = get_logger()
+    logger.stage("Feature Engineering")
+
     start_time = time.time()
 
     try:
@@ -152,6 +165,7 @@ def engineer_node(state: PipelineState) -> PipelineState:
 
         # Run feature engineering
         # Always use BigQuery in production (GitHub Actions always has BigQuery credentials)
+        logger.info("Starting feature engineering (BigQuery: True)")
         engineer_features(use_bigquery=True)
 
         # Update state
@@ -164,6 +178,8 @@ def engineer_node(state: PipelineState) -> PipelineState:
         state["engineered_data_path"] = "outputs/engineered"
 
         print(f"✅ Feature engineering completed successfully in {elapsed:.2f}s\n")
+        logger.success(f"Feature engineering completed ({elapsed:.1f}s) - Saved to BigQuery")
+        logger.commit_to_github()  # Commit log immediately after stage completes
 
     except Exception as e:
         elapsed = time.time() - start_time
@@ -179,6 +195,8 @@ def engineer_node(state: PipelineState) -> PipelineState:
             "elapsed_seconds": elapsed,
         }
         print(f"❌ Feature engineering failed: {e}\n")
+        logger.error(f"Feature engineering FAILED: {e}")
+        logger.commit_to_github()  # Commit log even on failure
 
     return state
 
@@ -206,6 +224,10 @@ def select_node(state: PipelineState) -> PipelineState:
     print("🚀 STAGE 3: Feature Selection")
     print("=" * 70 + "\n")
 
+    # Real-time logging
+    logger = get_logger()
+    logger.stage("Feature Selection")
+
     start_time = time.time()
 
     try:
@@ -213,6 +235,7 @@ def select_node(state: PipelineState) -> PipelineState:
 
         # Run feature selection
         # Always use BigQuery in production
+        logger.info("Starting feature selection (PCA + correlation + mRMR, BigQuery: True)")
         run_selector(use_bigquery=True)
 
         # Update state
@@ -225,6 +248,8 @@ def select_node(state: PipelineState) -> PipelineState:
         state["selected_features_path"] = "outputs/selected/aligned_dataset.parquet"
 
         print(f"✅ Feature selection completed successfully in {elapsed:.2f}s\n")
+        logger.success(f"Feature selection completed ({elapsed:.1f}s) - Selected features saved to BigQuery")
+        logger.commit_to_github()  # Commit log immediately after stage completes
 
     except Exception as e:
         elapsed = time.time() - start_time
@@ -240,6 +265,8 @@ def select_node(state: PipelineState) -> PipelineState:
             "elapsed_seconds": elapsed,
         }
         print(f"❌ Feature selection failed: {e}\n")
+        logger.error(f"Feature selection FAILED: {e}")
+        logger.commit_to_github()  # Commit log even on failure
 
     return state
 
@@ -267,6 +294,10 @@ def cluster_node(state: PipelineState) -> PipelineState:
     print("🚀 STAGE 4: Regime Clustering (HMM)")
     print("=" * 70 + "\n")
 
+    # Real-time logging
+    logger = get_logger()
+    logger.stage("Regime Clustering (HMM)")
+
     start_time = time.time()
 
     try:
@@ -275,26 +306,32 @@ def cluster_node(state: PipelineState) -> PipelineState:
 
         # Run HMM clustering
         # Always use BigQuery in production
+        logger.info("Starting HMM clustering (BigQuery: True)")
         df_out, stats = run_hmm_clustering(use_bigquery=True)
 
         # Visualize regimes (optional - skip if files not available)
         try:
             print("\n📈 Generating regime visualization...")
             visualize_regimes(feature_for_overlay="ret_GSPC")
+            logger.info("Regime visualization generated successfully")
         except FileNotFoundError as e:
             print(f"⚠️  Skipping visualization (files not available): {e}")
+            logger.warning(f"Skipping visualization: {e}")
 
         # Update state
         elapsed = time.time() - start_time
+        n_regimes = len(stats) if stats is not None else 3
         state["cluster_status"] = {
             "success": True,
-            "n_regimes": len(stats) if stats is not None else 3,
+            "n_regimes": n_regimes,
             "elapsed_seconds": elapsed,
             "timestamp": datetime.now().isoformat(),
         }
         state["cluster_assignments_path"] = "outputs/clustering/cluster_assignments.parquet"
 
         print(f"✅ Clustering completed successfully in {elapsed:.2f}s\n")
+        logger.success(f"HMM clustering completed ({elapsed:.1f}s) - {n_regimes} regimes detected, saved to BigQuery")
+        logger.commit_to_github()  # Commit log immediately after stage completes
 
     except Exception as e:
         elapsed = time.time() - start_time
@@ -310,6 +347,8 @@ def cluster_node(state: PipelineState) -> PipelineState:
             "elapsed_seconds": elapsed,
         }
         print(f"❌ Clustering failed: {e}\n")
+        logger.error(f"HMM clustering FAILED: {e}")
+        logger.commit_to_github()  # Commit log even on failure
 
     return state
 
@@ -337,6 +376,10 @@ def classify_node(state: PipelineState) -> PipelineState:
     print("🚀 STAGE 5: Regime Classification")
     print("=" * 70 + "\n")
 
+    # Real-time logging
+    logger = get_logger()
+    logger.stage("Regime Classification")
+
     start_time = time.time()
 
     try:
@@ -344,6 +387,7 @@ def classify_node(state: PipelineState) -> PipelineState:
 
         # Train classifier
         # Always use BigQuery in production
+        logger.info("Starting Random Forest classifier training (BigQuery: True)")
         train_regime_classifier(use_bigquery=True)
 
         # Update state
@@ -356,6 +400,8 @@ def classify_node(state: PipelineState) -> PipelineState:
         state["classifier_model_path"] = "outputs/models/regime_classifier.joblib"
 
         print(f"✅ Classification completed successfully in {elapsed:.2f}s\n")
+        logger.success(f"Regime classifier trained ({elapsed:.1f}s) - Model saved")
+        logger.commit_to_github()  # Commit log immediately after stage completes
 
     except Exception as e:
         elapsed = time.time() - start_time
@@ -371,6 +417,8 @@ def classify_node(state: PipelineState) -> PipelineState:
             "elapsed_seconds": elapsed,
         }
         print(f"❌ Classification failed: {e}\n")
+        logger.error(f"Regime classification FAILED: {e}")
+        logger.commit_to_github()  # Commit log even on failure
 
     return state
 
@@ -477,6 +525,8 @@ def forecast_node(state: PipelineState) -> PipelineState:
         state["forecast_output_path"] = "outputs/forecasting"
 
         print(f"✅ Forecasting completed successfully in {elapsed:.2f}s\n")
+        logger.success(f"Forecasting completed ({elapsed:.1f}s) - Models trained and saved")
+        logger.commit_to_github()  # Commit log immediately after stage completes
 
     except Exception as e:
         elapsed = time.time() - start_time
@@ -492,5 +542,7 @@ def forecast_node(state: PipelineState) -> PipelineState:
             "elapsed_seconds": elapsed,
         }
         print(f"❌ Forecasting failed: {e}\n")
+        logger.error(f"Forecasting FAILED: {e}")
+        logger.commit_to_github()  # Commit log even on failure
 
     return state
