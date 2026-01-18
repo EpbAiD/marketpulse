@@ -75,20 +75,8 @@ jobs:
         run: |
           echo "Starting daily market regime forecast..."
 
-          # Start background process to commit log file every 2 minutes for real-time monitoring
-          (
-            while true; do
-              sleep 120
-              bash utils/commit_log.sh
-            done
-          ) &
-          LOG_COMMITTER_PID=$!
-
-          # Run the pipeline
+          # Run the pipeline (logs are committed after each stage completes)
           python run_daily_update.py
-
-          # Stop the background log committer
-          kill $LOG_COMMITTER_PID 2>/dev/null || true
 
           # Final commit of the log
           bash utils/commit_log.sh
