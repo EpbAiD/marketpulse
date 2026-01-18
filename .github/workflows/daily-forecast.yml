@@ -85,6 +85,7 @@ jobs:
             outputs/models/*.joblib
             outputs/clustering/*.parquet
             outputs/forecasting/models/*/nf_bundle_v*/**
+            outputs/forecasting/models/*_versions.json
           retention-days: 90
 
       - name: Log daily predictions
