@@ -1151,7 +1151,7 @@ def _status_printer(stop, total, poll=3.0):
         time.sleep(poll)
     print()
 
-def run_forecasting_agent(mode="all", config_path=None, single_daily=None, single_weekly=None, single_monthly=None, use_bigquery=False, force_retrain=False):
+def run_forecasting_agent(mode="all", config_path=None, single_daily=None, single_weekly=None, single_monthly=None, use_bigquery=False, force_retrain=False, selective_features=None):
     for d in [MODEL_DIR, PLOT_DIR, METRIC_DIR, PL_RUNS_DIR, LOG_DIR]:
         os.makedirs(d, exist_ok=True)
     print("===========================================================")
@@ -1200,6 +1200,18 @@ def run_forecasting_agent(mode="all", config_path=None, single_daily=None, singl
     force_cpu = accelerator == "cpu"
     quiet = True
     runs = build_run_list_single(cad, name_to_path, single_daily, single_weekly, single_monthly) if mode == "single" else build_run_list_all(cad, name_to_path)
+
+    # Filter runs based on selective_features if provided
+    if selective_features:
+        print(f"🎯 Selective training mode: {len(selective_features)} features requested")
+        original_count = len(runs)
+        runs = [(f, fpath, cadence, h, v, t) for (f, fpath, cadence, h, v, t) in runs if f in selective_features]
+        print(f"   Filtered: {original_count} → {len(runs)} features")
+
+        if not runs:
+            print("⚠️ No matching features found for selective training.")
+            return
+
     if not runs:
         print("⚠️ Nothing to run.")
         return

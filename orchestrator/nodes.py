@@ -402,17 +402,44 @@ def forecast_node(state: PipelineState) -> PipelineState:
     try:
         import sys
         from forecasting_agent import forecaster
+        from orchestrator.intelligent_model_checker import get_intelligent_recommendation
+
+        # Get intelligent recommendation for selective training
+        recommendation = get_intelligent_recommendation()
+
+        print(f"\n🧠 Intelligent Model Checker Results:")
+        print(f"   Workflow: {recommendation['workflow']}")
+        print(f"   Reason: {recommendation['reason']}")
+
+        # Determine if we should train forecasting models
+        if recommendation['workflow'] == 'inference':
+            # All models fresh - skip forecasting training
+            print("✅ All forecasting models are fresh. Skipping forecasting stage.\n")
+            state["forecast_status"] = {
+                "success": True,
+                "skipped": True,
+                "reason": "All models fresh",
+                "elapsed_seconds": 0,
+                "timestamp": datetime.now().isoformat(),
+            }
+            return state
 
         # Determine config path
         config_path = "configs/features_config.yaml"
         if not os.path.exists(config_path):
             config_path = "configs/features_config.yml"
 
-        # Run forecasting with mode from state
+        # Run forecasting with mode from state or intelligent recommendation
         mode = state.get("forecast_mode", "all")
         single_daily = state.get("single_daily")
         single_weekly = state.get("single_weekly")
         single_monthly = state.get("single_monthly")
+
+        # Use selective features if partial training recommended
+        selective_features = None
+        if recommendation['workflow'] == 'partial_train' and recommendation['features_to_train']:
+            selective_features = recommendation['features_to_train']
+            print(f"🎯 Partial training mode: {len(selective_features)} features need training\n")
 
         print(f"📄 Using config: {config_path}")
         print(f"🎯 Forecast mode: {mode}\n")
@@ -424,7 +451,8 @@ def forecast_node(state: PipelineState) -> PipelineState:
             single_weekly=single_weekly,
             single_monthly=single_monthly,
             use_bigquery=True,  # Always use BigQuery in production
-            force_retrain=False  # Let auto-detection decide
+            force_retrain=False,  # Let auto-detection decide
+            selective_features=selective_features  # Train only needed features
         )
 
         # Update state
