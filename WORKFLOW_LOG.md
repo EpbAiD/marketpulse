@@ -1,48 +1,12 @@
 # Workflow Execution Log
 
-**Started**: 2026-01-19 11:24:42 UTC
+**Started**: 2026-01-19 13:47:08 UTC
 
 ---
 
-**[11:24:42]** (0.0min) 📍 **STAGE**: Starting stage: Data Fetching
+**[13:47:08]** (0.0min) 📍 **STAGE**: Starting stage: Data Fetching
 
-**[11:24:44]** (0.0min) ℹ️ **INFO**: Starting data fetch (BigQuery: True)
+**[13:47:13]** (0.1min) ℹ️ **INFO**: Starting data fetch (BigQuery: True)
 
-**[11:25:52]** (1.2min) ✅ **SUCCESS**: Data fetch completed (70.3s) - Saved to BigQuery
-
-**[11:25:53]** (1.2min) 📍 **STAGE**: Starting stage: Feature Engineering
-
-**[11:25:53]** (1.2min) ℹ️ **INFO**: Starting feature engineering (BigQuery: True)
-
-**[11:27:21]** (2.7min) ✅ **SUCCESS**: Feature engineering completed (88.3s) - Saved to BigQuery
-
-**[11:27:22]** (2.7min) 📍 **STAGE**: Starting stage: Feature Selection
-
-**[11:27:23]** (2.7min) ℹ️ **INFO**: Starting feature selection (PCA + correlation + mRMR, BigQuery: True)
-
-**[11:31:32]** (6.8min) ✅ **SUCCESS**: Feature selection completed (249.7s) - Selected features saved to BigQuery
-
-**[11:31:33]** (6.9min) 📍 **STAGE**: Starting stage: Regime Clustering (HMM)
-
-**[11:31:33]** (6.9min) ℹ️ **INFO**: Starting HMM clustering (BigQuery: True)
-
-**[11:31:48]** (7.1min) ⚠️ **WARNING**: Skipping visualization: Aligned dataset not found → /home/runner/work/marketpulse/marketpulse/outputs/selected/aligned_dataset.parquet
-
-**[11:31:48]** (7.1min) ✅ **SUCCESS**: HMM clustering completed (14.9s) - 3 regimes detected, saved to BigQuery
-
-**[11:31:49]** (7.1min) 📍 **STAGE**: Starting stage: Regime Classification
-
-**[11:31:49]** (7.1min) ℹ️ **INFO**: Starting Random Forest classifier training (BigQuery: True)
-
-**[11:31:57]** (7.3min) ✅ **SUCCESS**: Regime classifier trained (7.6s) - Model saved
-
-**[11:31:58]** (7.3min) 📍 **STAGE**: Starting stage: Forecasting - Intelligent Model Check
-
-**[11:31:58]** (7.3min) ℹ️ **INFO**: Intelligent Decision: train
-
-**[11:31:58]** (7.3min) ℹ️ **INFO**: Reason: Core models (HMM/classifier) are missing or stale
-
-**[11:31:59]** (7.3min) ℹ️ **INFO**: Full training: All 22 features need training
-
-**[11:31:59]** (7.3min) 📍 **STAGE**: Starting stage: Forecasting - Training Models
+**[13:48:12]** (1.1min) ✅ **SUCCESS**: Data fetch completed (63.8s) - Saved to BigQuery
 
