@@ -113,6 +113,7 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "🤖 Daily forecast update $(date +'%Y-%m-%d %H:%M UTC')"
+            git pull --rebase origin main
             git push
             echo "✅ Forecast results committed and pushed"
           fi
