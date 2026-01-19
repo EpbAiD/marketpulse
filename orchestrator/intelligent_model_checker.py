@@ -204,8 +204,9 @@ def check_core_models_status() -> Dict:
 
     needs_training = not (hmm_exists and classifier_exists and cluster_exists)
 
-    # Core models should be retrained if older than 30 days
-    if age_days is not None and age_days > 30:
+    # Core models are fast to train (~20 seconds total) and use daily data
+    # Retrain if older than 90 days to match daily feature threshold
+    if age_days is not None and age_days > 90:
         needs_training = True
 
     return {
