@@ -1,7 +1,12 @@
 name: Train Models - Parallel A (Features 1-7)
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Debug mode'
+        required: false
+        default: 'false'
 
 jobs:
   train:
@@ -54,28 +59,7 @@ jobs:
         env:
           PYTHONUNBUFFERED: 1
         run: |
-          echo "Training Parallel Group A: Features 1-7"
-          python -c "
-from forecasting_agent import forecaster
-import yaml
-
-# Load config to get feature names
-with open('configs/features_config.yaml', 'r') as f:
-    config = yaml.safe_load(f)
-
-# Get first 7 daily features
-features_to_train = config['daily']['features'][:7]
-print(f'Training {len(features_to_train)} features: {features_to_train}')
-
-# Train only these features
-forecaster.run_forecasting_agent(
-    mode='all',
-    config_path='configs/features_config.yaml',
-    use_bigquery=True,
-    force_retrain=True,
-    selective_features=features_to_train
-)
-          "
+          python train_parallel_subset.py --group A
 
       - name: Upload trained models
         if: always()
