@@ -11,6 +11,7 @@ scipy==1.11.4  # Pin to version compatible with pmdarima 2.0.4
 # Machine learning
 scikit-learn==1.7.2
 hmmlearn==0.3.3
+cmdstanpy==1.2.2  # Required for Prophet backend
 prophet==1.1.5
 statsmodels==0.14.4
 pmdarima==2.0.4  # Required for ARIMA models in weekly/monthly forecasting
