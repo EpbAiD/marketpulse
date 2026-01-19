@@ -54,32 +54,7 @@ jobs:
         env:
           PYTHONUNBUFFERED: 1
         run: |
-          echo "Training Parallel Group C: Features 15-22"
-          python -c "
-from forecasting_agent import forecaster
-import yaml
-
-# Load config to get feature names
-with open('configs/features_config.yaml', 'r') as f:
-    config = yaml.safe_load(f)
-
-# Get remaining daily features + weekly + monthly
-features_to_train = (
-    config['daily']['features'][14:] +  # DFF, GOLD, OIL, COPPER
-    config['weekly']['features'] +       # NFCI
-    config['monthly']['features']        # CPI, UNRATE, INDPRO
-)
-print(f'Training {len(features_to_train)} features: {features_to_train}')
-
-# Train only these features
-forecaster.run_forecasting_agent(
-    mode='all',
-    config_path='configs/features_config.yaml',
-    use_bigquery=True,
-    force_retrain=True,
-    selective_features=features_to_train
-)
-          "
+          python train_parallel_subset.py --group C
 
       - name: Upload trained models
         if: always()
