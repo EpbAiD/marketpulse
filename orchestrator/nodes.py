@@ -467,10 +467,15 @@ def forecast_node(state: PipelineState) -> PipelineState:
         logger.info(f"Intelligent Decision: {recommendation['workflow']}")
         logger.info(f"Reason: {recommendation['reason']}")
 
+        # Commit intelligent decision immediately
+        logger.commit_to_github()
+
         # Determine if we should train forecasting models
         if recommendation['workflow'] == 'inference':
             # All models fresh - skip forecasting training
             print("✅ All forecasting models are fresh. Skipping forecasting stage.\n")
+            logger.success("All forecasting models are fresh - Skipping training")
+            logger.commit_to_github()
             state["forecast_status"] = {
                 "success": True,
                 "skipped": True,
@@ -497,11 +502,15 @@ def forecast_node(state: PipelineState) -> PipelineState:
             selective_features = recommendation['features_to_train']
             print(f"🎯 Partial training mode: {len(selective_features)} features need training\n")
             logger.info(f"Partial training: {len(selective_features)} features ({', '.join(selective_features[:5])}...)")
+        elif recommendation['workflow'] == 'train':
+            logger.info("Full training: All 22 features need training")
 
         print(f"📄 Using config: {config_path}")
         print(f"🎯 Forecast mode: {mode}\n")
 
         logger.stage(f"Forecasting - Training Models")
+        # Commit before starting training (so we know training has started)
+        logger.commit_to_github()
 
         forecaster.run_forecasting_agent(
             mode=mode,
