@@ -22,3 +22,11 @@
 
 **[00:27:25]** (7.4min) ✅ **SUCCESS**: Feature selection completed (257.3s) - Selected features saved to BigQuery
 
+**[00:27:25]** (7.4min) 📍 **STAGE**: Starting stage: Regime Clustering (HMM)
+
+**[00:27:25]** (7.4min) ℹ️ **INFO**: Starting HMM clustering (BigQuery: True)
+
+**[00:27:36]** (7.6min) ⚠️ **WARNING**: Skipping visualization: Aligned dataset not found → /home/runner/work/marketpulse/marketpulse/outputs/selected/aligned_dataset.parquet
+
+**[00:27:36]** (7.6min) ✅ **SUCCESS**: HMM clustering completed (10.1s) - 3 regimes detected, saved to BigQuery
+
