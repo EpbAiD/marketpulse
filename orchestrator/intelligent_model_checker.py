@@ -52,9 +52,11 @@ def get_retraining_threshold(cadence: str) -> int:
     """
     Get the retraining threshold in days for a given cadence.
 
-    Daily features: More frequent updates needed (7 days)
-    Weekly features: Medium frequency (14 days)
-    Monthly features: Less frequent (30 days)
+    Daily features: Retrain every 3 months (90 days) - ~90 new data points
+    Weekly features: Retrain every 6 months (180 days) - ~26 new data points
+    Monthly features: Retrain yearly (365 days) - 12 new data points
+
+    Models need significant new data to learn meaningful patterns.
 
     Args:
         cadence: 'daily', 'weekly', or 'monthly'
@@ -63,11 +65,11 @@ def get_retraining_threshold(cadence: str) -> int:
         Threshold in days
     """
     thresholds = {
-        'daily': 7,      # Retrain if older than 7 days
-        'weekly': 14,    # Retrain if older than 14 days (2 weeks)
-        'monthly': 30    # Retrain if older than 30 days (1 month)
+        'daily': 90,      # Retrain if older than 90 days (3 months)
+        'weekly': 180,    # Retrain if older than 180 days (6 months)
+        'monthly': 365    # Retrain if older than 365 days (1 year)
     }
-    return thresholds.get(cadence, 7)  # Default to 7 days if unknown
+    return thresholds.get(cadence, 90)  # Default to 90 days if unknown
 
 
 def check_feature_model_status(feature_name: str, cadence: str) -> Dict:
