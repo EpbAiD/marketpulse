@@ -5,6 +5,8 @@ Usage: python train_parallel_subset.py --group [A|B|C]
 """
 import argparse
 import yaml
+import shutil
+from pathlib import Path
 from forecasting_agent import forecaster
 
 
@@ -37,6 +39,12 @@ def main():
         print(f"Group C: Training features 15-22")
 
     print(f"Features to train ({len(features_to_train)}): {', '.join(features_to_train)}")
+
+    # Clean up lightning_logs to avoid version conflicts
+    lightning_logs = Path("lightning_logs")
+    if lightning_logs.exists():
+        print(f"Cleaning up {lightning_logs}...")
+        shutil.rmtree(lightning_logs)
 
     # Train
     forecaster.run_forecasting_agent(
