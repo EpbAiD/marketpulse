@@ -42,3 +42,7 @@
 
 **[13:53:56]** (6.8min) ℹ️ **INFO**: Reason: Core models (HMM/classifier) are missing or stale
 
+**[13:53:56]** (6.8min) ℹ️ **INFO**: Full training: All 22 features need training
+
+**[13:53:56]** (6.8min) 📍 **STAGE**: Starting stage: Forecasting - Training Models
+
