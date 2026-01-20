@@ -334,7 +334,20 @@ def _fit_and_predict_window(cadence, horizon, df_fit, val_size, test_ds_window, 
     # 🧠 NeuralForecast ensemble
     # ------------------------------------------------------------------
     nf_models = _build_nf_models(cadence, horizon, len(df_fit)//2, accelerator, nf_loss)
+
+    # Set unique logger directory for this feature to avoid parallel training conflicts
+    import tempfile
+    temp_log_dir = tempfile.mkdtemp(prefix=f"lightning_logs_{feature_stub}_")
+
     nf = NeuralForecast(models=nf_models, freq=inferred_freq)
+
+    # Configure PyTorch Lightning to use feature-specific log directory
+    for model in nf.models:
+        if hasattr(model, 'trainer_kwargs'):
+            if model.trainer_kwargs is None:
+                model.trainer_kwargs = {}
+            model.trainer_kwargs['default_root_dir'] = temp_log_dir
+
     nf.fit(df=df_fit[["unique_id", "ds", "y"]], val_size=val_size)
     nf_fc = nf.predict().reset_index()
 
@@ -503,6 +516,13 @@ def _fit_and_predict_window(cadence, horizon, df_fit, val_size, test_ds_window, 
         pass
     try:
         del prophet_model
+    except:
+        pass
+
+    # Clean up temporary lightning logs directory
+    try:
+        import shutil
+        shutil.rmtree(temp_log_dir, ignore_errors=True)
     except:
         pass
 
@@ -902,17 +922,6 @@ def train_forecaster_for_feature(feature_path, cadence, horizon, val_size, force
     os.makedirs(METRIC_DIR, exist_ok=True)
     os.makedirs(PLOT_DIR, exist_ok=True)
     os.makedirs(MODEL_DIR, exist_ok=True)
-
-    # Clean up lightning_logs to avoid version conflicts between features
-    import shutil
-    from pathlib import Path
-    lightning_logs = Path("lightning_logs")
-    if lightning_logs.exists():
-        try:
-            shutil.rmtree(lightning_logs)
-        except Exception as e:
-            pass  # Ignore errors, continue training
-
     fname = os.path.splitext(os.path.basename(feature_path))[0]
     pid = os.getpid()
     ts_tag = datetime.now().strftime("%Y%m%d_%H%M%S")
