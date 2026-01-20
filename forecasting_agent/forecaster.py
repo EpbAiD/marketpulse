@@ -334,20 +334,7 @@ def _fit_and_predict_window(cadence, horizon, df_fit, val_size, test_ds_window, 
     # 🧠 NeuralForecast ensemble
     # ------------------------------------------------------------------
     nf_models = _build_nf_models(cadence, horizon, len(df_fit)//2, accelerator, nf_loss)
-
-    # Set unique logger directory for this feature to avoid parallel training conflicts
-    import tempfile
-    temp_log_dir = tempfile.mkdtemp(prefix=f"lightning_logs_{feature_stub}_")
-
     nf = NeuralForecast(models=nf_models, freq=inferred_freq)
-
-    # Configure PyTorch Lightning to use feature-specific log directory
-    for model in nf.models:
-        if hasattr(model, 'trainer_kwargs'):
-            if model.trainer_kwargs is None:
-                model.trainer_kwargs = {}
-            model.trainer_kwargs['default_root_dir'] = temp_log_dir
-
     nf.fit(df=df_fit[["unique_id", "ds", "y"]], val_size=val_size)
     nf_fc = nf.predict().reset_index()
 
@@ -516,13 +503,6 @@ def _fit_and_predict_window(cadence, horizon, df_fit, val_size, test_ds_window, 
         pass
     try:
         del prophet_model
-    except:
-        pass
-
-    # Clean up temporary lightning logs directory
-    try:
-        import shutil
-        shutil.rmtree(temp_log_dir, ignore_errors=True)
     except:
         pass
 
@@ -1237,9 +1217,10 @@ def run_forecasting_agent(mode="all", config_path=None, single_daily=None, singl
         return
     print(f"📦 Features to run: {len(runs)}")
 
-    # Enable parallel training with 8 workers to fit within 6-hour timeout
-    max_workers = 8
-    print(f"🧩 Running in parallel with {max_workers} workers.")
+    # Sequential training (max_workers=1) to avoid lightning_logs conflicts
+    # Since we batch features into groups (A/B/C), sequential is acceptable with 12hr timeout
+    max_workers = 1
+    print(f"🧩 Running sequentially (max_workers={max_workers}).")
 
     stop_evt = threading.Event()
     all_metrics = []

@@ -6,7 +6,7 @@ on:
 jobs:
   train:
     runs-on: ubuntu-latest
-    timeout-minutes: 360  # 6 hours - needed for monthly features with Prophet
+    timeout-minutes: 720  # 12 hours (sequential training per batch)
     permissions:
       contents: write
 

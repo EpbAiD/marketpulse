@@ -11,7 +11,7 @@ on:
 jobs:
   train:
     runs-on: ubuntu-latest
-    timeout-minutes: 360  # 6 hours
+    timeout-minutes: 720  # 12 hours (sequential training per batch)
     permissions:
       contents: write
 
