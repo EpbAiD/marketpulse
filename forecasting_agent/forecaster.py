@@ -902,6 +902,17 @@ def train_forecaster_for_feature(feature_path, cadence, horizon, val_size, force
     os.makedirs(METRIC_DIR, exist_ok=True)
     os.makedirs(PLOT_DIR, exist_ok=True)
     os.makedirs(MODEL_DIR, exist_ok=True)
+
+    # Clean up lightning_logs to avoid version conflicts between features
+    import shutil
+    from pathlib import Path
+    lightning_logs = Path("lightning_logs")
+    if lightning_logs.exists():
+        try:
+            shutil.rmtree(lightning_logs)
+        except Exception as e:
+            pass  # Ignore errors, continue training
+
     fname = os.path.splitext(os.path.basename(feature_path))[0]
     pid = os.getpid()
     ts_tag = datetime.now().strftime("%Y%m%d_%H%M%S")

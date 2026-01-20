@@ -40,13 +40,7 @@ def main():
 
     print(f"Features to train ({len(features_to_train)}): {', '.join(features_to_train)}")
 
-    # Clean up lightning_logs to avoid version conflicts
-    lightning_logs = Path("lightning_logs")
-    if lightning_logs.exists():
-        print(f"Cleaning up {lightning_logs}...")
-        shutil.rmtree(lightning_logs)
-
-    # Train
+    # Train (lightning_logs cleanup now happens per-feature inside forecaster)
     forecaster.run_forecasting_agent(
         mode='all',
         config_path='configs/features_config.yaml',
