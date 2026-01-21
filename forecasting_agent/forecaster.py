@@ -383,25 +383,43 @@ def _fit_and_predict_window(cadence, horizon, df_fit, val_size, test_ds_window, 
     # ---- Prophet ----
     if cadence == "monthly":
         from prophet import Prophet
+        import traceback
         try:
+            print(f"[{pid}] 🔮 Training Prophet for {feature_stub} (monthly feature)...")
+
+            # Limit history for very long monthly series to prevent memory issues
+            MAX_MONTHLY_HISTORY = 240  # 20 years (240 months)
+            if len(df_fit) > MAX_MONTHLY_HISTORY:
+                print(f"[{pid}] ⚠️ Limiting monthly history from {len(df_fit)} to {MAX_MONTHLY_HISTORY} months")
+                df_fit_prophet = df_fit.tail(MAX_MONTHLY_HISTORY).copy()
+            else:
+                df_fit_prophet = df_fit.copy()
+
             prophet_model = Prophet(
                 yearly_seasonality=bool(prophet_cfg.get("yearly_seasonality", True)),
                 weekly_seasonality=bool(prophet_cfg.get("weekly_seasonality", False)),
                 daily_seasonality=bool(prophet_cfg.get("daily_seasonality", False)),
                 seasonality_mode=prophet_cfg.get("seasonality_mode", "additive"),
             )
-            df_p = df_fit[["ds", "y"]].rename(columns={"ds": "ds", "y": "y"})
-            prophet_model.fit(df_p)
+            df_p = df_fit_prophet[["ds", "y"]].rename(columns={"ds": "ds", "y": "y"})
+
+            print(f"[{pid}] Fitting Prophet model ({len(df_p)} data points)...")
+            prophet_model.fit(df_p, algorithm='Newton')  # Explicitly use Newton (faster)
+
             future = pd.DataFrame({"ds": pd.to_datetime(test_ds_window[:horizon])})
             p_fc = prophet_model.predict(future)["yhat"].to_numpy()[:len(test_ds_window)]
             mu = float(np.nanmean(p_fc)); sd = float(np.nanstd(p_fc) + 1e-8)
             p_fc = (p_fc - mu) / sd * ref_std + ref_mean
             cols.append(p_fc)
             col_map["Prophet"] = len(cols) - 1
+            print(f"[{pid}] ✅ Prophet training completed for {feature_stub}")
         except Exception as e:
-            print(f"⚠️ Prophet failed for {feature_stub}: {e}")
+            print(f"[{pid}] ❌ Prophet FAILED for {feature_stub}: {e}")
+            print(f"[{pid}] Traceback: {traceback.format_exc()}")
+            print(f"[{pid}] Continuing without Prophet (using neural + ARIMA only)...")
             p_fc = np.zeros(horizon)
             cols.append(p_fc)
+            prophet_model = None  # Set to None so we don't try to save it
 
     # ------------------------------------------------------------------
     # ⚖️ Weighted Ensemble (VAL-based)
