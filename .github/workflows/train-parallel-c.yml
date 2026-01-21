@@ -45,6 +45,17 @@ jobs:
           python -c "import pandas; print('✓ pandas installed')"
           echo "✓ All critical packages verified"
 
+      - name: Install Stan compiler for Prophet
+        run: |
+          echo "Installing Stan compiler (required for Prophet monthly forecasts)..."
+          python -c "import cmdstanpy; cmdstanpy.install_cmdstan(verbose=True)"
+          echo "✓ Stan compiler installed"
+
+      - name: Verify Prophet installation
+        run: |
+          echo "Verifying Prophet works with Stan backend..."
+          python -c "from prophet import Prophet; import pandas as pd; import numpy as np; m = Prophet(); df = pd.DataFrame({'ds': pd.date_range('2020-01-01', periods=100, freq='MS'), 'y': np.random.randn(100).cumsum()}); m.fit(df, algorithm='Newton'); print('✓ Prophet working with Stan backend')"
+
       - name: Set up Google Cloud credentials
         run: |
           echo '${{ secrets.GCP_CREDENTIALS }}' > /tmp/gcp_credentials.json
