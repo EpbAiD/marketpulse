@@ -1,6 +1,6 @@
-name: Train Models - Parallel C1 (Features 15-18: Daily)
+name: Train Models - Parallel C1 (Features 15-18 Daily)
 
-on:
+"on":
   workflow_dispatch:  # Manual trigger only
 
 jobs:
