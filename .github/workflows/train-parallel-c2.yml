@@ -1,0 +1,78 @@
+name: Train Models - Parallel C2 (Features 19-22: Weekly + Monthly)
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 480  # 8 hours (1 weekly + 3 monthly with Prophet)
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Download previous models from artifacts
+        uses: dawidd6/action-download-artifact@v3
+        continue-on-error: true
+        with:
+          workflow: daily-forecast.yml
+          name: trained-models
+          path: .
+          if_no_artifact_found: warn
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_github_actions.txt
+
+      - name: Verify critical packages
+        run: |
+          echo "Verifying critical package installation..."
+          python -c "import google.cloud.bigquery; print('✓ google-cloud-bigquery installed')"
+          python -c "import db_dtypes; print('✓ db-dtypes installed')"
+          python -c "import pandas; print('✓ pandas installed')"
+          echo "✓ All critical packages verified"
+
+      - name: Install Stan compiler for Prophet
+        run: |
+          echo "Installing Stan compiler (required for Prophet monthly forecasts)..."
+          python -c "import cmdstanpy; cmdstanpy.install_cmdstan(verbose=True)"
+          echo "✓ Stan compiler installed"
+
+      - name: Verify Prophet installation
+        run: |
+          echo "Verifying Prophet works with Stan backend..."
+          python -c "from prophet import Prophet; import pandas as pd; import numpy as np; m = Prophet(); df = pd.DataFrame({'ds': pd.date_range('2020-01-01', periods=100, freq='MS'), 'y': np.random.randn(100).cumsum()}); m.fit(df, algorithm='Newton'); print('✓ Prophet working with Stan backend')"
+
+      - name: Set up Google Cloud credentials
+        run: |
+          echo '${{ secrets.GCP_CREDENTIALS }}' > /tmp/gcp_credentials.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp_credentials.json" >> $GITHUB_ENV
+
+      - name: Train features 19-22 (NFCI, CPI, UNRATE, INDPRO)
+        env:
+          PYTHONUNBUFFERED: 1
+        run: |
+          python train_parallel_subset.py --group C2
+
+      - name: Upload trained models
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trained-models-parallel-c2
+          path: |
+            outputs/forecasting/models/*/nf_bundle_v*/**
+            outputs/forecasting/models/*_versions.json
+          retention-days: 90
