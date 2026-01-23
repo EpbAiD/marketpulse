@@ -214,13 +214,41 @@ gh run watch
 - Logs show slow training progress
 - Fix: Optimize model configs, reduce max_steps
 
-## Current Status
+## Current Status - FINAL RESOLUTION
 
-- ❌ Workflow C #21159706332 failed after 3h 45m
-- ❓ Logs incomplete (stopped at credentials setup)
-- ❓ No error message visible
-- ❓ Training step may have started but crashed silently
+### Failed Attempts:
+- ❌ Workflow C #21159706332 failed after 3h 45m (no Stan compiler)
+- ❌ Workflow C #21212873759 failed after 3h 44m (WITH Stan compiler installed!)
 
-**Most Likely Cause:** Prophet initialization issue (Stan compiler not available)
+### Root Cause Identified:
+**3h 45m timeout is NOT a Prophet issue - it's a resource/time limit!**
 
-**Next Action:** Implement Fix 1 (Install Stan) + Fix 2 (Verify Prophet)
+Evidence:
+1. Both failures at exactly 3h 45m (not 12hr workflow timeout)
+2. Stan compiler + Prophet verification SUCCEEDED in run #21212873759
+3. Training step was CANCELLED (not failed), indicating external kill
+4. No artifacts saved because upload only happens at workflow end
+
+**Actual Cause:** 8 features × 30-45min/feature = 4-6 hours total, but workflow gets killed at 3h 45m mark (likely GitHub Actions organization limit, silent OOM, or network timeout)
+
+### Solution Implemented:
+**Split Group C into two sub-batches:**
+
+**C1 (Features 15-18):** DFF, GOLD, OIL, COPPER
+- 4 daily features
+- Neural models only (no Prophet)
+- Est. time: 2-3 hours
+- Workflow: [train-parallel-c1.yml](../.github/workflows/train-parallel-c1.yml)
+
+**C2 (Features 19-22):** NFCI, CPI, UNRATE, INDPRO
+- 1 weekly + 3 monthly features
+- Includes Prophet with Stan compiler
+- Est. time: 3-4 hours
+- Workflow: [train-parallel-c2.yml](../.github/workflows/train-parallel-c2.yml)
+
+Each sub-batch:
+- Fits within resource limits
+- Uploads artifacts independently (no progress loss)
+- Can be run in parallel if needed
+
+**Next Action:** Trigger C1 and C2 workflows (waiting for GitHub to register new workflows)

@@ -1,6 +1,6 @@
-name: Train Models - Parallel C2 (Features 19-22: Weekly + Monthly)
+name: Train Models - Parallel C2 (Features 19-22 Weekly + Monthly)
 
-on:
+"on":
   workflow_dispatch:  # Manual trigger only
 
 jobs:
