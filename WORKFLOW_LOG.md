@@ -30,3 +30,9 @@
 
 **[11:33:35]** (9.3min) ✅ **SUCCESS**: HMM clustering completed (11.5s) - 3 regimes detected, saved to BigQuery
 
+**[11:33:35]** (9.3min) 📍 **STAGE**: Starting stage: Regime Classification
+
+**[11:33:35]** (9.3min) ℹ️ **INFO**: Starting Random Forest classifier training (BigQuery: True)
+
+**[11:33:43]** (9.4min) ✅ **SUCCESS**: Regime classifier trained (7.7s) - Model saved
+
