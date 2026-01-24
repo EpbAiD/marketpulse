@@ -22,3 +22,11 @@
 
 **[13:43:30]** (4.3min) ✅ **SUCCESS**: Feature selection completed (126.5s) - Selected features saved to BigQuery
 
+**[13:43:30]** (4.4min) 📍 **STAGE**: Starting stage: Regime Clustering (HMM)
+
+**[13:43:31]** (4.4min) ℹ️ **INFO**: Starting HMM clustering (BigQuery: True)
+
+**[13:43:39]** (4.5min) ⚠️ **WARNING**: Skipping visualization: Aligned dataset not found → /Users/eeshanbhanap/Desktop/RFP/outputs/selected/aligned_dataset.parquet
+
+**[13:43:39]** (4.5min) ✅ **SUCCESS**: HMM clustering completed (8.5s) - 3 regimes detected, saved to BigQuery
+
