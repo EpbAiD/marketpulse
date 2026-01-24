@@ -385,12 +385,12 @@ def _fit_and_predict_window(cadence, horizon, df_fit, val_size, test_ds_window, 
         from prophet import Prophet
         import traceback
         try:
-            print(f"[{pid}] 🔮 Training Prophet for {feature_stub} (monthly feature)...")
+            print(f"🔮 Training Prophet for {feature_name} (monthly feature)...")
 
             # Limit history for very long monthly series to prevent memory issues
             MAX_MONTHLY_HISTORY = 240  # 20 years (240 months)
             if len(df_fit) > MAX_MONTHLY_HISTORY:
-                print(f"[{pid}] ⚠️ Limiting monthly history from {len(df_fit)} to {MAX_MONTHLY_HISTORY} months")
+                print(f"⚠️ Limiting monthly history from {len(df_fit)} to {MAX_MONTHLY_HISTORY} months")
                 df_fit_prophet = df_fit.tail(MAX_MONTHLY_HISTORY).copy()
             else:
                 df_fit_prophet = df_fit.copy()
@@ -403,7 +403,7 @@ def _fit_and_predict_window(cadence, horizon, df_fit, val_size, test_ds_window, 
             )
             df_p = df_fit_prophet[["ds", "y"]].rename(columns={"ds": "ds", "y": "y"})
 
-            print(f"[{pid}] Fitting Prophet model ({len(df_p)} data points)...")
+            print(f"Fitting Prophet model ({len(df_p)} data points)...")
             prophet_model.fit(df_p, algorithm='Newton')  # Explicitly use Newton (faster)
 
             future = pd.DataFrame({"ds": pd.to_datetime(test_ds_window[:horizon])})
@@ -412,11 +412,11 @@ def _fit_and_predict_window(cadence, horizon, df_fit, val_size, test_ds_window, 
             p_fc = (p_fc - mu) / sd * ref_std + ref_mean
             cols.append(p_fc)
             col_map["Prophet"] = len(cols) - 1
-            print(f"[{pid}] ✅ Prophet training completed for {feature_stub}")
+            print(f"✅ Prophet training completed for {feature_name}")
         except Exception as e:
-            print(f"[{pid}] ❌ Prophet FAILED for {feature_stub}: {e}")
-            print(f"[{pid}] Traceback: {traceback.format_exc()}")
-            print(f"[{pid}] Continuing without Prophet (using neural + ARIMA only)...")
+            print(f"❌ Prophet FAILED for {feature_name}: {e}")
+            print(f"Traceback: {traceback.format_exc()}")
+            print(f"Continuing without Prophet (using neural + ARIMA only)...")
             p_fc = np.zeros(horizon)
             cols.append(p_fc)
             prophet_model = None  # Set to None so we don't try to save it
