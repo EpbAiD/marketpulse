@@ -56,7 +56,16 @@ jobs:
         run: |
           python train_parallel_subset.py --group C1
 
-      - name: Upload trained models
+      - name: Commit trained models to repository
+        if: success()
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add outputs/forecasting/models/
+          git diff --staged --quiet || git commit -m "chore: update trained models for Group C1 (DFF, GOLD, OIL, COPPER) [skip ci]"
+          git push
+
+      - name: Upload trained models (backup)
         if: always()
         uses: actions/upload-artifact@v4
         with:
