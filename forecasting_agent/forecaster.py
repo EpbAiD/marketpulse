@@ -719,31 +719,33 @@ def run_inference_for_features(
         # Get versioned model paths
         versioned_paths = get_versioned_model_paths(fname, version_num)
 
-        # Load ensemble weights
-        if not os.path.exists(versioned_paths["ensemble"]):
-            print(f"  ❌ Ensemble weights not found for {fname} v{version_num}, skipping...")
-            continue
+        # Load ensemble weights (or use equal weights as fallback)
+        if os.path.exists(versioned_paths["ensemble"]):
+            with open(versioned_paths["ensemble"], "r") as f:
+                ensemble_config = json.load(f)
 
-        with open(versioned_paths["ensemble"], "r") as f:
-            ensemble_config = json.load(f)
+            # Convert weights list to dictionary mapping model names to weights
+            weights_list = ensemble_config.get("weights", [])
+            base_models = ensemble_config.get("base_models", [])
 
-        # Convert weights list to dictionary mapping model names to weights
-        weights_list = ensemble_config.get("weights", [])
-        base_models = ensemble_config.get("base_models", [])
+            # For NeuralForecast models, sum across their variants
+            # Each base model has 3 variants (3x weight values in list)
+            weights = {}
+            models_per_base = len(weights_list) // len(base_models) if base_models else 0
 
-        # For NeuralForecast models, sum across their variants
-        # Each base model has 3 variants (3x weight values in list)
-        weights = {}
-        models_per_base = len(weights_list) // len(base_models) if base_models else 0
+            for i, model_name in enumerate(base_models):
+                # Sum weights for this model's variants
+                model_key = model_name.lower().replace("x", "")  # NBEATSx -> nbeats
+                start_idx = i * models_per_base
+                end_idx = start_idx + models_per_base
+                weights[model_key] = sum(weights_list[start_idx:end_idx])
 
-        for i, model_name in enumerate(base_models):
-            # Sum weights for this model's variants
-            model_key = model_name.lower().replace("x", "")  # NBEATSx -> nbeats
-            start_idx = i * models_per_base
-            end_idx = start_idx + models_per_base
-            weights[model_key] = sum(weights_list[start_idx:end_idx])
-
-        print(f"  📊 Ensemble weights: {weights}")
+            print(f"  📊 Ensemble weights: {weights}")
+        else:
+            # Fallback: Use equal weights for available NeuralForecast models
+            print(f"  ⚠️ Ensemble weights not found for {fname} v{version_num}, using equal weights")
+            weights = {"nbeats": 1.0, "nhits": 1.0, "patchtst": 1.0}
+            print(f"  📊 Using equal weights: {weights}")
 
         # Prepare data for inference
         df = raw_data[fname].copy()
