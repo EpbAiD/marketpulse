@@ -51,8 +51,17 @@ jobs:
           echo "📊 Feature Models:"
           MODEL_COUNT=$(find outputs/forecasting/models -name "nf_bundle_v*" -type d 2>/dev/null | wc -l | tr -d ' ')
           VERSION_COUNT=$(find outputs/forecasting/models -name "*_versions.json" -type f 2>/dev/null | wc -l | tr -d ' ')
+          ENSEMBLE_COUNT=$(find outputs/forecasting/models -name "*_ensemble_v*.json" -type f 2>/dev/null | wc -l | tr -d ' ')
           echo "  Model bundles: $MODEL_COUNT"
           echo "  Version files: $VERSION_COUNT"
+          echo "  Ensemble files: $ENSEMBLE_COUNT (REQUIRED for inference)"
+
+          # Warn if ensemble files are missing
+          if [ "$ENSEMBLE_COUNT" -lt "$MODEL_COUNT" ]; then
+            echo ""
+            echo "  ⚠️  WARNING: Some ensemble files are missing!"
+            echo "     Models without ensemble files will need retraining."
+          fi
 
           echo ""
           echo "=============================================="
@@ -130,6 +139,7 @@ jobs:
             outputs/models/*.joblib
             outputs/clustering/*.parquet
             outputs/forecasting/models/*/nf_bundle_v*/**
+            outputs/forecasting/models/*/*.json
             outputs/forecasting/models/*_versions.json
           retention-days: 30
 
