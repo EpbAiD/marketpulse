@@ -26,9 +26,9 @@ def cleanup_node(state: PipelineState) -> PipelineState:
     """
     Smart cleanup that preserves models that don't need retraining.
 
-    Behavior based on state:
-    - If retrain_core=False: Preserve HMM, classifier, and cluster assignments
-    - If selective_features is set: Preserve feature models NOT in the list
+    Uses intelligent_model_checker to determine what to preserve:
+    - Core models (HMM/RF) are preserved if fresh (< 30 days old)
+    - Feature models are preserved if not in selective_features list
     - Always clean: logs, lightning_logs, temporary files
     """
     if state.get("skip_cleanup", False):
@@ -37,22 +37,26 @@ def cleanup_node(state: PipelineState) -> PipelineState:
 
     print("\n🧹 Smart cleanup (preserving fresh models)...")
 
-    # Determine what to preserve
-    retrain_core = state.get("retrain_core", True)
+    # Import intelligent model checker to determine what needs retraining
+    from orchestrator.intelligent_model_checker import check_core_models_status
+
+    core_status = check_core_models_status()
     selective_features = state.get("selective_features", None)
 
     # Directories/files to always preserve
     preserved_ext = {".py", ".yaml", ".yml"}
 
-    # Paths to preserve based on state
+    # Paths to preserve based on model freshness
     preserved_paths = set()
 
-    if not retrain_core:
+    # Check if core models are fresh (don't need retraining)
+    core_needs_training = core_status['needs_training']
+    if not core_needs_training:
         # Preserve core models (HMM, classifier, cluster assignments)
         preserved_paths.add("outputs/models/hmm_model.joblib")
         preserved_paths.add("outputs/models/regime_classifier.joblib")
         preserved_paths.add("outputs/clustering/cluster_assignments.parquet")
-        print("   📦 Preserving core models (HMM/RF are fresh)")
+        print(f"   📦 Preserving core models (fresh, {core_status.get('age_days', '?')} days old < {core_status.get('threshold_days', 30)} day threshold)")
 
     if selective_features is not None:
         # Preserve feature models NOT in selective_features list
@@ -343,7 +347,10 @@ def cluster_node(state: PipelineState) -> PipelineState:
     """
     Run HMM clustering to identify market regimes.
 
-    If retrain_core=False and HMM model exists, skip training and use existing model.
+    Uses intelligent model detection to decide whether to train or use existing:
+    - If HMM model exists AND is fresh (< 30 days old): use existing model
+    - If HMM model missing OR stale (> 30 days old): train new model
+
     Wraps clustering_agent.clustering.run_hmm_clustering()
     """
     if state.get("skip_cluster", False):
@@ -357,33 +364,47 @@ def cluster_node(state: PipelineState) -> PipelineState:
         state["cluster_status"] = {"success": False, "error": "Dependency failed"}
         return state
 
-    # Check if we should skip retraining (core models are fresh)
-    retrain_core = state.get("retrain_core", True)
-    hmm_model_path = "outputs/models/hmm_model.joblib"
+    # Import intelligent model checker to determine if HMM needs training
+    from orchestrator.intelligent_model_checker import check_core_models_status
 
-    if not retrain_core and os.path.exists(hmm_model_path):
+    core_status = check_core_models_status()
+    hmm_exists = core_status['hmm_exists']
+    hmm_age_days = core_status.get('hmm_age_days')
+    threshold = core_status.get('threshold_days', 30)
+
+    # Determine if HMM needs training: missing OR stale (> threshold days)
+    hmm_needs_training = not hmm_exists or (hmm_age_days is not None and hmm_age_days > threshold)
+
+    if not hmm_needs_training:
         print("\n" + "=" * 70)
         print("🚀 STAGE 4: Regime Clustering (HMM) - USING EXISTING MODEL")
         print("=" * 70 + "\n")
-        print("📦 Core model is fresh (retrain_core=False)")
-        print(f"✅ Using existing HMM model: {hmm_model_path}\n")
+        print(f"📦 HMM model is fresh ({hmm_age_days} days old, threshold: {threshold} days)")
+        print(f"✅ Using existing HMM model: outputs/models/hmm_model.joblib\n")
 
         logger = get_logger()
-        logger.info("Using existing HMM model (retrain_core=False)")
+        logger.info(f"Using existing HMM model ({hmm_age_days} days old < {threshold} day threshold)")
         logger.commit_to_github()
 
         state["cluster_status"] = {
             "success": True,
             "used_existing": True,
-            "model_path": hmm_model_path,
+            "model_age_days": hmm_age_days,
+            "threshold_days": threshold,
+            "model_path": "outputs/models/hmm_model.joblib",
             "timestamp": datetime.now().isoformat(),
         }
         state["cluster_assignments_path"] = "outputs/clustering/cluster_assignments.parquet"
         return state
 
     print("\n" + "=" * 70)
-    print("🚀 STAGE 4: Regime Clustering (HMM)")
+    print("🚀 STAGE 4: Regime Clustering (HMM) - TRAINING NEW MODEL")
     print("=" * 70 + "\n")
+    if not hmm_exists:
+        print("📦 HMM model does not exist - training new model")
+    else:
+        print(f"📦 HMM model is stale ({hmm_age_days} days old > {threshold} day threshold)")
+    print()
 
     # Real-time logging
     logger = get_logger()
@@ -451,7 +472,10 @@ def classify_node(state: PipelineState) -> PipelineState:
     """
     Train Random Forest classifier to predict regimes.
 
-    If retrain_core=False and classifier model exists, skip training and use existing model.
+    Uses intelligent model detection to decide whether to train or use existing:
+    - If RF classifier exists AND is fresh (< 30 days old): use existing model
+    - If RF classifier missing OR stale (> 30 days old): train new model
+
     Wraps classification_agent.classifier.train_regime_classifier()
     """
     if state.get("skip_classify", False):
@@ -465,33 +489,47 @@ def classify_node(state: PipelineState) -> PipelineState:
         state["classify_status"] = {"success": False, "error": "Dependency failed"}
         return state
 
-    # Check if we should skip retraining (core models are fresh)
-    retrain_core = state.get("retrain_core", True)
-    classifier_model_path = "outputs/models/regime_classifier.joblib"
+    # Import intelligent model checker to determine if classifier needs training
+    from orchestrator.intelligent_model_checker import check_core_models_status
 
-    if not retrain_core and os.path.exists(classifier_model_path):
+    core_status = check_core_models_status()
+    classifier_exists = core_status['classifier_exists']
+    classifier_age_days = core_status.get('classifier_age_days')
+    threshold = core_status.get('threshold_days', 30)
+
+    # Determine if classifier needs training: missing OR stale (> threshold days)
+    classifier_needs_training = not classifier_exists or (classifier_age_days is not None and classifier_age_days > threshold)
+
+    if not classifier_needs_training:
         print("\n" + "=" * 70)
         print("🚀 STAGE 5: Regime Classification - USING EXISTING MODEL")
         print("=" * 70 + "\n")
-        print("📦 Core model is fresh (retrain_core=False)")
-        print(f"✅ Using existing classifier: {classifier_model_path}\n")
+        print(f"📦 RF classifier is fresh ({classifier_age_days} days old, threshold: {threshold} days)")
+        print(f"✅ Using existing classifier: outputs/models/regime_classifier.joblib\n")
 
         logger = get_logger()
-        logger.info("Using existing RF classifier (retrain_core=False)")
+        logger.info(f"Using existing RF classifier ({classifier_age_days} days old < {threshold} day threshold)")
         logger.commit_to_github()
 
         state["classify_status"] = {
             "success": True,
             "used_existing": True,
-            "model_path": classifier_model_path,
+            "model_age_days": classifier_age_days,
+            "threshold_days": threshold,
+            "model_path": "outputs/models/regime_classifier.joblib",
             "timestamp": datetime.now().isoformat(),
         }
-        state["classifier_model_path"] = classifier_model_path
+        state["classifier_model_path"] = "outputs/models/regime_classifier.joblib"
         return state
 
     print("\n" + "=" * 70)
-    print("🚀 STAGE 5: Regime Classification")
+    print("🚀 STAGE 5: Regime Classification - TRAINING NEW MODEL")
     print("=" * 70 + "\n")
+    if not classifier_exists:
+        print("📦 RF classifier does not exist - training new model")
+    else:
+        print(f"📦 RF classifier is stale ({classifier_age_days} days old > {threshold} day threshold)")
+    print()
 
     # Real-time logging
     logger = get_logger()
