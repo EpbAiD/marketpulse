@@ -24,41 +24,106 @@ from utils.realtime_logger import get_logger
 # ============================================================
 def cleanup_node(state: PipelineState) -> PipelineState:
     """
-    Clean workspace before pipeline run.
-    Removes old outputs/logs but preserves code and configs.
+    Smart cleanup that preserves models that don't need retraining.
+
+    Behavior based on state:
+    - If retrain_core=False: Preserve HMM, classifier, and cluster assignments
+    - If selective_features is set: Preserve feature models NOT in the list
+    - Always clean: logs, lightning_logs, temporary files
     """
     if state.get("skip_cleanup", False):
         print("⚙️  Skipping workspace cleanup (--no-clean flag set)\n")
         return state
 
-    print("\n🧹 Cleaning workspace before fresh run...")
-    base_dirs = ["outputs", "logs", "lightning_logs"]
+    print("\n🧹 Smart cleanup (preserving fresh models)...")
+
+    # Determine what to preserve
+    retrain_core = state.get("retrain_core", True)
+    selective_features = state.get("selective_features", None)
+
+    # Directories/files to always preserve
     preserved_ext = {".py", ".yaml", ".yml"}
 
-    for base in base_dirs:
-        if not os.path.exists(base):
-            continue
+    # Paths to preserve based on state
+    preserved_paths = set()
 
-        for root, dirs, files in os.walk(base):
+    if not retrain_core:
+        # Preserve core models (HMM, classifier, cluster assignments)
+        preserved_paths.add("outputs/models/hmm_model.joblib")
+        preserved_paths.add("outputs/models/regime_classifier.joblib")
+        preserved_paths.add("outputs/clustering/cluster_assignments.parquet")
+        print("   📦 Preserving core models (HMM/RF are fresh)")
+
+    if selective_features is not None:
+        # Preserve feature models NOT in selective_features list
+        forecasting_models_dir = "outputs/forecasting/models"
+        if os.path.exists(forecasting_models_dir):
+            for feature_dir in os.listdir(forecasting_models_dir):
+                feature_path = os.path.join(forecasting_models_dir, feature_dir)
+                # Check if it's a feature directory (not a json file)
+                if os.path.isdir(feature_path) and feature_dir not in (selective_features or []):
+                    # Preserve this feature's model directory
+                    preserved_paths.add(feature_path)
+                # Also preserve version json files for features not being retrained
+                if feature_dir.endswith("_versions.json"):
+                    feature_name = feature_dir.replace("_versions.json", "")
+                    if feature_name not in (selective_features or []):
+                        preserved_paths.add(os.path.join(forecasting_models_dir, feature_dir))
+
+        if selective_features:
+            print(f"   🎯 Preserving {22 - len(selective_features)} fresh feature models")
+        else:
+            print("   📊 Preserving all feature models (none need retraining)")
+
+    # Clean logs and lightning_logs (always)
+    for base in ["logs", "lightning_logs"]:
+        if os.path.exists(base):
+            for root, dirs, files in os.walk(base):
+                for file in files:
+                    path = os.path.join(root, file)
+                    _, ext = os.path.splitext(file)
+                    if ext not in preserved_ext:
+                        try:
+                            os.remove(path)
+                        except Exception:
+                            pass
+
+    # Clean outputs directory (selectively)
+    base = "outputs"
+    if os.path.exists(base):
+        for root, dirs, files in os.walk(base, topdown=False):
             for file in files:
                 path = os.path.join(root, file)
                 _, ext = os.path.splitext(file)
-                if ext not in preserved_ext:
+
+                # Check if this path should be preserved
+                should_preserve = ext in preserved_ext
+
+                # Check against preserved paths
+                for pp in preserved_paths:
+                    if path.startswith(pp) or path == pp:
+                        should_preserve = True
+                        break
+
+                if not should_preserve:
                     try:
                         os.remove(path)
                     except Exception:
                         pass
 
-            # Remove empty directories
+            # Remove empty directories (but not preserved model directories)
             for d in dirs:
                 dir_path = os.path.join(root, d)
+                # Don't remove if it's a preserved path
+                if dir_path in preserved_paths:
+                    continue
                 try:
-                    if not os.listdir(dir_path):
+                    if os.path.exists(dir_path) and not os.listdir(dir_path):
                         os.rmdir(dir_path)
                 except Exception:
                     pass
 
-    print("✅ Workspace cleaned successfully.\n")
+    print("✅ Smart cleanup completed.\n")
     return state
 
 
@@ -430,6 +495,9 @@ def forecast_node(state: PipelineState) -> PipelineState:
     """
     Run ensemble forecasting on selected features.
     Wraps forecasting_agent.forecaster.run_forecasting_agent()
+
+    Uses selective_features from state (set by auto mode) to train only
+    the features that need training, not all 22.
     """
     if state.get("skip_forecast", False):
         print("⏭️  Skipping forecasting (--skip-forecast flag set)\n")
@@ -449,30 +517,34 @@ def forecast_node(state: PipelineState) -> PipelineState:
     start_time = time.time()
 
     try:
-        import sys
         from forecasting_agent import forecaster
-        from orchestrator.intelligent_model_checker import get_intelligent_recommendation
 
         # Real-time logging
         logger = get_logger()
-        logger.stage("Forecasting - Intelligent Model Check")
+        logger.stage("Forecasting")
 
-        # Get intelligent recommendation for selective training
-        recommendation = get_intelligent_recommendation()
+        # Get selective features from state (set by auto mode in run_pipeline.py)
+        # If None, train all features; if list, train only those features
+        selective_features = state.get("selective_features", None)
 
-        print(f"\n🧠 Intelligent Model Checker Results:")
-        print(f"   Workflow: {recommendation['workflow']}")
-        print(f"   Reason: {recommendation['reason']}")
+        # Determine config path
+        config_path = "configs/features_config.yaml"
+        if not os.path.exists(config_path):
+            config_path = "configs/features_config.yml"
 
-        logger.info(f"Intelligent Decision: {recommendation['workflow']}")
-        logger.info(f"Reason: {recommendation['reason']}")
+        # Run forecasting with mode from state
+        mode = state.get("forecast_mode", "all")
+        single_daily = state.get("single_daily")
+        single_weekly = state.get("single_weekly")
+        single_monthly = state.get("single_monthly")
 
-        # Commit intelligent decision immediately
-        logger.commit_to_github()
-
-        # Determine if we should train forecasting models
-        if recommendation['workflow'] == 'inference':
-            # All models fresh - skip forecasting training
+        # Log what we're doing
+        if selective_features:
+            print(f"🎯 Selective training: {len(selective_features)} features")
+            print(f"   Features: {', '.join(sorted(selective_features))}\n")
+            logger.info(f"Selective training: {len(selective_features)} features ({', '.join(selective_features[:5])}{'...' if len(selective_features) > 5 else ''})")
+        elif selective_features == []:
+            # Empty list means no features need training
             print("✅ All forecasting models are fresh. Skipping forecasting stage.\n")
             logger.success("All forecasting models are fresh - Skipping training")
             logger.commit_to_github()
@@ -484,32 +556,14 @@ def forecast_node(state: PipelineState) -> PipelineState:
                 "timestamp": datetime.now().isoformat(),
             }
             return state
-
-        # Determine config path
-        config_path = "configs/features_config.yaml"
-        if not os.path.exists(config_path):
-            config_path = "configs/features_config.yml"
-
-        # Run forecasting with mode from state or intelligent recommendation
-        mode = state.get("forecast_mode", "all")
-        single_daily = state.get("single_daily")
-        single_weekly = state.get("single_weekly")
-        single_monthly = state.get("single_monthly")
-
-        # Use selective features if partial training recommended
-        selective_features = None
-        if recommendation['workflow'] == 'partial_train' and recommendation['features_to_train']:
-            selective_features = recommendation['features_to_train']
-            print(f"🎯 Partial training mode: {len(selective_features)} features need training\n")
-            logger.info(f"Partial training: {len(selective_features)} features ({', '.join(selective_features[:5])}...)")
-        elif recommendation['workflow'] == 'train':
-            logger.info("Full training: All 22 features need training")
+        else:
+            print("📊 Training all feature models\n")
+            logger.info("Training all feature models")
 
         print(f"📄 Using config: {config_path}")
         print(f"🎯 Forecast mode: {mode}\n")
 
-        logger.stage(f"Forecasting - Training Models")
-        # Commit before starting training (so we know training has started)
+        logger.stage("Forecasting - Training Models")
         logger.commit_to_github()
 
         forecaster.run_forecasting_agent(
@@ -520,7 +574,7 @@ def forecast_node(state: PipelineState) -> PipelineState:
             single_monthly=single_monthly,
             use_bigquery=True,  # Always use BigQuery in production
             force_retrain=False,  # Let auto-detection decide
-            selective_features=selective_features  # Train only needed features
+            selective_features=selective_features  # Train only needed features (None = all)
         )
 
         # Update state
@@ -528,6 +582,7 @@ def forecast_node(state: PipelineState) -> PipelineState:
         state["forecast_status"] = {
             "success": True,
             "mode": mode,
+            "selective_features": selective_features,
             "elapsed_seconds": elapsed,
             "timestamp": datetime.now().isoformat(),
         }
@@ -535,7 +590,7 @@ def forecast_node(state: PipelineState) -> PipelineState:
 
         print(f"✅ Forecasting completed successfully in {elapsed:.2f}s\n")
         logger.success(f"Forecasting completed ({elapsed:.1f}s) - Models trained and saved")
-        logger.commit_to_github()  # Commit log immediately after stage completes
+        logger.commit_to_github()
 
     except Exception as e:
         elapsed = time.time() - start_time
@@ -552,6 +607,6 @@ def forecast_node(state: PipelineState) -> PipelineState:
         }
         print(f"❌ Forecasting failed: {e}\n")
         logger.error(f"Forecasting FAILED: {e}")
-        logger.commit_to_github()  # Commit log even on failure
+        logger.commit_to_github()
 
     return state
