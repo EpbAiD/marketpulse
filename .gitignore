@@ -41,11 +41,33 @@ env/
 .env
 .env.local
 
-# Project specific
-outputs/
+# =============================================================================
+# PROJECT OUTPUTS - Selective tracking
+# =============================================================================
+# Ignore most outputs but ALLOW trained models to be committed
+
+# Ignore temporary/generated outputs
+outputs/fetched/
+outputs/engineered/
+outputs/selected/
+outputs/diagnostics/
 lightning_logs/
+
+# ALLOW these model directories to be tracked:
+# - outputs/models/ (HMM, classifier)
+# - outputs/clustering/ (cluster assignments)
+# - outputs/forecasting/models/ (neural network models)
+# These are NOT ignored!
+
+# =============================================================================
+# JSON files - selective
+# =============================================================================
+# Ignore most JSON but allow specific patterns
 *.json
 !configs/*.json
+!outputs/forecasting/models/*_versions.json
+
+# Log files
 *.log
 *.jsonl
 !logs/.gitkeep
@@ -54,7 +76,7 @@ lightning_logs/
 dashboard_screenshots/
 !assets/
 
-# BigQuery credentials
+# BigQuery credentials (NEVER commit these!)
 regime01-*.json
 *credentials*.json
 
@@ -63,17 +85,27 @@ regime01-*.json
 *.bak
 *.cache
 
-# Model files (too large for git)
-models/
-*.pkl
-*.joblib
+# =============================================================================
+# MODEL FILES - ALLOW for persistence
+# =============================================================================
+# We WANT to track trained models in the repo for persistence
+# DO NOT ignore: .joblib, .pkl in outputs/models/
+# DO NOT ignore: nf_bundle directories in outputs/forecasting/models/
+
+# Only ignore model files OUTSIDE of outputs/
+/models/
 *.h5
 *.pt
 *.pth
 
-# Data files
-*.parquet
+# =============================================================================
+# DATA FILES - Ignore raw data (too large)
+# =============================================================================
 *.csv
 *.tsv
 data/
 INTERVIEW_PREP.md
+
+# Parquet files - ignore except cluster assignments
+*.parquet
+!outputs/clustering/*.parquet
