@@ -66,6 +66,7 @@ lightning_logs/
 *.json
 !configs/*.json
 !outputs/forecasting/models/*_versions.json
+!outputs/forecasting/models/*/*.json
 
 # Log files
 *.log
