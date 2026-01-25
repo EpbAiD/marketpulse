@@ -179,12 +179,31 @@ def get_features_needing_training() -> List[str]:
     ]
 
 
+def get_core_model_threshold() -> int:
+    """
+    Get the retraining threshold in days for core models (HMM, RF classifier).
+
+    Core models (HMM + Random Forest) should be retrained every 30 days because:
+    - They use daily market data which changes frequently
+    - Regime patterns can shift over time
+    - 30 days provides ~20 new trading data points for learning
+    - Training is fast (~20 seconds total)
+
+    Returns:
+        Threshold in days (30)
+    """
+    return 30
+
+
 def check_core_models_status() -> Dict:
     """
     Check status of core models (HMM, classifier).
 
     Returns:
-        Dict with status of core models
+        Dict with status of core models including:
+        - Existence of each model
+        - Age of each model in days
+        - Whether retraining is needed (missing or > 30 days old)
     """
     models_dir = BASE_DIR / "outputs" / "models"
 
@@ -196,24 +215,43 @@ def check_core_models_status() -> Dict:
     classifier_exists = classifier_path.exists()
     cluster_exists = cluster_path.exists()
 
-    # Check age of classifier (most critical)
-    age_days = None
+    # Check age of each core model
+    hmm_age_days = None
+    classifier_age_days = None
+
+    if hmm_path.exists():
+        mtime = datetime.fromtimestamp(hmm_path.stat().st_mtime)
+        hmm_age_days = (datetime.now() - mtime).days
+
     if classifier_path.exists():
         mtime = datetime.fromtimestamp(classifier_path.stat().st_mtime)
-        age_days = (datetime.now() - mtime).days
+        classifier_age_days = (datetime.now() - mtime).days
 
+    # Use the older of the two for the age_days field
+    age_days = None
+    if hmm_age_days is not None and classifier_age_days is not None:
+        age_days = max(hmm_age_days, classifier_age_days)
+    elif hmm_age_days is not None:
+        age_days = hmm_age_days
+    elif classifier_age_days is not None:
+        age_days = classifier_age_days
+
+    # Core models need training if ANY are missing
     needs_training = not (hmm_exists and classifier_exists and cluster_exists)
 
-    # Core models are fast to train (~20 seconds total) and use daily data
-    # Retrain if older than 90 days to match daily feature threshold
-    if age_days is not None and age_days > 90:
+    # Core models should be retrained every 30 days
+    threshold = get_core_model_threshold()
+    if age_days is not None and age_days > threshold:
         needs_training = True
 
     return {
         'hmm_exists': hmm_exists,
         'classifier_exists': classifier_exists,
         'cluster_exists': cluster_exists,
+        'hmm_age_days': hmm_age_days,
+        'classifier_age_days': classifier_age_days,
         'age_days': age_days,
+        'threshold_days': threshold,
         'needs_training': needs_training
     }
 
@@ -297,12 +335,16 @@ def print_intelligent_status():
 
     # Core models status
     core = recommendation['details']['core_status']
-    print("\n📦 Core Models:")
-    print(f"   {'✅' if core['hmm_exists'] else '❌'} HMM Model")
-    print(f"   {'✅' if core['classifier_exists'] else '❌'} Regime Classifier")
+    threshold = core.get('threshold_days', 30)
+    print(f"\n📦 Core Models (threshold: {threshold} days):")
+    hmm_age = f" ({core.get('hmm_age_days', '?')} days)" if core.get('hmm_age_days') is not None else ""
+    rf_age = f" ({core.get('classifier_age_days', '?')} days)" if core.get('classifier_age_days') is not None else ""
+    print(f"   {'✅' if core['hmm_exists'] else '❌'} HMM Model{hmm_age}")
+    print(f"   {'✅' if core['classifier_exists'] else '❌'} Regime Classifier{rf_age}")
     print(f"   {'✅' if core['cluster_exists'] else '❌'} Cluster Assignments")
     if core['age_days'] is not None:
-        print(f"   ⏰ Age: {core['age_days']} days")
+        status = "🔴 STALE" if core['age_days'] > threshold else "🟢 FRESH"
+        print(f"   ⏰ Age: {core['age_days']} days {status}")
 
     # Feature models status
     details = recommendation['details']
