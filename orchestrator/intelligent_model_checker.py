@@ -76,74 +76,120 @@ def check_feature_model_status(feature_name: str, cadence: str) -> Dict:
     """
     Check the status of a specific feature's model.
 
+    CRITICAL: A feature model is only considered valid if ALL required files exist:
+    - nf_bundle_v{version}/ directory (NeuralForecast models)
+    - {feature}_ensemble_v{version}.json (ensemble weights for inference)
+
+    Without the ensemble weights file, inference will FAIL even if nf_bundle exists.
+
     Args:
         feature_name: Name of the feature (e.g., 'GSPC', 'CPI')
         cadence: Feature cadence ('daily', 'weekly', 'monthly')
 
     Returns:
         Dict with:
-            - exists: bool - Model files exist
+            - exists: bool - ALL required model files exist
             - age_days: int or None - Age in days
             - needs_training: bool - Whether retraining is needed
             - reason: str - Explanation
+            - missing_files: List[str] - Which required files are missing
     """
     forecasting_dir = BASE_DIR / "outputs" / "forecasting" / "models" / feature_name
+    models_base_dir = BASE_DIR / "outputs" / "forecasting" / "models"
 
-    # Check for model bundle directory (NeuralForecast models)
-    nf_bundles = list(forecasting_dir.glob("nf_bundle_v*"))
+    # Check version metadata first to get the active version
+    version_metadata_path = models_base_dir / f"{feature_name}_versions.json"
 
-    if not nf_bundles:
+    if not version_metadata_path.exists():
         return {
             'exists': False,
             'age_days': None,
             'needs_training': True,
-            'reason': 'Model does not exist'
+            'reason': 'Version metadata does not exist',
+            'missing_files': ['version_metadata']
         }
 
-    # Get the most recent bundle
-    latest_bundle = max(nf_bundles, key=lambda p: p.stat().st_mtime)
+    try:
+        with open(version_metadata_path, 'r') as f:
+            metadata = json.load(f)
+    except Exception as e:
+        return {
+            'exists': False,
+            'age_days': None,
+            'needs_training': True,
+            'reason': f'Failed to read version metadata: {e}',
+            'missing_files': ['version_metadata']
+        }
 
-    # Check version metadata for more accurate age
-    version_metadata_path = BASE_DIR / "outputs" / "forecasting" / "models" / f"{feature_name}_versions.json"
+    active_version = metadata.get('active_version')
+    if active_version is None:
+        # Try to get from completed versions
+        completed = [v for v in metadata.get('versions', []) if v.get('status') == 'completed']
+        if completed:
+            active_version = max(completed, key=lambda v: v['version'])['version']
+        else:
+            return {
+                'exists': False,
+                'age_days': None,
+                'needs_training': True,
+                'reason': 'No active or completed version found',
+                'missing_files': ['completed_version']
+            }
 
-    if version_metadata_path.exists():
-        try:
-            with open(version_metadata_path, 'r') as f:
-                metadata = json.load(f)
-                if metadata.get('active_version'):
-                    # Find the active version details
-                    active_version = metadata['active_version']
-                    for version_info in metadata.get('versions', []):
-                        if version_info.get('version') == active_version:
-                            timestamp_str = version_info.get('timestamp')
-                            if timestamp_str:
-                                mtime = datetime.fromisoformat(timestamp_str)
-                                age_days = (datetime.now() - mtime).days
-                                threshold = get_retraining_threshold(cadence)
+    # Check for ALL required model files for this version
+    nf_bundle_path = forecasting_dir / f"nf_bundle_v{active_version}"
+    ensemble_path = forecasting_dir / f"{feature_name}_ensemble_v{active_version}.json"
 
-                                needs_training = age_days > threshold
+    missing_files = []
+    if not nf_bundle_path.exists():
+        missing_files.append(f"nf_bundle_v{active_version}")
+    if not ensemble_path.exists():
+        missing_files.append(f"{feature_name}_ensemble_v{active_version}.json")
 
-                                return {
-                                    'exists': True,
-                                    'age_days': age_days,
-                                    'needs_training': needs_training,
-                                    'reason': f'{age_days} days old (threshold: {threshold} days for {cadence})'
-                                }
-        except Exception as e:
-            pass  # Fall back to file timestamp
+    # Model is ONLY valid if ALL required files exist
+    if missing_files:
+        return {
+            'exists': False,
+            'age_days': None,
+            'needs_training': True,
+            'reason': f'Missing required files: {", ".join(missing_files)}',
+            'missing_files': missing_files
+        }
 
-    # Fallback: use bundle directory modification time
-    mtime = datetime.fromtimestamp(latest_bundle.stat().st_mtime)
+    # All files exist - check age
+    # Get age from version metadata
+    for version_info in metadata.get('versions', []):
+        if version_info.get('version') == active_version:
+            timestamp_str = version_info.get('created_at') or version_info.get('timestamp')
+            if timestamp_str:
+                try:
+                    mtime = datetime.fromisoformat(timestamp_str)
+                    age_days = (datetime.now() - mtime).days
+                    threshold = get_retraining_threshold(cadence)
+                    needs_training = age_days > threshold
+
+                    return {
+                        'exists': True,
+                        'age_days': age_days,
+                        'needs_training': needs_training,
+                        'reason': f'{age_days} days old (threshold: {threshold} days for {cadence})',
+                        'missing_files': []
+                    }
+                except Exception:
+                    pass
+
+    # Fallback: use ensemble file modification time (most accurate for training completion)
+    mtime = datetime.fromtimestamp(ensemble_path.stat().st_mtime)
     age_days = (datetime.now() - mtime).days
     threshold = get_retraining_threshold(cadence)
-
     needs_training = age_days > threshold
 
     return {
         'exists': True,
         'age_days': age_days,
         'needs_training': needs_training,
-        'reason': f'{age_days} days old (threshold: {threshold} days for {cadence})'
+        'reason': f'{age_days} days old (threshold: {threshold} days for {cadence})',
+        'missing_files': []
     }
 
 
@@ -364,10 +410,14 @@ def print_intelligent_status():
             print(f"      • {feature} ({status['cadence']}, {status['age_days']} days old)")
 
     if details.get('missing_features'):
-        print(f"   ❌ Missing: {len(details['missing_features'])} features")
+        print(f"   ❌ Missing/Incomplete: {len(details['missing_features'])} features")
+        all_features_status = check_all_features()
         for feature in sorted(details['missing_features']):
-            status = check_all_features()[feature]
-            print(f"      • {feature} ({status['cadence']})")
+            status = all_features_status[feature]
+            missing_info = ""
+            if status.get('missing_files'):
+                missing_info = f" - missing: {', '.join(status['missing_files'])}"
+            print(f"      • {feature} ({status['cadence']}){missing_info}")
 
     # Recommendation
     print(f"\n💡 Workflow Recommendation: {recommendation['workflow'].upper()}")
