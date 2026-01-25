@@ -9,7 +9,7 @@ on:
 jobs:
   forecast:
     runs-on: ubuntu-latest
-    timeout-minutes: 360  # 6 hours - allows for training 66 neural network models
+    timeout-minutes: 360  # 6 hours - allows for training neural network models
     permissions:
       contents: write  # Allow git push
 
@@ -26,30 +26,36 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Download previous models from artifacts
-        uses: dawidd6/action-download-artifact@v3
-        continue-on-error: true
-        with:
-          workflow: daily-forecast.yml
-          name: trained-models
-          path: .
-          if_no_artifact_found: warn
-
-      - name: Verify downloaded models
+      # Models are stored in repo - no artifact download needed!
+      - name: Verify models in repository
         run: |
-          echo "Checking for downloaded models..."
-          if [ -d "outputs/models" ]; then
-            echo "✓ Models directory found"
-            ls -lh outputs/models/ || echo "Models directory empty"
+          echo "=============================================="
+          echo "Checking models stored in repository..."
+          echo "=============================================="
+
+          echo ""
+          echo "📦 Core Models:"
+          if [ -f "outputs/models/hmm_model.joblib" ]; then
+            echo "  ✓ HMM Model found"
           else
-            echo "⚠️ No models directory (will train from scratch)"
+            echo "  ✗ HMM Model missing (will be trained)"
           fi
-          if [ -d "outputs/clustering" ]; then
-            echo "✓ Clustering directory found"
-            ls -lh outputs/clustering/ || echo "Clustering directory empty"
+
+          if [ -f "outputs/models/regime_classifier.joblib" ]; then
+            echo "  ✓ Regime Classifier found"
           else
-            echo "⚠️ No clustering directory"
+            echo "  ✗ Regime Classifier missing (will be trained)"
           fi
+
+          echo ""
+          echo "📊 Feature Models:"
+          MODEL_COUNT=$(find outputs/forecasting/models -name "nf_bundle_v*" -type d 2>/dev/null | wc -l | tr -d ' ')
+          VERSION_COUNT=$(find outputs/forecasting/models -name "*_versions.json" -type f 2>/dev/null | wc -l | tr -d ' ')
+          echo "  Model bundles: $MODEL_COUNT"
+          echo "  Version files: $VERSION_COUNT"
+
+          echo ""
+          echo "=============================================="
 
       - name: Install dependencies
         run: |
@@ -69,29 +75,63 @@ jobs:
           echo '${{ secrets.GCP_CREDENTIALS }}' > /tmp/gcp_credentials.json
           echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp_credentials.json" >> $GITHUB_ENV
 
-      - name: Run daily forecast pipeline
+      - name: Run daily forecast pipeline (auto mode)
         env:
           PYTHONUNBUFFERED: 1
         run: |
-          echo "Starting daily market regime forecast..."
+          echo "Starting daily market regime forecast (auto mode)..."
+          echo "Auto mode will:"
+          echo "  - Detect if models need training"
+          echo "  - Train ONLY missing/stale models"
+          echo "  - Run inference with all available models"
+          echo "  - Update BigQuery with forecasts"
+          echo ""
 
-          # Run the pipeline (logs are committed after each stage completes)
+          # Run the pipeline with auto mode
           python run_daily_update.py
 
           # Final commit of the log
-          bash utils/commit_log.sh
+          bash utils/commit_log.sh || true
 
-      - name: Upload trained models
+      # CRITICAL: Commit trained models to repository for permanent storage
+      - name: Commit trained models to repository
+        if: always()
+        run: |
+          echo "=============================================="
+          echo "Committing trained models to repository..."
+          echo "=============================================="
+
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "GitHub Actions Bot"
+
+          # Add all model files
+          git add outputs/models/*.joblib 2>/dev/null || true
+          git add outputs/clustering/*.parquet 2>/dev/null || true
+          git add outputs/forecasting/models/ 2>/dev/null || true
+
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No model changes to commit"
+          else
+            echo "Committing model updates..."
+            git commit -m "chore: update trained models [skip ci]"
+            git pull --rebase origin main
+            git push
+            echo "✅ Models committed to repository!"
+          fi
+
+      # Keep artifacts as backup (but models are primarily stored in repo)
+      - name: Upload trained models (backup)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: trained-models
+          name: trained-models-backup
           path: |
             outputs/models/*.joblib
             outputs/clustering/*.parquet
             outputs/forecasting/models/*/nf_bundle_v*/**
             outputs/forecasting/models/*_versions.json
-          retention-days: 90
+          retention-days: 30
 
       - name: Log daily predictions
         run: |
@@ -125,19 +165,14 @@ jobs:
           curl -I https://marketpulsedashboard.streamlit.app || true
           echo "✓ Dashboard pinged successfully"
 
-      - name: Upload forecast artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: forecast-${{ github.run_number }}
-          path: |
-            DAILY_PREDICTIONS.md
-          retention-days: 7
-
       - name: Summary
         if: success()
         run: |
+          echo "=============================================="
           echo "✅ Daily forecast completed successfully!"
+          echo "=============================================="
           echo "📅 Timestamp: $(date +'%Y-%m-%d %H:%M UTC')"
-          echo "🔗 View results: https://github.com/${{ github.repository }}/blob/main/DAILY_PREDICTIONS.md"
+          echo "💾 Models: Stored permanently in repository"
+          echo "🔗 Results: https://github.com/${{ github.repository }}/blob/main/DAILY_PREDICTIONS.md"
           echo "📊 Dashboard: https://marketpulsedashboard.streamlit.app"
+          echo "=============================================="
