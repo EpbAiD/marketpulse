@@ -1,0 +1,24 @@
+{
+  "feature": "COPPER",
+  "cadence": "daily",
+  "base_models": [
+    "NBEATSx",
+    "NHITS",
+    "PatchTST"
+  ],
+  "column_index_map": {
+    "NBEATSx": 0,
+    "NHITS": 1,
+    "PatchTST": 2
+  },
+  "n_models": 3,
+  "metric_used": "smape",
+  "normalize": true,
+  "tie_breaker": "equal",
+  "timestamp": "2026-01-25T23:57:23.353935",
+  "weights": [
+    0.34149863701666383,
+    0.34154405871640314,
+    0.31695730426693314
+  ]
+}
