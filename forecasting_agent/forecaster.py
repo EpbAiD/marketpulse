@@ -1094,36 +1094,27 @@ def train_forecaster_for_feature(feature_path, cadence, horizon, val_size, force
             _save_residuals_plots(df_last[["ds", "y", "y_pred"]], feature_name=fname)
 
         # ===========================================================
-        # ✅ Final full-data retrain ONLY for saving deployable models (with versioning)
+        # ✅ Final full-data retrain for saving deployable models (with versioning)
         # ===========================================================
-        # WORKAROUND: Skip final retrain for weekly/monthly to avoid hanging (GitHub Actions issue)
-        # Test metrics are already valid from train/val/test split above
-        if cadence in ["weekly", "monthly"]:
-            print(f"\n⏭️ Skipping final retrain for {fname} (weekly/monthly) - using test models as final")
-            # Mark version as completed with test metrics
+        try:
+            print(f"\n🧠 Retraining final full-data model for {fname} v{current_version} (saving artifacts)...")
+            # Use the last horizon timestamps from the series to drive shapes;
+            # predictions themselves are not used here—this call persists models.
+            final_window_ds = df_long["ds"].tail(horizon).to_numpy()
+            _ = _fit_and_predict_window(
+                cadence, horizon, df_long, val_size, final_window_ds,
+                inferred_freq, accel, nf_loss, arima_cfg, prophet_cfg, ens_cfg,
+                save_model=True,
+                versioned_paths=versioned_paths,
+                feature_name=fname
+            )
+            # Mark version as completed
             mark_version_status(fname, current_version, "completed", metrics=metrics)
-            print(f"✅ {fname} v{current_version} marked as completed (test models saved)\n")
-        else:
-            # Daily features: do final retrain as normal
-            try:
-                print(f"\n🧠 Retraining final full-data model for {fname} v{current_version} (saving artifacts)...")
-                # Use the last horizon timestamps from the series to drive shapes;
-                # predictions themselves are not used here—this call persists models.
-                final_window_ds = df_long["ds"].tail(horizon).to_numpy()
-                _ = _fit_and_predict_window(
-                    cadence, horizon, df_long, val_size, final_window_ds,
-                    inferred_freq, accel, nf_loss, arima_cfg, prophet_cfg, ens_cfg,
-                    save_model=True,
-                    versioned_paths=versioned_paths,
-                    feature_name=fname
-                )
-                # Mark version as completed
-                mark_version_status(fname, current_version, "completed", metrics=metrics)
-                print(f"✅ Final model for {fname} v{current_version} saved and marked as active version\n")
-            except Exception as e:
-                # Mark version as failed
-                mark_version_status(fname, current_version, "failed")
-                print(f"⚠️ Failed to retrain/save final model for {fname} v{current_version}: {e}")
+            print(f"✅ Final model for {fname} v{current_version} saved and marked as active version\n")
+        except Exception as e:
+            # Mark version as failed
+            mark_version_status(fname, current_version, "failed")
+            print(f"⚠️ Failed to retrain/save final model for {fname} v{current_version}: {e}")
 
         return {"feature": fname, "Cadence": cadence, **metrics}
     finally:
