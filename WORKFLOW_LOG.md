@@ -36,3 +36,9 @@
 
 **[11:28:09]** (7.1min) ✅ **SUCCESS**: Regime classifier trained (7.8s) - Model saved
 
+**[11:28:10]** (7.1min) 📍 **STAGE**: Starting stage: Forecasting - Intelligent Model Check
+
+**[11:28:10]** (7.1min) ℹ️ **INFO**: Intelligent Decision: train
+
+**[11:28:10]** (7.1min) ℹ️ **INFO**: Reason: Core models (HMM/classifier) missing or stale + 6 features need training
+
