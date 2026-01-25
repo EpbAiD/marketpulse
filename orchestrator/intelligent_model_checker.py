@@ -241,12 +241,13 @@ def get_intelligent_recommendation() -> Dict:
 
     # Decision logic
     if core_status['needs_training']:
-        # Core models missing or stale - need full retrain
+        # Core models missing or stale - retrain core + only missing/stale features
+        # DON'T retrain all 22 features if they already exist!
         return {
             'workflow': 'train',
-            'features_to_train': list(features_status.keys()),  # Train all features
+            'features_to_train': features_needing_training,  # Only train missing/stale features, NOT all 22!
             'retrain_core': True,
-            'reason': 'Core models (HMM/classifier) are missing or stale',
+            'reason': f'Core models (HMM/classifier) missing or stale + {len(features_needing_training)} features need training',
             'details': {
                 'core_status': core_status,
                 'total_features': len(features_status),
