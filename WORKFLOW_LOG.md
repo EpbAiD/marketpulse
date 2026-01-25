@@ -26,3 +26,9 @@
 
 **[14:55:26]** (6.1min) ℹ️ **INFO**: Using existing RF classifier (0 days old < 30 day threshold)
 
+**[14:55:27]** (6.2min) 📍 **STAGE**: Starting stage: Forecasting
+
+**[14:55:27]** (6.2min) ℹ️ **INFO**: Selective training: 6 features (VIX9D, DGS2, NFCI, CPI, UNRATE...)
+
+**[14:55:27]** (6.2min) 📍 **STAGE**: Starting stage: Forecasting - Training Models
+
