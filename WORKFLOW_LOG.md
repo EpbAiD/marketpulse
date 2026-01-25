@@ -16,3 +16,9 @@
 
 **[14:18:59]** (2.7min) ✅ **SUCCESS**: Feature engineering completed (78.7s) - Saved to BigQuery
 
+**[14:19:00]** (2.7min) 📍 **STAGE**: Starting stage: Forecasting
+
+**[14:19:00]** (2.7min) ℹ️ **INFO**: Selective training: 6 features (VIX9D, DGS2, NFCI, CPI, UNRATE...)
+
+**[14:19:00]** (2.7min) 📍 **STAGE**: Starting stage: Forecasting - Training Models
+
