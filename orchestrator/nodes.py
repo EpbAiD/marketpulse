@@ -342,6 +342,8 @@ def select_node(state: PipelineState) -> PipelineState:
 def cluster_node(state: PipelineState) -> PipelineState:
     """
     Run HMM clustering to identify market regimes.
+
+    If retrain_core=False and HMM model exists, skip training and use existing model.
     Wraps clustering_agent.clustering.run_hmm_clustering()
     """
     if state.get("skip_cluster", False):
@@ -353,6 +355,30 @@ def cluster_node(state: PipelineState) -> PipelineState:
     if not state.get("select_status", {}).get("success", False) and not state.get("skip_select", False):
         print("⚠️  Cannot run clustering: feature selection failed or was skipped\n")
         state["cluster_status"] = {"success": False, "error": "Dependency failed"}
+        return state
+
+    # Check if we should skip retraining (core models are fresh)
+    retrain_core = state.get("retrain_core", True)
+    hmm_model_path = "outputs/models/hmm_model.joblib"
+
+    if not retrain_core and os.path.exists(hmm_model_path):
+        print("\n" + "=" * 70)
+        print("🚀 STAGE 4: Regime Clustering (HMM) - USING EXISTING MODEL")
+        print("=" * 70 + "\n")
+        print("📦 Core model is fresh (retrain_core=False)")
+        print(f"✅ Using existing HMM model: {hmm_model_path}\n")
+
+        logger = get_logger()
+        logger.info("Using existing HMM model (retrain_core=False)")
+        logger.commit_to_github()
+
+        state["cluster_status"] = {
+            "success": True,
+            "used_existing": True,
+            "model_path": hmm_model_path,
+            "timestamp": datetime.now().isoformat(),
+        }
+        state["cluster_assignments_path"] = "outputs/clustering/cluster_assignments.parquet"
         return state
 
     print("\n" + "=" * 70)
@@ -424,6 +450,8 @@ def cluster_node(state: PipelineState) -> PipelineState:
 def classify_node(state: PipelineState) -> PipelineState:
     """
     Train Random Forest classifier to predict regimes.
+
+    If retrain_core=False and classifier model exists, skip training and use existing model.
     Wraps classification_agent.classifier.train_regime_classifier()
     """
     if state.get("skip_classify", False):
@@ -435,6 +463,30 @@ def classify_node(state: PipelineState) -> PipelineState:
     if not state.get("cluster_status", {}).get("success", False) and not state.get("skip_cluster", False):
         print("⚠️  Cannot train classifier: clustering failed or was skipped\n")
         state["classify_status"] = {"success": False, "error": "Dependency failed"}
+        return state
+
+    # Check if we should skip retraining (core models are fresh)
+    retrain_core = state.get("retrain_core", True)
+    classifier_model_path = "outputs/models/regime_classifier.joblib"
+
+    if not retrain_core and os.path.exists(classifier_model_path):
+        print("\n" + "=" * 70)
+        print("🚀 STAGE 5: Regime Classification - USING EXISTING MODEL")
+        print("=" * 70 + "\n")
+        print("📦 Core model is fresh (retrain_core=False)")
+        print(f"✅ Using existing classifier: {classifier_model_path}\n")
+
+        logger = get_logger()
+        logger.info("Using existing RF classifier (retrain_core=False)")
+        logger.commit_to_github()
+
+        state["classify_status"] = {
+            "success": True,
+            "used_existing": True,
+            "model_path": classifier_model_path,
+            "timestamp": datetime.now().isoformat(),
+        }
+        state["classifier_model_path"] = classifier_model_path
         return state
 
     print("\n" + "=" * 70)

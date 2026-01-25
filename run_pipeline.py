@@ -258,14 +258,12 @@ Examples:
         elif recommendation['workflow'] == 'partial_train':
             # Partial train: Core models (HMM/RF) are fresh, only some feature models need training
             print(f"🎯 Partial training: {len(recommendation['features_to_train'])} features need training")
-            print(f"   Core models (HMM/RF) are fresh - skipping core retraining")
+            print(f"   Core models (HMM/RF) are fresh - will use existing models")
             print(f"   Features to train: {', '.join(sorted(recommendation['features_to_train']))}\n")
             args.workflow = "full"
             args.retrain_core = False
-            # Skip select/cluster/classify since core models are fresh
-            args.skip_select = True
-            args.skip_cluster = True
-            args.skip_classify = True
+            # DO NOT skip select/cluster/classify - they need to run but will use existing models
+            # The nodes check retrain_core flag to decide whether to train or load existing
 
         else:  # 'train' - core models need retraining
             # Core models (HMM/RF) are missing or stale (> 30 days old)
