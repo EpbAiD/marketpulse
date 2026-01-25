@@ -136,9 +136,9 @@ def run_full_workflow(args):
         single_daily=args.single_daily,
         single_weekly=args.single_weekly,
         single_monthly=args.single_monthly,
-        # Intelligent auto-mode flags (from auto mode detection)
+        # Selective features for forecasting (from auto mode detection)
+        # Note: cluster/classify nodes self-detect model freshness via intelligent_model_checker
         selective_features=getattr(args, 'selective_features', None),
-        retrain_core=getattr(args, 'retrain_core', True),
     )
 
     # Build and run graph
@@ -244,29 +244,28 @@ Examples:
 
         recommendation = print_intelligent_status()
 
-        # Store recommendation for use by state/nodes
+        # Store selective_features for forecast_node (which features need training)
+        # Note: cluster_node and classify_node now self-detect using intelligent_model_checker
         args.selective_features = recommendation.get('features_to_train') or None
-        args.retrain_core = recommendation.get('retrain_core', True)
 
         if recommendation['workflow'] == 'inference':
             # All models fresh - just run inference
             print(f"✅ All models ready! Running inference workflow...\n")
             args.workflow = "inference"
             args.selective_features = None
-            args.retrain_core = False
 
         elif recommendation['workflow'] == 'partial_train':
             # Partial train: Core models (HMM/RF) are fresh, only some feature models need training
+            # Nodes will self-detect and use existing core models
             print(f"🎯 Partial training: {len(recommendation['features_to_train'])} features need training")
-            print(f"   Core models (HMM/RF) are fresh - will use existing models")
+            print(f"   Core models (HMM/RF) are fresh - nodes will auto-detect and use existing")
             print(f"   Features to train: {', '.join(sorted(recommendation['features_to_train']))}\n")
             args.workflow = "full"
-            args.retrain_core = False
-            # DO NOT skip select/cluster/classify - they need to run but will use existing models
-            # The nodes check retrain_core flag to decide whether to train or load existing
+            # Nodes (cluster_node, classify_node) will self-detect model freshness
 
         else:  # 'train' - core models need retraining
             # Core models (HMM/RF) are missing or stale (> 30 days old)
+            # Nodes will self-detect and train new models
             print(f"🔄 Core models need retraining (HMM/RF > 30 days old or missing)")
             if recommendation['features_to_train']:
                 print(f"   Also training {len(recommendation['features_to_train'])} feature models")
@@ -274,8 +273,7 @@ Examples:
             else:
                 print(f"   All feature models are fresh - only retraining core\n")
             args.workflow = "full"
-            args.retrain_core = True
-            # Don't skip any core stages - need full pipeline for HMM/RF
+            # Nodes (cluster_node, classify_node) will self-detect model staleness
 
     # Route to appropriate workflow
     try:

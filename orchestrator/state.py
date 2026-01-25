@@ -58,8 +58,8 @@ class PipelineState(TypedDict, total=False):
     single_monthly: Optional[str]
 
     # Intelligent auto-mode flags (from intelligent_model_checker)
+    # Note: cluster_node and classify_node self-detect model freshness
     selective_features: Optional[List[str]]  # Features that need training (None = train all)
-    retrain_core: bool  # Whether to retrain HMM/RF classifier
 
     # ============================================================
     # STAGE STATUS TRACKING
@@ -163,7 +163,6 @@ def create_initial_state(
     single_weekly: Optional[str] = None,
     single_monthly: Optional[str] = None,
     selective_features: Optional[List[str]] = None,
-    retrain_core: bool = True,
 ) -> PipelineState:
     """
     Factory function to create initial pipeline state.
@@ -210,9 +209,9 @@ def create_initial_state(
         single_weekly=single_weekly,
         single_monthly=single_monthly,
 
-        # Intelligent auto-mode flags
+        # Intelligent auto-mode flags (for forecast_node)
+        # Note: cluster_node and classify_node self-detect model freshness
         selective_features=selective_features,
-        retrain_core=retrain_core,
 
         # Initialize training status dicts
         fetch_status={},
