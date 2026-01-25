@@ -36,3 +36,9 @@
 
 **[13:59:27]** (7.0min) ✅ **SUCCESS**: Regime classifier trained (7.5s) - Model saved
 
+**[13:59:28]** (7.0min) 📍 **STAGE**: Starting stage: Forecasting
+
+**[13:59:28]** (7.0min) ℹ️ **INFO**: Selective training: 6 features (VIX9D, DGS2, NFCI, CPI, UNRATE...)
+
+**[13:59:28]** (7.0min) 📍 **STAGE**: Starting stage: Forecasting - Training Models
+
