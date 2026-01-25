@@ -252,7 +252,7 @@ class BigQueryStorage(StorageBackend):
         print(f"✅ BigQuery: Replaced aligned_dataset ({len(data)} rows)")
 
     def save_cluster_assignments(self, df: pd.DataFrame) -> None:
-        """Save cluster assignments (replace mode)"""
+        """Save cluster assignments (replace mode) - to both BigQuery and local file"""
         # Prepare data
         data = df.copy()
         data = data.reset_index()
@@ -277,6 +277,14 @@ class BigQueryStorage(StorageBackend):
 
         self._retry_operation(write_op)
         print(f"✅ BigQuery: Replaced cluster_assignments ({len(data)} rows)")
+
+        # Also save to local file for model checking
+        # This allows intelligent_model_checker to detect if cluster assignments exist
+        local_path = Path(__file__).parent.parent.parent / "outputs" / "clustering"
+        local_path.mkdir(parents=True, exist_ok=True)
+        local_file = local_path / "cluster_assignments.parquet"
+        df.to_parquet(local_file)
+        print(f"💾 Local: Saved cluster_assignments → {local_file.name}")
 
     # ========================================================================
     # LOAD METHODS
