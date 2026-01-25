@@ -16,3 +16,9 @@
 
 **[14:51:28]** (2.2min) ✅ **SUCCESS**: Feature engineering completed (73.2s) - Saved to BigQuery
 
+**[14:51:29]** (2.2min) 📍 **STAGE**: Starting stage: Feature Selection
+
+**[14:51:29]** (2.2min) ℹ️ **INFO**: Starting feature selection (PCA + correlation + mRMR, BigQuery: True)
+
+**[14:55:25]** (6.1min) ✅ **SUCCESS**: Feature selection completed (236.2s) - Selected features saved to BigQuery
+
