@@ -12,8 +12,8 @@ from forecasting_agent import forecaster
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--group', required=True, choices=['A', 'B', 'C', 'C1', 'C2'],
-                        help='Which group to train (A=1-7, B=8-14, C1=15-18 daily, C2=19-22 weekly+monthly)')
+    parser.add_argument('--group', required=True, choices=['A', 'A1', 'A2', 'B', 'C', 'C1', 'C2'],
+                        help='Which group to train (A1=1-4, A2=5-7, B=8-14, C1=15-18 daily, C2=19-22 weekly+monthly)')
     args = parser.parse_args()
 
     # Load config
@@ -22,9 +22,17 @@ def main():
 
     # Determine features based on group
     if args.group == 'A':
-        # Features 1-7: First 7 daily features
+        # Features 1-7: First 7 daily features (legacy - all of A)
         features_to_train = config['daily']['features'][:7]
         print(f"Group A: Training features 1-7")
+    elif args.group == 'A1':
+        # Features 1-4: GSPC, IXIC, DXY, UUP
+        features_to_train = config['daily']['features'][:4]
+        print(f"Group A1: Training features 1-4 (GSPC, IXIC, DXY, UUP)")
+    elif args.group == 'A2':
+        # Features 5-7: VIX, VIX3M, VIX9D
+        features_to_train = config['daily']['features'][4:7]
+        print(f"Group A2: Training features 5-7 (VIX, VIX3M, VIX9D)")
     elif args.group == 'B':
         # Features 8-14: Next 7 daily features
         features_to_train = config['daily']['features'][7:14]
