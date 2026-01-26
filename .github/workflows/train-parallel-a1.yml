@@ -1,0 +1,77 @@
+name: Train Models - Parallel A1 (Features 1-4)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360  # 6 hours
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Download previous models from artifacts
+        uses: dawidd6/action-download-artifact@v3
+        continue-on-error: true
+        with:
+          workflow: daily-forecast.yml
+          name: trained-models
+          path: .
+          if_no_artifact_found: warn
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_github_actions.txt
+
+      - name: Set up Google Cloud credentials
+        run: |
+          echo '${{ secrets.GCP_CREDENTIALS }}' > /tmp/gcp_credentials.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp_credentials.json" >> $GITHUB_ENV
+
+      - name: Train features 1-4 (GSPC, IXIC, DXY, UUP)
+        env:
+          PYTHONUNBUFFERED: 1
+        run: |
+          python train_parallel_subset.py --group A1
+
+      - name: Commit trained models to repository
+        if: always()
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "GitHub Actions Bot"
+          git add outputs/forecasting/models/ 2>/dev/null || true
+          echo "Files to commit:"
+          git diff --staged --name-only | head -50
+          if git diff --staged --quiet; then
+            echo "No model changes to commit"
+          else
+            git commit -m "chore: update trained models (group A1) [skip ci]"
+            git pull --rebase origin main
+            git push
+            echo "Models committed!"
+          fi
+
+      - name: Upload trained models (backup)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trained-models-parallel-a1
+          path: |
+            outputs/forecasting/models/*/nf_bundle_v*/**
+            outputs/forecasting/models/*/*.json
+            outputs/forecasting/models/*_versions.json
+          retention-days: 90
