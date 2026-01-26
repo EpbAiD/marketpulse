@@ -1,0 +1,24 @@
+{
+  "feature": "UUP",
+  "cadence": "daily",
+  "base_models": [
+    "NBEATSx",
+    "NHITS",
+    "PatchTST"
+  ],
+  "column_index_map": {
+    "NBEATSx": 0,
+    "NHITS": 1,
+    "PatchTST": 2
+  },
+  "n_models": 3,
+  "metric_used": "smape",
+  "normalize": true,
+  "tie_breaker": "equal",
+  "timestamp": "2026-01-26T06:45:53.763756",
+  "weights": [
+    0.32744187799059754,
+    0.3475233486576217,
+    0.3250347733517808
+  ]
+}
