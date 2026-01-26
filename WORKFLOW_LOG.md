@@ -1,36 +1,12 @@
 # Workflow Execution Log
 
-**Started**: 2026-01-25 15:22:07 UTC
+**Started**: 2026-01-26 11:24:06 UTC
 
 ---
 
-**[15:22:07]** (0.0min) 📍 **STAGE**: Starting stage: Data Fetching
+**[11:24:06]** (0.0min) 📍 **STAGE**: Starting stage: Data Fetching
 
-**[15:22:10]** (0.0min) ℹ️ **INFO**: Starting data fetch (BigQuery: True)
+**[11:24:08]** (0.0min) ℹ️ **INFO**: Starting data fetch (BigQuery: True)
 
-**[15:22:56]** (0.8min) ✅ **SUCCESS**: Data fetch completed (49.4s) - Saved to BigQuery
-
-**[15:22:57]** (0.8min) 📍 **STAGE**: Starting stage: Feature Engineering
-
-**[15:22:57]** (0.8min) ℹ️ **INFO**: Starting feature engineering (BigQuery: True)
-
-**[15:24:14]** (2.1min) ✅ **SUCCESS**: Feature engineering completed (76.4s) - Saved to BigQuery
-
-**[15:24:14]** (2.1min) 📍 **STAGE**: Starting stage: Feature Selection
-
-**[15:24:15]** (2.1min) ℹ️ **INFO**: Starting feature selection (PCA + correlation + mRMR, BigQuery: True)
-
-**[15:28:16]** (6.2min) ✅ **SUCCESS**: Feature selection completed (241.5s) - Selected features saved to BigQuery
-
-**[15:28:16]** (6.2min) ℹ️ **INFO**: Using existing HMM model (0 days old < 30 day threshold)
-
-**[15:28:17]** (6.2min) ℹ️ **INFO**: Using existing RF classifier (0 days old < 30 day threshold)
-
-**[15:28:18]** (6.2min) 📍 **STAGE**: Starting stage: Forecasting
-
-**[15:28:18]** (6.2min) ℹ️ **INFO**: Selective training: 6 features (VIX9D, DGS2, NFCI, CPI, UNRATE...)
-
-**[15:28:18]** (6.2min) 📍 **STAGE**: Starting stage: Forecasting - Training Models
-
-**[15:28:24]** (6.3min) ✅ **SUCCESS**: Forecasting completed (6.4s) - Models trained and saved
+**[11:25:03]** (0.9min) ✅ **SUCCESS**: Data fetch completed (56.6s) - Saved to BigQuery
 
