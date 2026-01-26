@@ -1,0 +1,111 @@
+name: Train CPI (Monthly Feature)
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360  # 6 hours
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Pull latest changes
+        run: |
+          git pull origin main
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_github_actions.txt
+
+      - name: Verify critical packages
+        run: |
+          python -c "import google.cloud.bigquery; print('✓ google-cloud-bigquery')"
+          python -c "import neuralforecast; print('✓ neuralforecast')"
+
+      - name: Install Stan compiler for Prophet
+        run: |
+          echo "Installing Stan compiler for Prophet..."
+          python -c "import cmdstanpy; cmdstanpy.install_cmdstan(verbose=True)"
+          echo "✓ Stan compiler installed"
+
+      - name: Verify Prophet installation
+        run: |
+          python -c "
+          from prophet import Prophet
+          import pandas as pd
+          import numpy as np
+          m = Prophet()
+          df = pd.DataFrame({'ds': pd.date_range('2020-01-01', periods=100, freq='MS'), 'y': np.random.randn(100).cumsum()})
+          m.fit(df, algorithm='Newton')
+          print('✓ Prophet working')
+          "
+
+      - name: Set up Google Cloud credentials
+        run: |
+          echo '${{ secrets.GCP_CREDENTIALS }}' > /tmp/gcp_credentials.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp_credentials.json" >> $GITHUB_ENV
+
+      - name: Train CPI
+        env:
+          PYTHONUNBUFFERED: 1
+        run: |
+          python -c "
+          from forecasting_agent import forecaster
+          forecaster.run_forecasting_agent(
+              mode='all',
+              config_path='configs/features_config.yaml',
+              use_bigquery=True,
+              force_retrain=True,
+              selective_features=['CPI']
+          )
+          "
+
+      - name: Commit trained model to repository
+        if: always()
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "GitHub Actions Bot"
+          git add outputs/forecasting/models/CPI/ 2>/dev/null || true
+          git add outputs/forecasting/models/CPI_versions.json 2>/dev/null || true
+          echo "Files to commit:"
+          git diff --staged --name-only
+          if git diff --staged --quiet; then
+            echo "No model changes to commit"
+          else
+            git commit -m "chore: update trained model for CPI [skip ci]"
+            git pull --rebase origin main
+            git push
+            echo "✅ CPI model committed!"
+          fi
+
+      - name: Upload trained model (backup)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trained-model-cpi
+          path: |
+            outputs/forecasting/models/CPI/**
+          retention-days: 90
+
+      - name: Trigger UNRATE training
+        if: success()
+        run: |
+          gh workflow run train-unrate.yml
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
