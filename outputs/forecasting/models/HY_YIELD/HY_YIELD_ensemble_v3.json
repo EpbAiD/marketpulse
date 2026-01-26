@@ -1,0 +1,24 @@
+{
+  "feature": "HY_YIELD",
+  "cadence": "daily",
+  "base_models": [
+    "NBEATSx",
+    "NHITS",
+    "PatchTST"
+  ],
+  "column_index_map": {
+    "NBEATSx": 0,
+    "NHITS": 1,
+    "PatchTST": 2
+  },
+  "n_models": 3,
+  "metric_used": "smape",
+  "normalize": true,
+  "tie_breaker": "equal",
+  "timestamp": "2026-01-26T00:31:02.267031",
+  "weights": [
+    0.3195381314582296,
+    0.34300983448527933,
+    0.33745203405649093
+  ]
+}
