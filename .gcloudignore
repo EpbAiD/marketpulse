@@ -1,0 +1,22 @@
+# Ignore for Cloud Build
+.git
+.github
+__pycache__
+*.pyc
+*.pyo
+.env
+.venv
+venv
+*.egg-info
+.pytest_cache
+.mypy_cache
+lightning_logs/
+outputs/
+*.parquet
+*.csv
+data/
+logs/
+dashboard_screenshots/
+*.log
+.DS_Store
+node_modules/

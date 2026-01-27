@@ -12,14 +12,16 @@ echo "=============================================="
 # Verify GPU is available
 python -c "import torch; print(f'GPU Available: {torch.cuda.is_available()}'); print(f'GPU Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"None\"}')"
 
-# Set up Git for pushing results
+# Clone repo fresh (container doesn't have .git)
 if [ -n "$GITHUB_TOKEN" ]; then
-    git config --global user.email "cloud-run-bot@marketpulse.ai"
-    git config --global user.name "Cloud Run Training Bot"
-    git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git"
-    git fetch origin main
-    git checkout main
-    git pull origin main
+    echo "📥 Cloning repository..."
+    cd /tmp
+    git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git" repo
+    cd repo
+    git config user.email "cloud-run-bot@marketpulse.ai"
+    git config user.name "Cloud Run Training Bot"
+    # Copy over the installed packages symlink approach won't work, so we use the cloned repo
+    export PYTHONPATH=/app:$PYTHONPATH
 fi
 
 # Run based on mode
@@ -69,6 +71,7 @@ esac
 # Push results to GitHub
 if [ -n "$GITHUB_TOKEN" ]; then
     echo "📤 Pushing results to GitHub..."
+    # We're in /tmp/repo now
     git add outputs/forecasting/models/ 2>/dev/null || true
     git add outputs/clustering/ 2>/dev/null || true
     git add outputs/classification/ 2>/dev/null || true
@@ -76,7 +79,7 @@ if [ -n "$GITHUB_TOKEN" ]; then
     if git diff --staged --quiet; then
         echo "No changes to commit"
     else
-        git commit -m "chore: update models from Cloud Run GPU training [skip ci]"
+        git commit -m "chore: update models from Cloud Run training [skip ci]"
         git pull --rebase origin main
         git push origin main
         echo "✅ Results pushed to GitHub!"
