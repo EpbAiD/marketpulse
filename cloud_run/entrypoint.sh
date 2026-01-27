@@ -28,7 +28,7 @@ fi
 case "${MODE}" in
     "auto")
         echo "🤖 Running intelligent auto mode..."
-        python run_pipeline.py --mode auto --retrain-if-needed
+        python run_pipeline.py --workflow auto
         ;;
     "train")
         echo "🏋️ Running full training..."
@@ -60,7 +60,7 @@ forecaster.run_forecasting_agent(
         ;;
     "inference")
         echo "🔮 Running inference only..."
-        python run_pipeline.py --mode inference
+        python run_pipeline.py --workflow inference
         ;;
     *)
         echo "Unknown mode: ${MODE}"
