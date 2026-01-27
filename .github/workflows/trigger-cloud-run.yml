@@ -1,0 +1,53 @@
+name: Trigger Cloud Run Training
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Training mode'
+        required: true
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - train
+          - inference
+      features:
+        description: 'Features to train (comma-separated, or "all")'
+        required: false
+        default: 'all'
+      force_retrain:
+        description: 'Force retrain even if models are fresh'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Trigger Cloud Run Job
+        run: |
+          echo "🚀 Triggering Cloud Run GPU training job..."
+          echo "Mode: ${{ inputs.mode }}"
+          echo "Features: ${{ inputs.features }}"
+          echo "Force Retrain: ${{ inputs.force_retrain }}"
+
+          gcloud run jobs execute marketpulse-training \
+            --region=us-central1 \
+            --update-env-vars="MODE=${{ inputs.mode }},FEATURES=${{ inputs.features }},FORCE_RETRAIN=${{ inputs.force_retrain }}"
+
+          echo "✅ Job triggered! Check Cloud Run console for status."
