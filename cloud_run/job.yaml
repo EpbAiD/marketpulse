@@ -1,0 +1,54 @@
+# Cloud Run Job Configuration for GPU Training
+# Deploy with: gcloud run jobs replace cloud_run/job.yaml
+
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: marketpulse-training
+  labels:
+    cloud.googleapis.com/location: us-central1
+  annotations:
+    run.googleapis.com/launch-stage: BETA
+spec:
+  template:
+    metadata:
+      annotations:
+        # GPU configuration
+        run.googleapis.com/gpu-type: nvidia-l4
+        run.googleapis.com/gpu-zonal-redundancy-disabled: "true"
+    spec:
+      template:
+        spec:
+          containers:
+            - image: us-central1-docker.pkg.dev/PROJECT_ID/marketpulse/training:latest
+              resources:
+                limits:
+                  cpu: "4"
+                  memory: "16Gi"
+                  nvidia.com/gpu: "1"
+              env:
+                - name: MODE
+                  value: "auto"
+                - name: FORCE_RETRAIN
+                  value: "false"
+                - name: GITHUB_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: github-token
+                      key: latest
+                - name: GITHUB_REPO
+                  value: "EpbAiD/marketpulse"
+                - name: GOOGLE_APPLICATION_CREDENTIALS
+                  value: "/secrets/gcp/credentials.json"
+              volumeMounts:
+                - name: gcp-credentials
+                  mountPath: /secrets/gcp
+                  readOnly: true
+          volumes:
+            - name: gcp-credentials
+              secret:
+                secretName: gcp-credentials
+          timeoutSeconds: 14400  # 4 hours max
+          serviceAccountName: marketpulse-training@PROJECT_ID.iam.gserviceaccount.com
+      taskCount: 1
+      parallelism: 1
