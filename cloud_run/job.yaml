@@ -28,9 +28,13 @@ spec:
                   nvidia.com/gpu: "1"
               env:
                 - name: MODE
-                  value: "auto"
+                  value: "train"
+                - name: FEATURES
+                  value: "all"  # Or comma-separated list like "VIX,GSPC,DXY"
                 - name: FORCE_RETRAIN
                   value: "false"
+                - name: INCREMENTAL_COMMITS
+                  value: "true"  # Commit each feature immediately after training
                 - name: GITHUB_TOKEN
                   valueFrom:
                     secretKeyRef:
