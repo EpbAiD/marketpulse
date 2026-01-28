@@ -44,6 +44,42 @@ import yaml
 from datetime import datetime
 import gc  # ADD
 
+# 🔹 PyTorch 2.6+ Compatibility Patch
+# Fix for weights_only=True default in torch.load() which breaks NeuralForecast model loading
+# See: https://github.com/pytorch/pytorch/issues/137024
+def _setup_torch_safe_globals():
+    """Register safe globals for PyTorch model loading compatibility."""
+    try:
+        import torch
+        from torch.serialization import add_safe_globals
+
+        # Try to import Lightning fabric utilities that need to be allowlisted
+        try:
+            from lightning_fabric.utilities.data import AttributeDict
+            add_safe_globals([AttributeDict])
+        except ImportError:
+            pass
+
+        try:
+            from pytorch_lightning.utilities.data import AttributeDict as PLAttributeDict
+            add_safe_globals([PLAttributeDict])
+        except ImportError:
+            pass
+
+        # Add other common classes that may need to be allowlisted
+        try:
+            from collections import OrderedDict
+            add_safe_globals([OrderedDict])
+        except:
+            pass
+
+    except (ImportError, AttributeError):
+        # torch.serialization.add_safe_globals doesn't exist in older PyTorch versions
+        pass
+
+# Run the setup immediately on import
+_setup_torch_safe_globals()
+
 def _mps_gc():
     """
     Aggressive memory cleanup for PyTorch + MPS.
@@ -787,8 +823,25 @@ def run_inference_for_features(
         nf_bundle_path = versioned_paths["nf_bundle"]
         if os.path.exists(nf_bundle_path):
             try:
-                # Load the NeuralForecast bundle
-                nf = NeuralForecast.load(path=nf_bundle_path)
+                # Load the NeuralForecast bundle with PyTorch 2.6+ compatibility
+                # First try normal load, if it fails due to weights_only, patch and retry
+                try:
+                    nf = NeuralForecast.load(path=nf_bundle_path)
+                except Exception as load_err:
+                    if "weights_only" in str(load_err) or "Unsupported global" in str(load_err):
+                        print(f"  ⚠️ PyTorch 2.6+ compatibility issue, retrying with weights_only=False...")
+                        import torch
+                        original_load = torch.load
+                        def patched_load(*args, **kwargs):
+                            kwargs['weights_only'] = False
+                            return original_load(*args, **kwargs)
+                        torch.load = patched_load
+                        try:
+                            nf = NeuralForecast.load(path=nf_bundle_path)
+                        finally:
+                            torch.load = original_load
+                    else:
+                        raise
                 print(f"  ✅ Loaded NeuralForecast bundle from {os.path.basename(nf_bundle_path)}")
 
                 # Run inference
