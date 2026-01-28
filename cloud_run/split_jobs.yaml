@@ -1,0 +1,64 @@
+# Split Job Configuration for Parallel Training
+# ==============================================
+# Divides 22 features into 3 groups for parallel execution.
+# Each job can run independently and will skip features already trained.
+#
+# Usage:
+#   # Deploy all 3 jobs
+#   ./cloud_run/deploy_split_jobs.sh
+#
+#   # Or run individually via gcloud
+#   gcloud run jobs execute marketpulse-training-batch1 --region us-central1
+#   gcloud run jobs execute marketpulse-training-batch2 --region us-central1
+#   gcloud run jobs execute marketpulse-training-batch3 --region us-central1
+
+# Feature distribution (balanced by estimated training time)
+batches:
+  batch1:
+    name: "marketpulse-training-batch1"
+    description: "Daily features (high frequency data)"
+    features:
+      - GSPC      # S&P 500
+      - IXIC      # NASDAQ
+      - VIX       # Volatility Index
+      - VIX3M     # 3-month VIX
+      - VIX9D     # 9-day VIX
+      - TNX       # 10-year Treasury
+      - DXY       # Dollar Index
+      - UUP       # Dollar ETF
+    estimated_time: "3-4 hours"
+
+  batch2:
+    name: "marketpulse-training-batch2"
+    description: "Rates and spreads"
+    features:
+      - DFF       # Fed Funds Rate
+      - DGS10     # 10-year Treasury Rate
+      - DGS2      # 2-year Treasury Rate
+      - DGS3MO    # 3-month Treasury Rate
+      - T10Y2Y    # Yield Curve (10Y-2Y)
+      - HY_YIELD  # High Yield Spread
+      - IG_YIELD  # Investment Grade Spread
+      - NFCI      # Financial Conditions Index
+    estimated_time: "3-4 hours"
+
+  batch3:
+    name: "marketpulse-training-batch3"
+    description: "Commodities and macro indicators"
+    features:
+      - GOLD      # Gold Price
+      - OIL       # Oil Price
+      - COPPER    # Copper Price
+      - CPI       # Consumer Price Index
+      - INDPRO    # Industrial Production
+      - UNRATE    # Unemployment Rate
+    estimated_time: "2-3 hours"
+
+# Common settings for all jobs
+common:
+  region: "us-central1"
+  timeout: "14400s"  # 4 hours
+  cpu: "4"
+  memory: "16Gi"
+  mode: "train"
+  incremental_commits: "true"
