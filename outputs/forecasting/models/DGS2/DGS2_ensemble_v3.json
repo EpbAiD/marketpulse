@@ -1,0 +1,24 @@
+{
+  "feature": "DGS2",
+  "cadence": "daily",
+  "base_models": [
+    "NBEATSx",
+    "NHITS",
+    "PatchTST"
+  ],
+  "column_index_map": {
+    "NBEATSx": 0,
+    "NHITS": 1,
+    "PatchTST": 2
+  },
+  "n_models": 3,
+  "metric_used": "smape",
+  "normalize": true,
+  "tie_breaker": "equal",
+  "timestamp": "2026-01-25T23:22:59.983212",
+  "weights": [
+    0.3124018967810329,
+    0.35844595274778984,
+    0.32915215047117724
+  ]
+}

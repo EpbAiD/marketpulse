@@ -1,0 +1,24 @@
+{
+  "feature": "DFF",
+  "cadence": "daily",
+  "base_models": [
+    "NBEATSx",
+    "NHITS",
+    "PatchTST"
+  ],
+  "column_index_map": {
+    "NBEATSx": 0,
+    "NHITS": 1,
+    "PatchTST": 2
+  },
+  "n_models": 3,
+  "metric_used": "smape",
+  "normalize": true,
+  "tie_breaker": "equal",
+  "timestamp": "2026-01-25T22:14:53.392616",
+  "weights": [
+    0.3517740702461995,
+    0.32462890443987197,
+    0.32359702531392853
+  ]
+}

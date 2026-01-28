@@ -1,0 +1,24 @@
+{
+  "feature": "IXIC",
+  "cadence": "daily",
+  "base_models": [
+    "NBEATSx",
+    "NHITS",
+    "PatchTST"
+  ],
+  "column_index_map": {
+    "NBEATSx": 0,
+    "NHITS": 1,
+    "PatchTST": 2
+  },
+  "n_models": 3,
+  "metric_used": "smape",
+  "normalize": true,
+  "tie_breaker": "equal",
+  "timestamp": "2026-01-26T05:36:40.610386",
+  "weights": [
+    0.32210364006728437,
+    0.340317651746583,
+    0.33757870818613267
+  ]
+}
