@@ -1,0 +1,24 @@
+{
+  "feature": "OIL",
+  "cadence": "daily",
+  "base_models": [
+    "NBEATSx",
+    "NHITS",
+    "PatchTST"
+  ],
+  "column_index_map": {
+    "NBEATSx": 0,
+    "NHITS": 1,
+    "PatchTST": 2
+  },
+  "n_models": 3,
+  "metric_used": "smape",
+  "normalize": true,
+  "tie_breaker": "equal",
+  "timestamp": "2026-01-25T23:23:21.610593",
+  "weights": [
+    0.36355761077074233,
+    0.33443681285249016,
+    0.30200557637676745
+  ]
+}
