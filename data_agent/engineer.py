@@ -175,7 +175,8 @@ def engineer_features(cfg_path="configs/feature_policy.yaml", use_bigquery=False
 def engineer_forecasted_features(
     forecasted_raw_df: pd.DataFrame,
     cfg_path: str = "configs/feature_policy.yaml",
-    lookback_days: int = 252
+    lookback_days: int = 252,
+    use_bigquery: bool = True
 ) -> pd.DataFrame:
     """
     Apply feature engineering to forecasted raw feature values.
@@ -189,6 +190,7 @@ def engineer_forecasted_features(
                           from forecasting agent inference
         cfg_path: Path to feature_policy.yaml for rolling windows config
         lookback_days: Number of historical days to load for rolling windows (default: 252)
+        use_bigquery: Whether to use BigQuery for historical data (default: True)
 
     Returns:
         DataFrame with columns: ['ds', 'feature_name', 'feature_value']
@@ -201,6 +203,28 @@ def engineer_forecasted_features(
     print(f"\n{'='*60}")
     print(f"🔧 ENGINEERING FORECASTED FEATURES (WITH HISTORICAL CONTEXT)")
     print(f"{'='*60}\n")
+
+    # Try to initialize BigQuery storage for historical data
+    bq_storage = None
+    feature_cadences = {}
+    if use_bigquery:
+        try:
+            from data_agent.storage import get_storage
+            bq_storage = get_storage()
+            print("  ✅ BigQuery storage available for historical data")
+
+            # Load feature cadences from config
+            try:
+                features_cfg = load_yaml("configs/features_config.yaml")
+                for cadence in ['daily', 'weekly', 'monthly']:
+                    if cadence in features_cfg:
+                        for feat in features_cfg[cadence].get('features', []):
+                            feature_cadences[feat] = cadence
+                print(f"  📋 Loaded cadence mapping for {len(feature_cadences)} features")
+            except Exception as e:
+                print(f"  ⚠️ Could not load feature cadences: {e}")
+        except Exception as e:
+            print(f"  ⚠️ BigQuery not available: {e}")
 
     cfg = load_yaml(cfg_path)
     roll = cfg["rolling_windows"]
@@ -229,37 +253,62 @@ def engineer_forecasted_features(
         forecast_dates = forecast_group['ds'].unique()
         min_forecast_date = forecast_group['ds'].min()
 
-        # Load historical data
+        # Load historical data - try local file first, then BigQuery
+        hist_df = None
         hist_file = base_dir / f"{feature_name}.parquet"
-        if not hist_file.exists():
-            print(f"    ⚠️  No historical data found, skipping...")
+
+        # Try local parquet file first
+        if hist_file.exists():
+            try:
+                hist_df = pd.read_parquet(hist_file)
+
+                # Standardize historical data format
+                if isinstance(hist_df.index, pd.DatetimeIndex):
+                    hist_df = hist_df.reset_index()
+                    date_col = hist_df.columns[0]
+                    value_col = hist_df.columns[1] if len(hist_df.columns) > 1 else feature_name
+                else:
+                    # Find date and value columns
+                    date_col = 'date' if 'date' in hist_df.columns else 'Date' if 'Date' in hist_df.columns else 'ds'
+                    value_cols = [c for c in hist_df.columns if c != date_col]
+                    value_col = value_cols[0] if value_cols else feature_name
+
+                hist_df = hist_df.rename(columns={date_col: 'ds', value_col: 'value'})
+                hist_df = hist_df[['ds', 'value']].copy()
+                hist_df['ds'] = pd.to_datetime(hist_df['ds'])
+                print(f"    📂 Loaded from local parquet")
+            except Exception as e:
+                print(f"    ⚠️ Error loading local parquet: {e}")
+                hist_df = None
+
+        # Try BigQuery if local file doesn't exist or failed
+        if hist_df is None and bq_storage is not None:
+            try:
+                cadence = feature_cadences.get(feature_name, 'daily')  # Default to daily
+                bq_df = bq_storage.load_raw_feature(feature_name, cadence)
+
+                if bq_df is not None and not bq_df.empty:
+                    # Convert from index to columns
+                    hist_df = bq_df.reset_index()
+                    hist_df.columns = ['ds', 'value']
+                    hist_df['ds'] = pd.to_datetime(hist_df['ds'])
+                    print(f"    ☁️ Loaded from BigQuery ({cadence})")
+            except Exception as e:
+                print(f"    ⚠️ Error loading from BigQuery: {e}")
+
+        # Skip if no historical data available
+        if hist_df is None or hist_df.empty:
+            print(f"    ⚠️ No historical data found, skipping...")
             continue
 
         try:
-            hist_df = pd.read_parquet(hist_file)
-
-            # Standardize historical data format
-            if isinstance(hist_df.index, pd.DatetimeIndex):
-                hist_df = hist_df.reset_index()
-                date_col = hist_df.columns[0]
-                value_col = hist_df.columns[1] if len(hist_df.columns) > 1 else feature_name
-            else:
-                # Find date and value columns
-                date_col = 'date' if 'date' in hist_df.columns else 'Date' if 'Date' in hist_df.columns else 'ds'
-                value_cols = [c for c in hist_df.columns if c != date_col]
-                value_col = value_cols[0] if value_cols else feature_name
-
-            hist_df = hist_df.rename(columns={date_col: 'ds', value_col: 'value'})
-            hist_df = hist_df[['ds', 'value']].copy()
-            hist_df['ds'] = pd.to_datetime(hist_df['ds'])
-
             # Filter to lookback period
             cutoff_date = min_forecast_date - pd.Timedelta(days=lookback_days)
             hist_df = hist_df[hist_df['ds'] >= cutoff_date].copy()
             hist_df = hist_df[hist_df['ds'] < min_forecast_date].copy()  # Exclude forecast dates
 
         except Exception as e:
-            print(f"    ⚠️  Error loading historical data: {e}")
+            print(f"    ⚠️ Error filtering historical data: {e}")
             continue
 
         # Combine historical + forecast data
