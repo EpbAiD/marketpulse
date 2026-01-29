@@ -59,7 +59,7 @@ st.markdown("""
 BASE_DIR = Path(__file__).parent.parent
 
 # Version indicator to verify deployment (update this when making changes)
-DASHBOARD_VERSION = "2026-01-28-v2"  # Regime labels fix: 0=Declining, 1=Growing
+DASHBOARD_VERSION = "2026-01-29-v3"  # Fixed datetime timezone merge errors
 
 def get_latest_file(pattern):
     files = glob.glob(str(BASE_DIR / pattern))
@@ -470,7 +470,12 @@ if history is not None and 'GSPC' in market:
     sp500_col = [c for c in sp500.columns if c != 'ds'][0]
     sp500['return'] = sp500[sp500_col].pct_change()
 
-    merged = pd.merge(history[['ds', 'regime']], sp500, on='ds', how='inner')
+    # Normalize datetime columns to remove timezone for merge compatibility
+    history_merge = history[['ds', 'regime']].copy()
+    history_merge['ds'] = pd.to_datetime(history_merge['ds']).dt.tz_localize(None)
+    sp500['ds'] = pd.to_datetime(sp500['ds']).dt.tz_localize(None)
+
+    merged = pd.merge(history_merge, sp500, on='ds', how='inner')
 
     metrics = []
     for regime_id in [0, 1, 2]:
@@ -560,7 +565,11 @@ if 'GSPC' in market:
     sp500['dd'] = (sp500['cum'] - sp500['max']) / sp500['max'] * 100
 
     if history is not None:
-        sp500_regime = pd.merge(sp500, history[['ds', 'regime']], on='ds', how='left')
+        # Normalize datetime to remove timezone for merge compatibility
+        history_ds = history[['ds', 'regime']].copy()
+        history_ds['ds'] = pd.to_datetime(history_ds['ds']).dt.tz_localize(None)
+        sp500['ds'] = pd.to_datetime(sp500['ds']).dt.tz_localize(None)
+        sp500_regime = pd.merge(sp500, history_ds, on='ds', how='left')
     else:
         sp500_regime = sp500.copy()
 
@@ -645,7 +654,11 @@ if 'VIX' in market and history is not None:
     vix = market['VIX'].copy()
     vix_col = [c for c in vix.columns if c != 'ds'][0]
 
-    vix_regime = pd.merge(history[['ds', 'regime']], vix, on='ds', how='inner')
+    # Normalize datetime to remove timezone for merge compatibility
+    history_vix = history[['ds', 'regime']].copy()
+    history_vix['ds'] = pd.to_datetime(history_vix['ds']).dt.tz_localize(None)
+    vix['ds'] = pd.to_datetime(vix['ds']).dt.tz_localize(None)
+    vix_regime = pd.merge(history_vix, vix, on='ds', how='inner')
 
     col1, col2 = st.columns([2, 1])
 
@@ -711,11 +724,14 @@ if len(market) >= 3:
     available = [k for k in key_assets if k in market]
 
     if len(available) >= 2 and history is not None:
-        regime_history = history[history['regime'] == current_regime]
+        regime_history = history[history['regime'] == current_regime].copy()
+        # Normalize datetime to remove timezone for merge compatibility
+        regime_history['ds'] = pd.to_datetime(regime_history['ds']).dt.tz_localize(None)
 
         corr_data = {}
         for asset in available:
-            asset_df = market[asset]
+            asset_df = market[asset].copy()
+            asset_df['ds'] = pd.to_datetime(asset_df['ds']).dt.tz_localize(None)
             col_name = [c for c in asset_df.columns if c != 'ds'][0]
             merged = pd.merge(regime_history[['ds']], asset_df, on='ds', how='inner')
             if len(merged) > 0:
