@@ -59,7 +59,7 @@ st.markdown("""
 BASE_DIR = Path(__file__).parent.parent
 
 # Version indicator to verify deployment (update this when making changes)
-DASHBOARD_VERSION = "2026-01-29-v3"  # Fixed datetime timezone merge errors
+DASHBOARD_VERSION = "2026-01-29-v4"  # Fixed investment recommendation logic
 
 def get_latest_file(pattern):
     files = glob.glob(str(BASE_DIR / pattern))
@@ -774,15 +774,27 @@ if history is not None and 'GSPC' in market:
     with col1:
         st.markdown("**Investment Level**")
         sharpe = current_metrics['Score']
-        if sharpe > 1.0:
-            sizing = "Invest More"
-            color = "🟢"
-        elif sharpe > 0.5:
-            sizing = "Stay Balanced"
-            color = "🟡"
-        else:
+        ann_return = current_metrics['Return']
+
+        # Investment recommendation based on regime type AND risk-adjusted returns
+        # Regime 0 = Declining (bear), Regime 1 = Growing (bull), Regime 2 = Stable
+        if current_regime == 1:  # Growing/Bull market
+            if sharpe > 0.3:
+                sizing = "Invest More"
+                color = "🟢"
+            else:
+                sizing = "Stay Balanced"
+                color = "🟡"
+        elif current_regime == 0:  # Declining/Bear market
             sizing = "Invest Less"
             color = "🔴"
+        else:  # Stable/Transitional
+            if sharpe > 0.5:
+                sizing = "Stay Balanced"
+                color = "🟡"
+            else:
+                sizing = "Be Cautious"
+                color = "🟠"
 
         st.markdown(f"{color} **{sizing}** (Quality: {sharpe:.2f})")
         st.caption(f"Based on past {regime_names[current_regime]} conditions")
