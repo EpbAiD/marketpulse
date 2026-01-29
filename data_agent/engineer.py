@@ -231,7 +231,7 @@ def engineer_forecasted_features(
     yoy_window = cfg["yoy_window"]
     mom_window = cfg["mom_window"]
 
-    # Get max lookback needed for rolling windows
+    # Get max lookback needed for rolling windows (in trading days)
     max_window = max([
         max(roll.get("returns", [0])),
         max(roll.get("volatility", [0])),
@@ -240,7 +240,10 @@ def engineer_forecasted_features(
         yoy_window if yoy_window else 0,
         mom_window if mom_window else 0
     ])
-    lookback_days = max(lookback_days, max_window + 10)  # Add buffer
+    # Convert trading days to calendar days (roughly 7/5 ratio) and add buffer
+    # 252 trading days ≈ 365 calendar days
+    calendar_days_needed = int(max_window * 1.5) + 30  # 1.5x for weekends/holidays + buffer
+    lookback_days = max(lookback_days, calendar_days_needed)
 
     all_engineered = []
     base_dir = Path("outputs/fetched/cleaned")
