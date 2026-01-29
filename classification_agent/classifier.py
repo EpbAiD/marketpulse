@@ -224,16 +224,10 @@ def predict_regimes_from_forecast(
     clf = joblib.load(MODEL_PATH)
     print(f"✅ Loaded trained classifier from {MODEL_PATH}")
 
-    # Load selected features list
-    if selected_features_path is None:
-        selected_features_path = os.path.join(BASE_DIR, "outputs", "selected", "features_selected.csv")
-
-    if not os.path.exists(selected_features_path):
-        raise FileNotFoundError(f"❌ Selected features list not found → {selected_features_path}")
-
-    selected_features_df = pd.read_csv(selected_features_path)
-    selected_features = selected_features_df['selected_feature'].tolist()
-    print(f"✅ Loaded {len(selected_features)} selected features")
+    # Use the classifier's own feature names as the source of truth
+    # This ensures we match exactly what the model was trained on
+    model_features = list(clf.feature_names_in_)
+    print(f"✅ Classifier expects {len(model_features)} features")
 
     # Pivot engineered features to wide format (one row per date)
     print("  🔄 Pivoting engineered features to wide format...")
@@ -246,43 +240,30 @@ def predict_regimes_from_forecast(
     print(f"  📊 Pivoted shape: {pivot_df.shape}")
     print(f"  📅 Date range: {pivot_df['ds'].min()} to {pivot_df['ds'].max()}")
 
-    # Filter to only selected features
-    available_features = [f for f in selected_features if f in pivot_df.columns]
-    missing_features = [f for f in selected_features if f not in pivot_df.columns]
+    # Check which features from the model are available in the forecast data
+    available_features = [f for f in model_features if f in pivot_df.columns]
+    missing_features = [f for f in model_features if f not in pivot_df.columns]
+
+    print(f"  ✅ Found {len(available_features)}/{len(model_features)} features in forecast data")
 
     if missing_features:
-        print(f"  ⚠️ Warning: {len(missing_features)} features not available in forecast data")
-        print(f"     (This is expected for rolling window features that need historical data)")
+        print(f"  ⚠️ Missing {len(missing_features)} features (will be filled with 0):")
+        for f in missing_features[:5]:
+            print(f"     - {f}")
+        if len(missing_features) > 5:
+            print(f"     ... and {len(missing_features) - 5} more")
 
-    if not available_features:
-        # If no features available, try to use any available columns as fallback
-        print("  ⚠️ No selected features available, using available engineered features as fallback")
-        available_cols = [c for c in pivot_df.columns if c != 'ds']
-        if not available_cols:
-            raise ValueError("❌ No features available in forecasted data at all")
+    # Build feature matrix with exactly the columns the model expects
+    X = pd.DataFrame(index=pivot_df.index)
 
-        # Use the classifier anyway with a warning
-        print(f"  ⚠️ Proceeding with {len(available_cols)} available features (may reduce accuracy)")
-        X = pivot_df[available_cols].copy()
+    for feat in model_features:
+        if feat in pivot_df.columns:
+            X[feat] = pivot_df[feat].values
+        else:
+            # Fill missing features with 0 (neutral value)
+            X[feat] = 0.0
 
-        # Add missing selected features filled with 0
-        for missing_feat in selected_features:
-            if missing_feat not in X.columns:
-                X[missing_feat] = 0.0
-    else:
-        print(f"  ✅ Using {len(available_features)}/{len(selected_features)} selected features")
-
-        # Prepare feature matrix
-        X = pivot_df[available_features].copy()
-
-        # Handle missing features by filling with 0 (or could use other strategies)
-        for missing_feat in missing_features:
-            X[missing_feat] = 0.0
-
-    # Ensure correct column order matching training
-    X = X[selected_features]
-
-    # Handle any remaining NaN values
+    # Handle any NaN values
     X = X.fillna(0.0)
 
     print(f"  📊 Feature matrix shape: {X.shape}")
