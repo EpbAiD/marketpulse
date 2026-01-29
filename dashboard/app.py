@@ -58,6 +58,9 @@ st.markdown("""
 
 BASE_DIR = Path(__file__).parent.parent
 
+# Version indicator to verify deployment (update this when making changes)
+DASHBOARD_VERSION = "2026-01-28-v2"  # Regime labels fix: 0=Declining, 1=Growing
+
 def get_latest_file(pattern):
     files = glob.glob(str(BASE_DIR / pattern))
     return Path(max(files, key=lambda f: Path(f).stat().st_mtime)) if files else None
@@ -199,6 +202,13 @@ current_regime = int(current['regime'])
 current_conf = current['regime_probability']
 
 st.title("Market Condition Forecast")
+
+# Add refresh button and version in sidebar for debugging
+with st.sidebar:
+    st.caption(f"Dashboard version: {DASHBOARD_VERSION}")
+    if st.button("🔄 Refresh Data", help="Clear cache and reload data from BigQuery"):
+        st.cache_data.clear()
+        st.rerun()
 
 # Show data freshness prominently
 if 'forecast' in data and len(data['forecast']) > 0:
