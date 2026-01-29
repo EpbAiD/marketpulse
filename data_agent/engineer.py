@@ -386,12 +386,13 @@ def engineer_forecasted_features(
             if col == 'ds':
                 continue
 
-            # Replace '_value' suffix with feature name to match training convention
-            # e.g., 'ret_value' becomes 'ret_DFF' for DFF feature
+            # Create feature names matching the training convention:
+            # - 'value' column -> feature_name (e.g., 'VIX_value' or just 'VIX')
+            # - Other columns -> feature_name + column (e.g., 'DFF_ret_value_5d')
             if col == 'value':
-                engineered_feature_name = feature_name
+                engineered_feature_name = f"{feature_name}_value"
             else:
-                engineered_feature_name = f"{feature_name}_{col.replace('_value', f'_{feature_name}')}"
+                engineered_feature_name = f"{feature_name}_{col}"
 
             for idx, row in feat_df.iterrows():
                 all_engineered.append({
