@@ -74,8 +74,10 @@ def log_daily_predictions(output_file="DAILY_PREDICTIONS.md"):
     log_entry += f"**Total Days:** {len(predictions)}\n\n"
 
     # Regime distribution
+    # Regime labels based on HMM clustering (matching clustering_agent/validate.py colors)
+    # Regime 0 = Bear (red #f94144), Regime 1 = Bull (green #43aa8b), Regime 2 = Neutral (blue #577590)
     log_entry += "### Regime Distribution\n\n"
-    regime_names = {0: "Bull Market", 1: "Bear Market", 2: "Transitional"}
+    regime_names = {0: "Bear Market", 1: "Bull Market", 2: "Transitional"}
 
     for regime_id in sorted(predictions['regime'].unique()):
         count = (predictions['regime'] == regime_id).sum()
