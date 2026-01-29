@@ -189,8 +189,10 @@ forecast = data['forecast']
 history = data.get('history')
 market = data.get('market', {})
 
-regime_names = {0: "Growing Market", 1: "Declining Market", 2: "Stable Market"}
-regime_colors = {0: '#3498db', 1: '#e74c3c', 2: '#2ecc71'}
+# Regime labels based on HMM clustering (matching clustering_agent/validate.py colors)
+# Regime 0 = Bear (red #f94144), Regime 1 = Bull (green #43aa8b), Regime 2 = Neutral (blue #577590)
+regime_names = {0: "Declining Market", 1: "Growing Market", 2: "Stable Market"}
+regime_colors = {0: '#e74c3c', 1: '#2ecc71', 2: '#3498db'}
 
 current = forecast.iloc[0]
 current_regime = int(current['regime'])
@@ -380,7 +382,7 @@ fig.update_layout(
     yaxis=dict(
         tickmode='array',
         tickvals=[0, 1, 2],
-        ticktext=['Growing Market', 'Declining Market', 'Stable Market']
+        ticktext=['Declining Market', 'Growing Market', 'Stable Market']
     ),
     showlegend=False,
     hovermode='closest'
