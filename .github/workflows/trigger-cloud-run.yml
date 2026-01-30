@@ -37,12 +37,13 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          # Cloud Run job is deployed in coms-452404, not regime01
+          project_id: coms-452404
 
       - name: Enable Cloud Run API if needed
         run: |
           echo "🔧 Ensuring Cloud Run Admin API is enabled..."
-          gcloud services enable run.googleapis.com --quiet || echo "Note: API enablement may require additional permissions"
+          gcloud services enable run.googleapis.com --project=coms-452404 --quiet || echo "Note: API enablement may require additional permissions"
 
       - name: Trigger Cloud Run Job
         run: |
@@ -54,6 +55,7 @@ jobs:
           # Use ^ as separator to avoid conflicts with comma-separated feature list
           gcloud run jobs execute marketpulse-training \
             --region=us-central1 \
+            --project=coms-452404 \
             --update-env-vars="^::^MODE=${{ inputs.mode }}::FEATURES=${{ inputs.features }}::FORCE_RETRAIN=${{ inputs.force_retrain }}"
 
           echo "✅ Job triggered! Check Cloud Run console for status."
