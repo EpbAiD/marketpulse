@@ -84,20 +84,62 @@ jobs:
           echo '${{ secrets.GCP_CREDENTIALS }}' > /tmp/gcp_credentials.json
           echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp_credentials.json" >> $GITHUB_ENV
 
-      - name: Run daily forecast pipeline (auto mode)
+      - name: Check if training is needed
+        id: check_models
+        run: |
+          echo "🔍 Running intelligent model checker..."
+
+          # Run checker and capture output
+          python -m orchestrator.intelligent_model_checker --json > /tmp/model_status.json 2>/dev/null || true
+
+          # Extract workflow recommendation
+          WORKFLOW=$(python -c "import json; d=json.load(open('/tmp/model_status.json')); print(d.get('workflow', 'inference'))" 2>/dev/null || echo "inference")
+          FEATURES_TO_TRAIN=$(python -c "import json; d=json.load(open('/tmp/model_status.json')); print(','.join(d.get('features_to_train', [])))" 2>/dev/null || echo "")
+
+          echo "Workflow recommendation: $WORKFLOW"
+          echo "Features to train: $FEATURES_TO_TRAIN"
+
+          echo "workflow=$WORKFLOW" >> $GITHUB_OUTPUT
+          echo "features_to_train=$FEATURES_TO_TRAIN" >> $GITHUB_OUTPUT
+
+      - name: Set up Cloud SDK (for training trigger)
+        if: steps.check_models.outputs.workflow != 'inference'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Configure gcloud
+        if: steps.check_models.outputs.workflow != 'inference'
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Trigger Cloud Run for training (if needed)
+        if: steps.check_models.outputs.workflow != 'inference'
+        run: |
+          echo "🚀 Training needed - triggering Cloud Run GPU job..."
+          echo "Workflow: ${{ steps.check_models.outputs.workflow }}"
+          echo "Features: ${{ steps.check_models.outputs.features_to_train }}"
+
+          # Trigger Cloud Run job with auto mode
+          gcloud run jobs execute marketpulse-training \
+            --region=us-central1 \
+            --update-env-vars="MODE=auto,FEATURES=${{ steps.check_models.outputs.features_to_train }}" \
+            --wait
+
+          echo "✅ Cloud Run training complete!"
+
+          # Pull the latest models from repo (Cloud Run pushed them)
+          git pull origin main
+
+      - name: Run inference pipeline
         env:
           PYTHONUNBUFFERED: 1
         run: |
-          echo "Starting daily market regime forecast (auto mode)..."
-          echo "Auto mode will:"
-          echo "  - Detect if models need training"
-          echo "  - Train ONLY missing/stale models"
-          echo "  - Run inference with all available models"
-          echo "  - Update BigQuery with forecasts"
-          echo ""
+          echo "Starting daily market regime forecast (inference mode)..."
 
-          # Run the pipeline with auto mode
-          python run_daily_update.py
+          # Run inference only (models are ready from repo or Cloud Run)
+          python run_pipeline.py --workflow inference --no-clean
 
           # Final commit of the log
           bash utils/commit_log.sh || true
