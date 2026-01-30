@@ -39,6 +39,11 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
+      - name: Enable Cloud Run API if needed
+        run: |
+          echo "🔧 Ensuring Cloud Run Admin API is enabled..."
+          gcloud services enable run.googleapis.com --quiet || echo "Note: API enablement may require additional permissions"
+
       - name: Trigger Cloud Run Job
         run: |
           echo "🚀 Triggering Cloud Run GPU training job..."
