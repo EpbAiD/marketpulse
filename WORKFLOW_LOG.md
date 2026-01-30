@@ -1,15 +1,12 @@
 # Workflow Execution Log
 
-**Started**: 2026-01-30 01:51:25 UTC
+**Started**: 2026-01-30 04:15:31 UTC
 
 ---
 
-**[01:51:25]** (0.0min) 📍 **STAGE**: Starting stage: Data Fetching
+**[04:15:31]** (0.0min) 📍 **STAGE**: Starting stage: Data Fetching
 
-**[01:51:32]** (0.1min) ℹ️ **INFO**: Starting data fetch (BigQuery: True)
+**[04:15:38]** (0.1min) ℹ️ **INFO**: Starting data fetch (BigQuery: True)
 
-**[01:51:35]** (0.2min) ❌ **ERROR**: Data fetch FAILED: BigQuery credentials not found at: /tmp/repo/regime01-b5321d26c433.json
-For local development: Ensure credentials file exists.
-For GitHub Actions: Add GCP_CREDENTIALS secret.
-For Streamlit Cloud: Add gcp_service_account to secrets.
+**[04:17:44]** (2.2min) ✅ **SUCCESS**: Data fetch completed (132.5s) - Saved to BigQuery
 
