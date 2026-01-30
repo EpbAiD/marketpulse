@@ -122,9 +122,10 @@ jobs:
           echo "Features: ${{ steps.check_models.outputs.features_to_train }}"
 
           # Trigger Cloud Run job with auto mode
+          # Note: Use ^ as separator for --update-env-vars to avoid comma conflicts with feature list
           gcloud run jobs execute marketpulse-training \
             --region=us-central1 \
-            --update-env-vars="MODE=auto,FEATURES=${{ steps.check_models.outputs.features_to_train }}" \
+            --update-env-vars="^::^MODE=auto::FEATURES=${{ steps.check_models.outputs.features_to_train }}" \
             --wait
 
           echo "✅ Cloud Run training complete!"
