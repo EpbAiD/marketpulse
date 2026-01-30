@@ -1,0 +1,24 @@
+{
+  "feature": "INDPRO",
+  "cadence": "monthly",
+  "base_models": [
+    "NBEATSx",
+    "ARIMA",
+    "Prophet"
+  ],
+  "column_index_map": {
+    "NBEATSx": 0,
+    "ARIMA": 1,
+    "Prophet": 2
+  },
+  "n_models": 3,
+  "metric_used": "smape",
+  "normalize": true,
+  "tie_breaker": "equal",
+  "timestamp": "2026-01-30T18:15:51.133074",
+  "weights": [
+    0.3333436326885416,
+    0.3333281838173343,
+    0.33332818349412396
+  ]
+}
