@@ -1,0 +1,24 @@
+{
+  "feature": "NFCI",
+  "cadence": "weekly",
+  "base_models": [
+    "NHITS",
+    "NBEATSx",
+    "ARIMA"
+  ],
+  "column_index_map": {
+    "NHITS": 0,
+    "NBEATSx": 1,
+    "ARIMA": 2
+  },
+  "n_models": 3,
+  "metric_used": "mae",
+  "normalize": true,
+  "tie_breaker": "equal",
+  "timestamp": "2026-01-30T17:53:06.004030",
+  "weights": [
+    0.333333764352653,
+    0.33333305770431276,
+    0.33333317794303413
+  ]
+}
