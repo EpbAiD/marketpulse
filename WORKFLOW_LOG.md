@@ -26,3 +26,9 @@
 
 **[05:06:21]** (7.7min) ℹ️ **INFO**: Using existing RF classifier (0 days old < 30 day threshold)
 
+**[05:06:38]** (8.0min) 📍 **STAGE**: Starting stage: Forecasting
+
+**[05:06:38]** (8.0min) ℹ️ **INFO**: Selective training: 4 features (NFCI, CPI, UNRATE, INDPRO)
+
+**[05:06:38]** (8.0min) 📍 **STAGE**: Starting stage: Forecasting - Training Models
+
