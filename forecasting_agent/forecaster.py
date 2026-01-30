@@ -928,8 +928,23 @@ def run_inference_for_features(
             ensemble_pred /= total_weight
 
         # Create forecast dataframe
+        # For monthly features with stale data (e.g., FRED indicators with 1-2 month lag),
+        # use today's date as the forecast start instead of last_date + 1 day
         last_date = df["ds"].max()
-        forecast_start = last_date + pd.Timedelta(days=1)
+        today = pd.Timestamp.now().normalize()
+
+        # Check if data is stale (more than 35 days old for monthly, 7 days for weekly, 2 days for daily)
+        data_age_days = (today - last_date).days
+        cadence_staleness_threshold = {'monthly': 35, 'weekly': 10, 'daily': 3}
+        staleness_threshold = cadence_staleness_threshold.get(cadence, 3)
+
+        if data_age_days > staleness_threshold:
+            # Data is stale - use today as forecast start and forward-fill the prediction
+            print(f"  ⚠️ Data is {data_age_days} days old (threshold: {staleness_threshold}), using today as forecast start")
+            forecast_start = today
+        else:
+            forecast_start = last_date + pd.Timedelta(days=1)
+
         forecast_dates = pd.date_range(start=forecast_start, periods=horizon_days, freq='D')
 
         print(f"  📅 Latest data date: {last_date.date()}")
