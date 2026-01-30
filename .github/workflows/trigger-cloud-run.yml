@@ -4,14 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'Training mode'
+        description: 'Training mode (auto=detect needed, train=use features list)'
         required: true
         default: 'auto'
         type: choice
         options:
           - auto
           - train
-          - inference
       features:
         description: 'Features to train (comma-separated, or "all")'
         required: false

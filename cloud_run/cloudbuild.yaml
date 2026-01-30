@@ -1,0 +1,6 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'cloud_run/Dockerfile', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/marketpulse/training:latest', '.']
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/marketpulse/training:latest'
+timeout: '3600s'
