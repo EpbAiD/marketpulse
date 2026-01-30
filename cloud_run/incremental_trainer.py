@@ -48,17 +48,63 @@ def run_git_command(cmd, cwd=None):
         return False
 
 
+def create_version_metadata(feature_name, repo_dir):
+    """Create version metadata file for a feature if it doesn't exist."""
+    models_dir = os.path.join(repo_dir, "outputs", "forecasting", "models")
+    version_file = os.path.join(models_dir, f"{feature_name}_versions.json")
+
+    # Check if version file already exists
+    if os.path.exists(version_file):
+        return version_file
+
+    # Get timestamp from ensemble file if it exists
+    ensemble_file = os.path.join(models_dir, feature_name, f"{feature_name}_ensemble_v1.json")
+    timestamp = datetime.now().isoformat()
+
+    if os.path.exists(ensemble_file):
+        try:
+            with open(ensemble_file, 'r') as f:
+                ensemble_data = json.load(f)
+            timestamp = ensemble_data.get('timestamp', timestamp)
+        except Exception:
+            pass
+
+    # Create version metadata
+    version_data = {
+        "versions": [
+            {
+                "version": 1,
+                "created_at": timestamp,
+                "status": "completed",
+                "updated_at": timestamp,
+                "metrics": {}
+            }
+        ],
+        "active_version": 1
+    }
+
+    with open(version_file, 'w') as f:
+        json.dump(version_data, f, indent=2)
+
+    print(f"  📝 Created version metadata: {feature_name}_versions.json")
+    return version_file
+
+
 def commit_and_push_feature(feature_name, repo_dir):
     """Commit and push a single feature's models to GitHub."""
     print(f"\n📤 Committing {feature_name} models to GitHub...")
 
     model_dir = os.path.join(repo_dir, "outputs", "forecasting", "models", feature_name)
     metrics_dir = os.path.join(repo_dir, "outputs", "forecasting", "metrics")
+    models_base_dir = os.path.join(repo_dir, "outputs", "forecasting", "models")
 
     # Check if model directory exists
     if not os.path.exists(model_dir):
         print(f"  ⚠️ No model directory found for {feature_name}")
         return False
+
+    # Create version metadata file (required by intelligent_model_checker)
+    create_version_metadata(feature_name, repo_dir)
 
     # Stage feature-specific files
     files_to_add = []
@@ -66,6 +112,11 @@ def commit_and_push_feature(feature_name, repo_dir):
     # Add model directory
     if os.path.exists(model_dir):
         files_to_add.append(f"outputs/forecasting/models/{feature_name}/")
+
+    # Add version metadata file
+    version_file = os.path.join(models_base_dir, f"{feature_name}_versions.json")
+    if os.path.exists(version_file):
+        files_to_add.append(f"outputs/forecasting/models/{feature_name}_versions.json")
 
     # Add metrics files for this feature
     if os.path.exists(metrics_dir):
