@@ -1,0 +1,24 @@
+{
+  "feature": "CPI",
+  "cadence": "monthly",
+  "base_models": [
+    "NBEATSx",
+    "ARIMA",
+    "Prophet"
+  ],
+  "column_index_map": {
+    "NBEATSx": 0,
+    "ARIMA": 1,
+    "Prophet": 2
+  },
+  "n_models": 3,
+  "metric_used": "smape",
+  "normalize": true,
+  "tie_breaker": "equal",
+  "timestamp": "2026-01-30T18:00:47.722015",
+  "weights": [
+    0.3333342529755498,
+    0.3333328734822075,
+    0.33333287354224267
+  ]
+}
