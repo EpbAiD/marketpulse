@@ -707,12 +707,19 @@ def run_inference_for_features(
         storage = get_storage(use_bigquery=True)
         raw_data = {}
         for fname in feature_names:
-            # Load raw feature with 'daily' cadence (default for most features)
-            df = storage.load_raw_feature(fname, cadence='daily')
+            # Determine correct cadence from config BEFORE loading
+            feature_cadence = 'daily'  # default
+            for cad_name in ['daily', 'weekly', 'monthly']:
+                if fname in cad[cad_name].get('features', []):
+                    feature_cadence = cad_name
+                    break
+
+            # Load raw feature with correct cadence
+            df = storage.load_raw_feature(fname, cadence=feature_cadence)
             if df is not None and not df.empty:
                 raw_data[fname] = df
             else:
-                print(f"⚠️ Warning: {fname} not found in BigQuery, skipping...")
+                print(f"⚠️ Warning: {fname} not found in BigQuery (cadence={feature_cadence}), skipping...")
     else:
         print("📂 Loading latest data from local files...")
         raw_data = {}
