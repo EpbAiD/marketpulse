@@ -46,8 +46,9 @@ jobs:
           echo "Features: ${{ inputs.features }}"
           echo "Force Retrain: ${{ inputs.force_retrain }}"
 
+          # Use ^ as separator to avoid conflicts with comma-separated feature list
           gcloud run jobs execute marketpulse-training \
             --region=us-central1 \
-            --update-env-vars="MODE=${{ inputs.mode }},FEATURES=${{ inputs.features }},FORCE_RETRAIN=${{ inputs.force_retrain }}"
+            --update-env-vars="^::^MODE=${{ inputs.mode }}::FEATURES=${{ inputs.features }}::FORCE_RETRAIN=${{ inputs.force_retrain }}"
 
           echo "✅ Job triggered! Check Cloud Run console for status."
