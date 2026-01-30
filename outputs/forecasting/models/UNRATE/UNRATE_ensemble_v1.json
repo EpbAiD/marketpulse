@@ -1,0 +1,24 @@
+{
+  "feature": "UNRATE",
+  "cadence": "monthly",
+  "base_models": [
+    "NBEATSx",
+    "ARIMA",
+    "Prophet"
+  ],
+  "column_index_map": {
+    "NBEATSx": 0,
+    "ARIMA": 1,
+    "Prophet": 2
+  },
+  "n_models": 3,
+  "metric_used": "smape",
+  "normalize": true,
+  "tie_breaker": "equal",
+  "timestamp": "2026-01-30T18:08:13.034537",
+  "weights": [
+    0.32363000494809524,
+    0.35273971896386896,
+    0.3236302760880358
+  ]
+}
