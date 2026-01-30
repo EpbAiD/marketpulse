@@ -35,7 +35,8 @@ class BigQueryStorage(StorageBackend):
             self.config = yaml.safe_load(f)['bigquery']
 
         # Set credentials
-        # Priority: 1) Streamlit Cloud secrets, 2) GitHub Actions secret (env var), 3) Local credentials file
+        # Priority: 1) Streamlit Cloud secrets, 2) GitHub Actions secret (env var),
+        #           3) Cloud Run ADC (default service account), 4) Local credentials file
 
         # First check for Streamlit Cloud
         if setup_streamlit_credentials():
@@ -43,22 +44,32 @@ class BigQueryStorage(StorageBackend):
         elif 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ:
             print(f"✓ Using BigQuery credentials from environment (GitHub Actions)")
         else:
-            # Running locally - use credentials file from config
-            creds_path = self.config['credentials_path']
-            if not os.path.isabs(creds_path):
-                # Make relative to project root
-                creds_path = str(Path(__file__).parent.parent.parent / creds_path)
+            # Check if we're in Cloud Run (has default service account via ADC)
+            # Try to use Application Default Credentials first
+            try:
+                import google.auth
+                credentials, project = google.auth.default()
+                if credentials:
+                    print(f"✓ Using Application Default Credentials (Cloud Run/GCE)")
+                    # ADC will be used automatically by BigQuery client
+            except Exception:
+                # Running locally - use credentials file from config
+                creds_path = self.config['credentials_path']
+                if not os.path.isabs(creds_path):
+                    # Make relative to project root
+                    creds_path = str(Path(__file__).parent.parent.parent / creds_path)
 
-            if os.path.exists(creds_path):
-                os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = creds_path
-                print(f"✓ Using local BigQuery credentials: {creds_path}")
-            else:
-                raise FileNotFoundError(
-                    f"BigQuery credentials not found at: {creds_path}\n"
-                    "For local development: Ensure credentials file exists.\n"
-                    "For GitHub Actions: Add GCP_CREDENTIALS secret.\n"
-                    "For Streamlit Cloud: Add gcp_service_account to secrets."
-                )
+                if os.path.exists(creds_path):
+                    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = creds_path
+                    print(f"✓ Using local BigQuery credentials: {creds_path}")
+                else:
+                    raise FileNotFoundError(
+                        f"BigQuery credentials not found at: {creds_path}\n"
+                        "For local development: Ensure credentials file exists.\n"
+                        "For GitHub Actions: Add GCP_CREDENTIALS secret.\n"
+                        "For Streamlit Cloud: Add gcp_service_account to secrets.\n"
+                        "For Cloud Run: Ensure service account has BigQuery access."
+                    )
 
         # Initialize client
         self.client = bigquery.Client(project=self.config['project_id'])
