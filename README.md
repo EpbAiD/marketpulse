@@ -147,11 +147,14 @@ Converts numpy types to native Python (`int()`, `float()`, `str()`) for msgpack 
 
 ## 💻 Tech Stack
 
-**ML/Forecasting**: Python, NeuralForecast (NBEATSx, NHITS, PatchTST), scikit-learn, statsmodels
-**Orchestration**: LangGraph
-**Data**: Pandas, NumPy, BigQuery
-**Visualization**: Streamlit, Plotly
-**APIs**: Yahoo Finance, FRED (Federal Reserve)
+| Category | Technologies |
+|----------|-------------|
+| **ML/Forecasting** | Python, PyTorch, NeuralForecast (NBEATSx, NHITS, PatchTST), scikit-learn |
+| **Orchestration** | LangGraph (multi-agent state machine) |
+| **Data Storage** | BigQuery, Pandas, Parquet |
+| **Cloud Infrastructure** | GitHub Actions, Google Cloud Run |
+| **Visualization** | Streamlit, Plotly |
+| **Data Sources** | Yahoo Finance, FRED (Federal Reserve) |
 
 ---
 
