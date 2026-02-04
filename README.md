@@ -43,11 +43,14 @@ Forecasts market regimes (Bull, Bear, Transitional) 10 trading days in advance u
 
 ## 📊 Performance
 
-- **Classification Accuracy**: 98.4% on 15 years of data (2011-2025)
-- **Forecast Error (SMAPE)**: 3.38% average across 18 features
-- **Regime Distribution**: Bull 22% | Bear 20% | Transitional 58%
-- **Daily Inference**: <50 seconds
-- **Auto-Retraining**: Monthly based on model age
+| Metric | Value |
+|--------|-------|
+| **Classification Accuracy** | 98.4% on 15 years of data |
+| **Forecast Error (SMAPE)** | 3.38% average across features |
+| **Regime Distribution** | Bull 22% / Bear 20% / Transitional 58% |
+| **Daily Inference Time** | <50 seconds |
+| **Training Time** | ~75-90 minutes (full pipeline) |
+| **Auto-Retraining** | Intelligent model age detection |
 
 ---
 
