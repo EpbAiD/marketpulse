@@ -188,6 +188,22 @@ Run `python backtest_strategy.py` for regime distribution analysis.
 
 ---
 
+## 🏗️ Hybrid Cloud Architecture
+
+The system uses a hybrid architecture for optimal resource utilization:
+
+| Component | Platform | Purpose |
+|-----------|----------|---------|
+| Data Fetching | GitHub Actions | API calls, lightweight processing |
+| Feature Engineering | GitHub Actions | Pandas transformations |
+| Model Training | Google Cloud Run | GPU-accelerated neural network training |
+| Inference | GitHub Actions | Load pre-trained models, fast prediction |
+| Monitoring | GitHub Actions | Validation, alerts, performance tracking |
+
+**Daily Schedule:** Runs automatically at 6 AM EST via GitHub Actions.
+
+---
+
 ## 👤 Author
 
 **Eeshan Bhanap**
@@ -196,8 +212,6 @@ Run `python backtest_strategy.py` for regime distribution analysis.
 
 ## 🙏 Acknowledgments
 
-Market regime concept inspired by Bridgewater Associates and AQR Capital research.
-
-Data sources: Yahoo Finance, FRED (Federal Reserve Economic Data)
-
-Models: NeuralForecast (Nixtla), LangGraph (LangChain)
+- Market regime research inspired by Bridgewater Associates and AQR Capital
+- Data sources: Yahoo Finance, FRED (Federal Reserve Economic Data)
+- ML frameworks: NeuralForecast (Nixtla), LangGraph (LangChain)
