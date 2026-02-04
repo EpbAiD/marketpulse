@@ -451,6 +451,5 @@ That's it! The system will:
 
 **Next**: Run `./download_models_from_github.sh` to migrate existing models to repo, then use auto mode for all future runs!
 
-**Created by**: Claude Sonnet 4.5
 **Project**: Market Regime Forecasting System
 **Status**: ✅ Ready for Production Use

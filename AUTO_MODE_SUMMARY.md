@@ -318,7 +318,6 @@ python run_pipeline.py --workflow auto
 
 ---
 
-**Created by**: Claude Sonnet 4.5
 **Project**: Market Regime Forecasting System
 **Version**: 1.0
 **Status**: ✅ Ready for Production
