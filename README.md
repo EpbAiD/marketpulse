@@ -1,8 +1,10 @@
 # MarketPulse: Multi-Agent Regime Intelligence Platform
 
+[![Daily Forecast](https://github.com/EpbAiD/marketpulse/actions/workflows/daily-forecast.yml/badge.svg)](https://github.com/EpbAiD/marketpulse/actions/workflows/daily-forecast.yml)
+
 Autonomous market regime forecasting system that predicts regime changes 10 trading days ahead using neural ensembles and LangGraph orchestration.
 
-📚 **[Full Documentation](docs/)** | [Architecture](docs/architecture.md) | [Usage Guide](docs/usage_guide.md) | [Automation Guide](docs/automation_guide.md)
+📚 **[Full Documentation](docs/MARKETPULSE_COMPLETE_TECHNICAL_DOCUMENTATION.md)** | [Architecture](docs/architecture.md) | [Usage Guide](docs/usage_guide.md)
 
 ---
 
