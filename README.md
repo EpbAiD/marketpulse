@@ -25,10 +25,22 @@ streamlit run dashboard/app.py
 
 ## 🎯 What It Does
 
-Forecasts market regimes (Bull, Bear, Transitional) 10 trading days in advance using 22 macroeconomic indicators:
-- VIX volatility indices, treasury yields, credit spreads
-- Equity indices (S&P 500, NASDAQ), commodities (Gold, Oil, Copper)
+Forecasts market regimes (Bull, Bear, Transitional) **10 trading days in advance** using 22 macroeconomic indicators:
+
+**Volatility & Risk:**
+- VIX, VIX3M, VIX9D (volatility term structure)
+
+**Fixed Income:**
+- Treasury yields (10Y, 2Y, 3M), yield curve spreads
+- Credit spreads (HY, IG)
+
+**Equities & Commodities:**
+- S&P 500, NASDAQ indices
+- Gold, Oil, Copper
+
+**Macro Indicators:**
 - Dollar strength (DXY, UUP)
+- Fed Funds Rate, NFCI, CPI, Unemployment
 
 **Architecture:**
 - Neural ensemble (NBEATSx, NHITS, PatchTST) for feature forecasting
