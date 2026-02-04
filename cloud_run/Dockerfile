@@ -1,7 +1,7 @@
 # Cloud Run GPU Training Container
 # Uses NVIDIA CUDA base for GPU acceleration
 
-FROM nvidia/cuda:12.1-runtime-ubuntu22.04
+FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
 
 # Install Python 3.11
 RUN apt-get update && apt-get install -y \
@@ -22,8 +22,7 @@ WORKDIR /app
 COPY requirements_github_actions.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install PyTorch with CUDA support
-RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu121
+# PyTorch is already installed via requirements - CUDA version will be used if GPU available
 
 # Copy the entire project
 COPY . .
