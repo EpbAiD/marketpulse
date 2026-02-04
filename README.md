@@ -216,6 +216,12 @@ The system uses a hybrid architecture for optimal resource utilization:
 
 ---
 
+## 📄 License
+
+This project is for educational and research purposes.
+
+---
+
 ## 🙏 Acknowledgments
 
 - Market regime research inspired by Bridgewater Associates and AQR Capital
