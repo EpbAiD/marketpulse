@@ -162,14 +162,20 @@ Converts numpy types to native Python (`int()`, `float()`, `str()`) for msgpack 
 
 ```
 ├── data_agent/              # Data fetching, engineering, feature selection
-├── clustering_agent/        # HMM regime clustering
+│   └── storage/             # BigQuery and local storage backends
+├── clustering_agent/        # HMM regime clustering (3 states)
 ├── classification_agent/    # Random Forest regime classifier
-├── forecasting_agent/       # Neural ensemble forecasters
+├── forecasting_agent/       # Neural ensemble forecasters (22 models)
 ├── orchestrator/            # LangGraph workflows and state management
-├── dashboard/               # Streamlit dashboard
-├── daily_update.sh          # Automated daily pipeline
-├── backtest_strategy.py     # Regime distribution analysis
-└── configs/                 # Feature configurations
+│   └── intelligent_model_checker.py  # Auto-detect stale models
+├── cloud_run/               # GPU training infrastructure
+├── dashboard/               # Streamlit visualization
+├── configs/                 # YAML configurations
+│   ├── features_config.yaml # Forecast horizons and ensembles
+│   └── bigquery_config.yaml # Data warehouse setup
+├── .github/workflows/       # CI/CD automation
+│   └── daily-forecast.yml   # Scheduled daily predictions
+└── docs/                    # Technical documentation
 ```
 
 ---
