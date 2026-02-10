@@ -78,7 +78,7 @@ def load_data():
     except Exception as e:
         print(f"⚠️ Storage initialization error: {type(e).__name__}: {str(e)}")
 
-    # Try loading forecast data
+    # Try loading forecast data from BigQuery
     if storage and hasattr(storage, 'get_latest_forecasts'):
         try:
             latest_forecasts = storage.get_latest_forecasts(limit=1)
@@ -95,7 +95,34 @@ def load_data():
                 data['forecast_time'] = forecast_time  # Store for easy access
                 print(f"✓ Loaded forecast from BigQuery: {forecast_id} (generated at {forecast_time})")
         except Exception as e:
-            print(f"⚠️ Failed to load forecast: {type(e).__name__}: {str(e)}")
+            print(f"⚠️ Failed to load forecast from BigQuery: {type(e).__name__}: {str(e)}")
+
+    # Fallback: Load forecast from local parquet files
+    if 'forecast' not in data:
+        inference_dir = BASE_DIR / "outputs" / "inference"
+        if inference_dir.exists():
+            regime_files = sorted(inference_dir.glob("regime_predictions_*.parquet"), reverse=True)
+            if regime_files:
+                try:
+                    df = pd.read_parquet(regime_files[0])
+                    df = df.rename(columns={'predicted_date': 'ds', 'predicted_regime': 'regime'})
+                    if 'ds' not in df.columns and 'date' in df.columns:
+                        df = df.rename(columns={'date': 'ds'})
+                    df['ds'] = pd.to_datetime(df['ds'])
+                    # Extract timestamp from filename
+                    import re
+                    match = re.search(r'regime_predictions_(\d{8}_\d{6})', regime_files[0].name)
+                    if match:
+                        forecast_time = pd.to_datetime(match.group(1), format='%Y%m%d_%H%M%S')
+                    else:
+                        forecast_time = pd.Timestamp(regime_files[0].stat().st_mtime, unit='s')
+                    df['timestamp'] = forecast_time
+                    data['forecast'] = df.sort_values('ds').reset_index(drop=True)
+                    data['forecast_source'] = 'local'
+                    data['forecast_time'] = forecast_time
+                    print(f"✓ Loaded forecast from local file: {regime_files[0].name}")
+                except Exception as e:
+                    print(f"⚠️ Failed to load local forecast: {type(e).__name__}: {str(e)}")
 
     # Historical data - try BigQuery first, fallback to local
     if storage and hasattr(storage, '_execute_query'):

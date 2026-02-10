@@ -210,6 +210,10 @@ jobs:
           git add DAILY_PREDICTIONS.md || true
           git add WORKFLOW_LOG.md || true
 
+          # Add inference outputs (fallback for when BigQuery is unavailable)
+          git add outputs/inference/*.parquet 2>/dev/null || true
+          git add outputs/forecasting/inference/*.parquet 2>/dev/null || true
+
           # Commit if there are changes
           if git diff --staged --quiet; then
             echo "No changes to commit"
