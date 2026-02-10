@@ -107,6 +107,8 @@ regime01-*.json
 data/
 INTERVIEW_PREP.md
 
-# Parquet files - ignore except cluster assignments
+# Parquet files - ignore except cluster assignments and inference outputs
 *.parquet
 !outputs/clustering/*.parquet
+!outputs/inference/*.parquet
+!outputs/forecasting/inference/*.parquet
