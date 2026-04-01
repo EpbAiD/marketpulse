@@ -112,6 +112,14 @@ def validate_forecast(forecast_id: str, forecast_time, storage=None) -> Optional
     if forecasted_df.empty:
         return None
 
+    # Filter out future dates — actuals won't exist yet
+    today = datetime.now().date()
+    forecasted_df = forecasted_df[forecasted_df['date'] <= today]
+
+    if forecasted_df.empty:
+        print(f"  ℹ️ Skipping {forecast_id}: all predicted dates are in the future")
+        return None
+
     # Get date range
     start_date = forecasted_df['date'].min()
     end_date = forecasted_df['date'].max()
@@ -132,12 +140,14 @@ def validate_forecast(forecast_id: str, forecast_time, storage=None) -> Optional
         return None
 
     if actual_df.empty:
+        print(f"  ℹ️ Skipping {forecast_id}: no actual data available for forecasted date range")
         return None
 
-    # Merge on (date, feature)
+    # Merge on (date, feature) — only keeps rows where both forecast and actual exist
     merged = forecasted_df.merge(actual_df, on=['date', 'feature'], how='inner')
 
     if merged.empty:
+        print(f"  ℹ️ Skipping {forecast_id}: no overlapping dates between forecast and actuals")
         return None
 
     # Calculate SMAPE per feature
@@ -217,6 +227,7 @@ def run_validation_analysis(storage=None) -> Dict:
         }
 
     # Get pending forecasts from storage
+    # Only validate forecasts whose predicted dates have passed (actuals available)
     query = f"""
         SELECT DISTINCT
             forecast_id,
@@ -225,7 +236,9 @@ def run_validation_analysis(storage=None) -> Dict:
             MAX(predicted_date) as last_predicted_date
         FROM `{storage.dataset_id}.regime_forecasts`
         WHERE validation_status IN ('PENDING', 'PARTIAL')
+          AND predicted_date <= CURRENT_DATE()
         GROUP BY forecast_id, forecast_generated_at
+        HAVING MAX(predicted_date) <= CURRENT_DATE()
         ORDER BY forecast_generated_at DESC
     """
 
@@ -264,6 +277,7 @@ def run_validation_analysis(storage=None) -> Dict:
             validation_results.append(result)
 
     if not validation_results:
+        print(f"  ℹ️ No forecasts could be validated (all predicted dates may still be in the future)")
         return {
             'metrics': {
                 'total_forecasts': 0,
