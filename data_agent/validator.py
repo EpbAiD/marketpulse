@@ -228,6 +228,7 @@ def run_validation_analysis(storage=None) -> Dict:
 
     # Get pending forecasts from storage
     # Only validate forecasts whose predicted dates have passed (actuals available)
+    # Limit to last 30 days to avoid re-validating stale backlog
     query = f"""
         SELECT DISTINCT
             forecast_id,
@@ -237,9 +238,11 @@ def run_validation_analysis(storage=None) -> Dict:
         FROM `{storage.dataset_id}.regime_forecasts`
         WHERE validation_status IN ('PENDING', 'PARTIAL')
           AND predicted_date <= CURRENT_DATE()
+          AND forecast_generated_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY)
         GROUP BY forecast_id, forecast_generated_at
         HAVING MAX(predicted_date) <= CURRENT_DATE()
         ORDER BY forecast_generated_at DESC
+        LIMIT 50
     """
 
     try:
