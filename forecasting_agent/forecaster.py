@@ -915,12 +915,18 @@ def run_inference_for_features(
             continue
 
         # Combine predictions with weights
+        # Pad shorter predictions with their last value to match horizon_days
         ensemble_pred = np.zeros(horizon_days)
         total_weight = 0.0
 
         for model_name, pred_values in predictions.items():
             weight = weights.get(model_name, 0.0)
-            if weight > 0 and len(pred_values) >= horizon_days:
+            if weight > 0 and len(pred_values) > 0:
+                if len(pred_values) < horizon_days:
+                    # Pad with last predicted value to fill remaining days
+                    padded = np.full(horizon_days, pred_values[-1])
+                    padded[:len(pred_values)] = pred_values
+                    pred_values = padded
                 ensemble_pred += weight * pred_values[:horizon_days]
                 total_weight += weight
 
