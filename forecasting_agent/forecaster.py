@@ -42,6 +42,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import yaml
 from datetime import datetime
+from pandas.tseries.holiday import USFederalHolidayCalendar
 import gc  # ADD
 
 # 🔹 PyTorch 2.6+ Compatibility Patch
@@ -654,6 +655,16 @@ def mark_version_status(feature_name, version, status, metrics=None):
 
     save_version_metadata(feature_name, metadata)
 
+def get_next_trading_days(start_date, n_days):
+    """Get the next N NYSE trading days from start_date (exclusive)."""
+    # Generate enough calendar days to cover N trading days (worst case: holidays + weekends)
+    cal_days = pd.bdate_range(start=start_date + pd.Timedelta(days=1), periods=n_days * 2)
+    # Remove US federal holidays
+    holidays = USFederalHolidayCalendar().holidays(start=cal_days.min(), end=cal_days.max())
+    trading_days = cal_days[~cal_days.isin(holidays)]
+    return trading_days[:n_days]
+
+
 # ===========================================================
 # INFERENCE FUNCTION (load versioned models and forecast)
 # ===========================================================
@@ -819,9 +830,8 @@ def run_inference_for_features(
         df = df[["unique_id", "ds", "y"]].dropna()
         df = df.sort_values("ds").reset_index(drop=True)
 
-        # Get horizon from config
+        # Get horizon from config — use the model's trained horizon
         horizon = cad[cadence]["horizon"]
-        actual_horizon = max(horizon, horizon_days)  # Use max of config and requested
 
         # Collect predictions from each model
         predictions = {}
@@ -871,7 +881,7 @@ def run_inference_for_features(
 
                         for col in possible_cols:
                             if col in nf_preds.columns:
-                                predictions[model_name] = nf_preds[col].values[:horizon_days]
+                                predictions[model_name] = nf_preds[col].values[:horizon]
                                 print(f"  ✅ {model_name} predictions extracted from column '{col}'")
                                 break
                         else:
@@ -886,7 +896,7 @@ def run_inference_for_features(
             try:
                 with open(versioned_paths["arima"], "rb") as f:
                     arima_model = pickle.load(f)
-                arima_forecast = arima_model.forecast(steps=horizon_days)
+                arima_forecast = arima_model.forecast(steps=horizon)
                 predictions["arima"] = arima_forecast
                 print(f"  ✅ ARIMA inference complete")
             except Exception as e:
@@ -900,7 +910,7 @@ def run_inference_for_features(
 
                 # Create future dataframe
                 last_date = df["ds"].max()
-                future_dates = pd.date_range(start=last_date + pd.Timedelta(days=1), periods=horizon_days, freq='D')
+                future_dates = pd.date_range(start=last_date + pd.Timedelta(days=1), periods=horizon, freq='D')
                 future_df = pd.DataFrame({"ds": future_dates})
 
                 prophet_forecast = prophet_model.predict(future_df)
@@ -914,47 +924,40 @@ def run_inference_for_features(
             print(f"  ❌ No model predictions available for {fname}")
             continue
 
-        # Combine predictions with weights
-        # Pad shorter predictions with their last value to match horizon_days
-        ensemble_pred = np.zeros(horizon_days)
+        # Combine predictions with weights using model's trained horizon
+        ensemble_pred = np.zeros(horizon)
         total_weight = 0.0
 
         for model_name, pred_values in predictions.items():
             weight = weights.get(model_name, 0.0)
             if weight > 0 and len(pred_values) > 0:
-                if len(pred_values) < horizon_days:
-                    # Pad with last predicted value to fill remaining days
-                    padded = np.full(horizon_days, pred_values[-1])
-                    padded[:len(pred_values)] = pred_values
-                    pred_values = padded
-                ensemble_pred += weight * pred_values[:horizon_days]
+                usable = min(len(pred_values), horizon)
+                ensemble_pred[:usable] += weight * pred_values[:usable]
                 total_weight += weight
 
         if total_weight > 0:
             ensemble_pred /= total_weight
 
-        # Create forecast dataframe
-        # For monthly features with stale data (e.g., FRED indicators with 1-2 month lag),
-        # use today's date as the forecast start instead of last_date + 1 day
+        # Generate forecast dates using NYSE trading calendar
         last_date = df["ds"].max()
         today = pd.Timestamp.now().normalize()
 
-        # Check if data is stale (more than 35 days old for monthly, 7 days for weekly, 2 days for daily)
+        # Check if data is stale (more than threshold days old)
         data_age_days = (today - last_date).days
         cadence_staleness_threshold = {'monthly': 35, 'weekly': 10, 'daily': 3}
         staleness_threshold = cadence_staleness_threshold.get(cadence, 3)
 
         if data_age_days > staleness_threshold:
-            # Data is stale - use today as forecast start and forward-fill the prediction
             print(f"  ⚠️ Data is {data_age_days} days old (threshold: {staleness_threshold}), using today as forecast start")
             forecast_start = today
         else:
-            forecast_start = last_date + pd.Timedelta(days=1)
+            forecast_start = last_date
 
-        forecast_dates = pd.date_range(start=forecast_start, periods=horizon_days, freq='D')
+        # Use actual trading days instead of calendar days
+        forecast_dates = get_next_trading_days(forecast_start, horizon)
 
         print(f"  📅 Latest data date: {last_date.date()}")
-        print(f"  📅 Forecast period: {forecast_dates[0].date()} to {forecast_dates[-1].date()}")
+        print(f"  📅 Forecast period: {forecast_dates[0].date()} to {forecast_dates[-1].date()} ({len(forecast_dates)} trading days)")
 
         forecast_df = pd.DataFrame({
             'ds': forecast_dates,
@@ -963,7 +966,7 @@ def run_inference_for_features(
         })
 
         all_forecasts.append(forecast_df)
-        print(f"  ✅ {fname} forecast complete: {horizon_days} days")
+        print(f"  ✅ {fname} forecast complete: {horizon} trading days")
 
     # Combine all forecasts
     if not all_forecasts:

@@ -39,9 +39,9 @@ def inference_node(state: PipelineState) -> PipelineState:
     try:
         from orchestrator.inference import run_inference_pipeline
 
-        # Run inference pipeline
-        # Generate 16 calendar days to ensure 10 trading days (accounts for weekends + holidays)
-        result = run_inference_pipeline(horizon_days=16)
+        # Run inference pipeline for 10 trading days
+        # Trading day calendar is handled inside the forecaster
+        result = run_inference_pipeline(horizon_days=10)
 
         # Update state
         elapsed = time.time() - start_time
