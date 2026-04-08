@@ -16,9 +16,26 @@ from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 import yaml
 import json
+import subprocess
 
 
 BASE_DIR = Path(__file__).parent.parent
+
+
+def get_git_commit_date(file_path: str) -> Optional[datetime]:
+    """Get the date of the last git commit that modified this file.
+    This is reliable on CI runners where file mtimes are reset by git checkout."""
+    try:
+        result = subprocess.run(
+            ['git', 'log', '-1', '--format=%aI', '--', str(file_path)],
+            capture_output=True, text=True, cwd=str(BASE_DIR), timeout=10
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            date_str = result.stdout.strip()
+            return datetime.fromisoformat(date_str)
+    except Exception:
+        pass
+    return None
 CONFIG_PATH = BASE_DIR / "configs" / "features_config.yaml"
 
 
@@ -178,9 +195,13 @@ def check_feature_model_status(feature_name: str, cadence: str) -> Dict:
                 except Exception:
                     pass
 
-    # Fallback: use ensemble file modification time (most accurate for training completion)
-    mtime = datetime.fromtimestamp(ensemble_path.stat().st_mtime)
-    age_days = (datetime.now() - mtime).days
+    # Fallback: use git commit date (reliable on CI), then file mtime
+    git_date = get_git_commit_date(ensemble_path)
+    if git_date:
+        age_days = (datetime.now(git_date.tzinfo) - git_date).days
+    else:
+        mtime = datetime.fromtimestamp(ensemble_path.stat().st_mtime)
+        age_days = (datetime.now() - mtime).days
     threshold = get_retraining_threshold(cadence)
     needs_training = age_days > threshold
 
@@ -262,16 +283,26 @@ def check_core_models_status() -> Dict:
     cluster_exists = cluster_path.exists()
 
     # Check age of each core model
+    # Use git commit date (reliable on CI where file mtimes are reset by checkout)
+    # Fall back to file mtime for local development
     hmm_age_days = None
     classifier_age_days = None
 
     if hmm_path.exists():
-        mtime = datetime.fromtimestamp(hmm_path.stat().st_mtime)
-        hmm_age_days = (datetime.now() - mtime).days
+        git_date = get_git_commit_date(hmm_path)
+        if git_date:
+            hmm_age_days = (datetime.now(git_date.tzinfo) - git_date).days
+        else:
+            mtime = datetime.fromtimestamp(hmm_path.stat().st_mtime)
+            hmm_age_days = (datetime.now() - mtime).days
 
     if classifier_path.exists():
-        mtime = datetime.fromtimestamp(classifier_path.stat().st_mtime)
-        classifier_age_days = (datetime.now() - mtime).days
+        git_date = get_git_commit_date(classifier_path)
+        if git_date:
+            classifier_age_days = (datetime.now(git_date.tzinfo) - git_date).days
+        else:
+            mtime = datetime.fromtimestamp(classifier_path.stat().st_mtime)
+            classifier_age_days = (datetime.now() - mtime).days
 
     # Use the older of the two for the age_days field
     age_days = None
