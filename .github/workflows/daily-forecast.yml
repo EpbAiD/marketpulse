@@ -122,7 +122,9 @@ jobs:
           gcloud services enable run.googleapis.com --project=coms-452404 --quiet || echo "Note: API enablement may require additional permissions"
 
       - name: Trigger Cloud Run for training (if needed)
+        id: cloud_run_training
         if: steps.check_models.outputs.workflow != 'inference'
+        continue-on-error: true
         run: |
           echo "🚀 Training needed - triggering Cloud Run GPU job..."
           echo "Workflow: ${{ steps.check_models.outputs.workflow }}"
@@ -141,6 +143,15 @@ jobs:
 
           # Pull the latest models from repo (Cloud Run pushed them)
           git pull origin main
+
+      - name: Log training result
+        if: steps.check_models.outputs.workflow != 'inference'
+        run: |
+          if [ "${{ steps.cloud_run_training.outcome }}" = "failure" ]; then
+            echo "⚠️ Cloud Run training failed — continuing with existing models for inference"
+          else
+            echo "✅ Training completed successfully"
+          fi
 
       - name: Run inference pipeline
         env:
