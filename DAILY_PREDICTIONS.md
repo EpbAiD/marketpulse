@@ -3623,3 +3623,32 @@ This file tracks daily regime forecasts from the MarketPulse system.
 | 2026-05-04 | Bear Market | 0.650 |
 
 ---
+
+## 2026-04-22 12:09:23
+
+**Source:** BigQuery
+
+**Forecast Period:** 2026-04-21 to 2026-05-04
+
+**Total Days:** 10
+
+### Regime Distribution
+
+- **Bear Market**: 10 days (100.0%) - Avg confidence: 0.657
+
+### Daily Predictions
+
+| Date | Regime | Confidence |
+|------|--------|------------|
+| 2026-04-21 | Bear Market | 0.710 |
+| 2026-04-22 | Bear Market | 0.658 |
+| 2026-04-23 | Bear Market | 0.638 |
+| 2026-04-24 | Bear Market | 0.636 |
+| 2026-04-27 | Bear Market | 0.678 |
+| 2026-04-28 | Bear Market | 0.656 |
+| 2026-04-29 | Bear Market | 0.658 |
+| 2026-04-30 | Bear Market | 0.654 |
+| 2026-05-01 | Bear Market | 0.642 |
+| 2026-05-04 | Bear Market | 0.644 |
+
+---
