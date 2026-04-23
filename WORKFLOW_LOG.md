@@ -48,3 +48,9 @@ Location: us-central1
 Job ID: 4e14a90a-9dc9-4931-a1c1-688177b76687
 
 
+**[19:32:36]** (7.6min) 📍 **STAGE**: Starting stage: Forecasting
+
+**[19:32:36]** (7.6min) ℹ️ **INFO**: Training all feature models
+
+**[19:32:36]** (7.6min) 📍 **STAGE**: Starting stage: Forecasting - Training Models
+
