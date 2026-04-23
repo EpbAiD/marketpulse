@@ -60,3 +60,9 @@ Location: us-central1
 Job ID: ff971e1a-cf9d-46ba-a3ee-9b38dd283bf5
 
 
+**[19:36:08]** (11.1min) 📍 **STAGE**: Starting stage: Data Fetching
+
+**[19:36:08]** (11.1min) ℹ️ **INFO**: Starting data fetch (BigQuery: True)
+
+**[19:36:51]** (11.9min) ✅ **SUCCESS**: Data fetch completed (43.3s) - Saved to BigQuery
+
