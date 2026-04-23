@@ -32,3 +32,9 @@ Location: us-central1
 Job ID: f390494e-320f-4241-a04c-ea76d1e5d630
 
 
+**[19:31:36]** (6.6min) 📍 **STAGE**: Starting stage: Data Fetching
+
+**[19:31:36]** (6.6min) ℹ️ **INFO**: Starting data fetch (BigQuery: True)
+
+**[19:32:33]** (7.5min) ✅ **SUCCESS**: Data fetch completed (56.9s) - Saved to BigQuery
+
