@@ -1289,16 +1289,31 @@ def run_forecasting_agent(mode="all", config_path=None, single_daily=None, singl
     cad = load_yaml_config(config_path)
     import torch
     # Keep MPS from hogging unified memory (lower than default 0.8)
-    # --- Stable Apple MPS memory watermarks ---
-    # ----------------------------------------------------------------------
-# ⚙️ Force CPU mode globally (safe and deterministic)
-# ----------------------------------------------------------------------
-    accelerator = "cpu"
-    os.environ["CUDA_VISIBLE_DEVICES"] = ""
     os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
     os.environ["PYTORCH_MPS_HIGH_WATERMARK_RATIO"] = "0.0"
     os.environ["PYTORCH_MPS_LOW_WATERMARK_RATIO"] = "0.0"
-    print("🧩 Running all forecasting on CPU (MPS/CUDA disabled).")
+
+    # ----------------------------------------------------------------------
+    # ⚙️ Runtime accelerator detection
+    # ----------------------------------------------------------------------
+    # CUDA can be reported available but still fail on a first tensor op when
+    # the installed torch build doesn't support the GPU's compute capability
+    # (e.g. Kaggle's torch 2.10 supports sm_70+, but Kaggle may assign P100
+    # = sm_60). Smoke-test with a real tensor allocation before committing.
+    accelerator = "cpu"
+    if torch.cuda.is_available():
+        try:
+            _probe = torch.zeros(1, device="cuda")
+            _ = _probe + 1  # force kernel launch
+            del _probe
+            accelerator = "gpu"
+            print(f"🧩 GPU detected: {torch.cuda.get_device_name(0)} — using CUDA.")
+        except Exception as e:
+            print(f"⚠️ GPU present but unusable with installed torch ({e}); falling back to CPU.")
+            os.environ["CUDA_VISIBLE_DEVICES"] = ""
+    else:
+        print("🧩 No CUDA device — running forecasting on CPU.")
+
     print(f"⚙️ Accelerator selected: {accelerator.upper()}")
     force_cpu = accelerator == "cpu"
     quiet = True
