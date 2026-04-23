@@ -1,78 +1,12 @@
 # Workflow Execution Log
 
-**Started**: 2026-04-23 19:25:00 UTC
+**Started**: 2026-04-23 19:48:51 UTC
 
 ---
 
-**[19:25:00]** (0.0min) 📍 **STAGE**: Starting stage: Data Fetching
+**[19:48:51]** (0.0min) 📍 **STAGE**: Starting stage: Data Fetching
 
-**[19:25:48]** (0.8min) ℹ️ **INFO**: Starting data fetch (BigQuery: True)
+**[19:49:40]** (0.8min) ℹ️ **INFO**: Starting data fetch (BigQuery: True)
 
-**[19:27:01]** (2.0min) ✅ **SUCCESS**: Data fetch completed (121.0s) - Saved to BigQuery
-
-**[19:27:03]** (2.1min) 📍 **STAGE**: Starting stage: Feature Engineering
-
-**[19:27:03]** (2.1min) ℹ️ **INFO**: Starting feature engineering (BigQuery: True)
-
-**[19:27:05]** (2.1min) ❌ **ERROR**: Feature engineering FAILED: 403 Access Denied: Table regime01:forecasting_pipeline.raw_features: User does not have permission to query table regime01:forecasting_pipeline.raw_features, or perhaps it does not exist.; reason: accessDenied, message: Access Denied: Table regime01:forecasting_pipeline.raw_features: User does not have permission to query table regime01:forecasting_pipeline.raw_features, or perhaps it does not exist.
-
-Location: us-central1
-Job ID: 01b6fac3-fc47-4df8-883b-cb752dd7947f
-
-
-**[19:27:21]** (2.4min) 📍 **STAGE**: Starting stage: Forecasting
-
-**[19:27:21]** (2.4min) ℹ️ **INFO**: Training all feature models
-
-**[19:27:21]** (2.4min) 📍 **STAGE**: Starting stage: Forecasting - Training Models
-
-**[19:27:24]** (2.4min) ❌ **ERROR**: Forecasting FAILED: 403 Access Denied: Table regime01:forecasting_pipeline.raw_features: User does not have permission to query table regime01:forecasting_pipeline.raw_features, or perhaps it does not exist.; reason: accessDenied, message: Access Denied: Table regime01:forecasting_pipeline.raw_features: User does not have permission to query table regime01:forecasting_pipeline.raw_features, or perhaps it does not exist.
-
-Location: us-central1
-Job ID: f390494e-320f-4241-a04c-ea76d1e5d630
-
-
-**[19:31:36]** (6.6min) 📍 **STAGE**: Starting stage: Data Fetching
-
-**[19:31:36]** (6.6min) ℹ️ **INFO**: Starting data fetch (BigQuery: True)
-
-**[19:32:33]** (7.5min) ✅ **SUCCESS**: Data fetch completed (56.9s) - Saved to BigQuery
-
-**[19:32:34]** (7.6min) 📍 **STAGE**: Starting stage: Feature Engineering
-
-**[19:32:34]** (7.6min) ℹ️ **INFO**: Starting feature engineering (BigQuery: True)
-
-**[19:32:35]** (7.6min) ❌ **ERROR**: Feature engineering FAILED: 403 Access Denied: Table regime01:forecasting_pipeline.raw_features: User does not have permission to query table regime01:forecasting_pipeline.raw_features, or perhaps it does not exist.; reason: accessDenied, message: Access Denied: Table regime01:forecasting_pipeline.raw_features: User does not have permission to query table regime01:forecasting_pipeline.raw_features, or perhaps it does not exist.
-
-Location: us-central1
-Job ID: 4e14a90a-9dc9-4931-a1c1-688177b76687
-
-
-**[19:32:36]** (7.6min) 📍 **STAGE**: Starting stage: Forecasting
-
-**[19:32:36]** (7.6min) ℹ️ **INFO**: Training all feature models
-
-**[19:32:36]** (7.6min) 📍 **STAGE**: Starting stage: Forecasting - Training Models
-
-**[19:32:39]** (7.6min) ❌ **ERROR**: Forecasting FAILED: 403 Access Denied: Table regime01:forecasting_pipeline.raw_features: User does not have permission to query table regime01:forecasting_pipeline.raw_features, or perhaps it does not exist.; reason: accessDenied, message: Access Denied: Table regime01:forecasting_pipeline.raw_features: User does not have permission to query table regime01:forecasting_pipeline.raw_features, or perhaps it does not exist.
-
-Location: us-central1
-Job ID: ff971e1a-cf9d-46ba-a3ee-9b38dd283bf5
-
-
-**[19:36:08]** (11.1min) 📍 **STAGE**: Starting stage: Data Fetching
-
-**[19:36:08]** (11.1min) ℹ️ **INFO**: Starting data fetch (BigQuery: True)
-
-**[19:36:51]** (11.9min) ✅ **SUCCESS**: Data fetch completed (43.3s) - Saved to BigQuery
-
-**[19:36:53]** (11.9min) 📍 **STAGE**: Starting stage: Feature Engineering
-
-**[19:36:53]** (11.9min) ℹ️ **INFO**: Starting feature engineering (BigQuery: True)
-
-**[19:36:53]** (11.9min) ❌ **ERROR**: Feature engineering FAILED: 403 Access Denied: Table regime01:forecasting_pipeline.raw_features: User does not have permission to query table regime01:forecasting_pipeline.raw_features, or perhaps it does not exist.; reason: accessDenied, message: Access Denied: Table regime01:forecasting_pipeline.raw_features: User does not have permission to query table regime01:forecasting_pipeline.raw_features, or perhaps it does not exist.
-
-Location: us-central1
-Job ID: 64651c1a-9a42-44c7-89fa-18e37a584da0
-
+**[19:50:32]** (1.7min) ✅ **SUCCESS**: Data fetch completed (101.2s) - Saved to BigQuery
 
