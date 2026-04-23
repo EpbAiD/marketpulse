@@ -103,8 +103,22 @@ class RealTimeLogger:
             if result.returncode != 0:  # There are changes
                 timestamp = datetime.now().strftime("%H:%M:%S")
                 subprocess.run(["git", "commit", "-m", f"📝 Update workflow log [{timestamp}]", "--no-verify"], check=False)
+
+                # Stash any unstaged changes (from concurrent pipeline stages
+                # generating outputs, __pycache__, etc.) so pull --rebase
+                # doesn't abort with "cannot pull with rebase".
+                stash_res = subprocess.run(
+                    ["git", "stash", "push", "-u", "-m", "auto-stash-before-log-push"],
+                    capture_output=True, text=True,
+                )
+                stashed = "No local changes to save" not in (stash_res.stdout + stash_res.stderr)
+
                 subprocess.run(["git", "pull", "--rebase", "origin", "main", "--no-verify"], check=False)
                 subprocess.run(["git", "push", "origin", "main", "--no-verify"], check=False)
+
+                if stashed:
+                    subprocess.run(["git", "stash", "pop"], check=False)
+
                 print(f"✓ Log committed to GitHub at {timestamp}")
         except Exception as e:
             print(f"⚠️ Could not commit log: {e}")

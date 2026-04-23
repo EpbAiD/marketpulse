@@ -244,9 +244,15 @@ Examples:
 
         recommendation = print_intelligent_status()
 
-        # Store selective_features for forecast_node (which features need training)
-        # Note: cluster_node and classify_node now self-detect using intelligent_model_checker
-        args.selective_features = recommendation.get('features_to_train') or None
+        # Store selective_features for forecast_node (which features need training).
+        # IMPORTANT: preserve the distinction between:
+        #   None -> train all features (legacy default, no auto guidance)
+        #   []   -> NO features need training (skip forecast stage entirely)
+        #   [..] -> train only these features
+        # Previously `.get(...) or None` coerced [] into None, causing the
+        # forecaster to retrain all 22 models even when the checker said none
+        # were stale — which OOM'd Kaggle's free-tier 13GB RAM cap.
+        args.selective_features = recommendation.get('features_to_train', None)
 
         if recommendation['workflow'] == 'inference':
             # All models fresh - just run inference
@@ -271,6 +277,8 @@ Examples:
                 print(f"   Also training {len(recommendation['features_to_train'])} feature models")
                 print(f"   Features: {', '.join(sorted(recommendation['features_to_train']))}\n")
             else:
+                # Keep args.selective_features as [] (not None) so the forecast
+                # node skips retraining — only HMM/RF will be retrained below.
                 print(f"   All feature models are fresh - only retraining core\n")
             args.workflow = "full"
             # Nodes (cluster_node, classify_node) will self-detect model staleness
