@@ -40,3 +40,9 @@
 
 **[23:49:37]** (11.2min) ✅ **SUCCESS**: All forecasting models are fresh - Skipping training
 
+**[23:53:10]** (14.7min) 📍 **STAGE**: Starting stage: Data Fetching
+
+**[23:53:10]** (14.7min) ℹ️ **INFO**: Starting data fetch (BigQuery: True)
+
+**[23:54:07]** (15.7min) ✅ **SUCCESS**: Data fetch completed (57.4s) - Saved to BigQuery
+
