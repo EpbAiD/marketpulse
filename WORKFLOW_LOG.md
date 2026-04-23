@@ -54,3 +54,9 @@ Job ID: 4e14a90a-9dc9-4931-a1c1-688177b76687
 
 **[19:32:36]** (7.6min) 📍 **STAGE**: Starting stage: Forecasting - Training Models
 
+**[19:32:39]** (7.6min) ❌ **ERROR**: Forecasting FAILED: 403 Access Denied: Table regime01:forecasting_pipeline.raw_features: User does not have permission to query table regime01:forecasting_pipeline.raw_features, or perhaps it does not exist.; reason: accessDenied, message: Access Denied: Table regime01:forecasting_pipeline.raw_features: User does not have permission to query table regime01:forecasting_pipeline.raw_features, or perhaps it does not exist.
+
+Location: us-central1
+Job ID: ff971e1a-cf9d-46ba-a3ee-9b38dd283bf5
+
+
