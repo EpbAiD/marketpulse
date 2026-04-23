@@ -71,8 +71,23 @@ class BigQueryStorage(StorageBackend):
                         "For Cloud Run: Ensure service account has BigQuery access."
                     )
 
-        # Initialize client
-        self.client = bigquery.Client(project=self.config['project_id'])
+        # Initialize client — prefer explicit service-account credentials when
+        # GOOGLE_APPLICATION_CREDENTIALS points to a real JSON file. This bypasses
+        # Kaggle's auth hijack which otherwise intercepts the default client and
+        # rejects with "No user secrets of target Bigquery exist for kernel id".
+        creds_env = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+        if creds_env and os.path.exists(creds_env):
+            from google.oauth2 import service_account
+            credentials = service_account.Credentials.from_service_account_file(
+                creds_env,
+                scopes=["https://www.googleapis.com/auth/cloud-platform"],
+            )
+            self.client = bigquery.Client(
+                project=self.config['project_id'],
+                credentials=credentials,
+            )
+        else:
+            self.client = bigquery.Client(project=self.config['project_id'])
 
         # Dataset reference
         self.dataset_id = f"{self.config['project_id']}.{self.config['dataset_id']}"
