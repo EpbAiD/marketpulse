@@ -66,3 +66,13 @@ Job ID: ff971e1a-cf9d-46ba-a3ee-9b38dd283bf5
 
 **[19:36:51]** (11.9min) ✅ **SUCCESS**: Data fetch completed (43.3s) - Saved to BigQuery
 
+**[19:36:53]** (11.9min) 📍 **STAGE**: Starting stage: Feature Engineering
+
+**[19:36:53]** (11.9min) ℹ️ **INFO**: Starting feature engineering (BigQuery: True)
+
+**[19:36:53]** (11.9min) ❌ **ERROR**: Feature engineering FAILED: 403 Access Denied: Table regime01:forecasting_pipeline.raw_features: User does not have permission to query table regime01:forecasting_pipeline.raw_features, or perhaps it does not exist.; reason: accessDenied, message: Access Denied: Table regime01:forecasting_pipeline.raw_features: User does not have permission to query table regime01:forecasting_pipeline.raw_features, or perhaps it does not exist.
+
+Location: us-central1
+Job ID: 64651c1a-9a42-44c7-89fa-18e37a584da0
+
+
