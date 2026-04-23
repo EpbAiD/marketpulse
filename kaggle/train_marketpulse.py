@@ -67,15 +67,31 @@ subprocess.run(["git", "config", "user.name", "Kaggle Training Bot"], check=True
 # -----------------------------------------------------------------------------
 # 3. Install dependencies
 # -----------------------------------------------------------------------------
-print("\n📦 Installing dependencies...")
+# Kaggle ships with torch/torchvision/torchaudio already installed and matched
+# to the CUDA runtime. Installing `torch==2.6.0` on top breaks torchvision's
+# C extensions (circular import). Filter those lines out and keep Kaggle's
+# preinstalled torch stack.
+print("\n📦 Installing dependencies (skipping torch family to keep Kaggle's stack)...")
+with open("requirements_github_actions.txt") as f:
+    reqs = f.read().splitlines()
+
+filtered = [
+    line for line in reqs
+    if line.strip() and not line.strip().startswith("#")
+    and not line.strip().lower().startswith(("torch==", "torchvision", "torchaudio", "pytorch-lightning"))
+]
+
+with open("/tmp/kaggle_requirements.txt", "w") as f:
+    f.write("\n".join(filtered))
+
 subprocess.run(
-    [sys.executable, "-m", "pip", "install", "-q", "-r", "requirements_github_actions.txt"],
+    [sys.executable, "-m", "pip", "install", "-q", "-r", "/tmp/kaggle_requirements.txt"],
     check=True,
 )
 
-# Confirm GPU
+# Confirm GPU + torch is still usable
 import torch
-print(f"\n🖥️  GPU Available: {torch.cuda.is_available()}")
+print(f"\n🖥️  torch {torch.__version__}, GPU: {torch.cuda.is_available()}")
 if torch.cuda.is_available():
     print(f"   Device: {torch.cuda.get_device_name(0)}")
 
@@ -115,6 +131,13 @@ if result.returncode != 0:
     print(f"❌ Training failed with exit code {result.returncode}")
     sys.exit(result.returncode)
 
+# Sanity check: did training actually produce cluster assignments?
+# run_pipeline.py can exit 0 even when data fetch fails silently.
+cluster_path = Path(REPO_DIR) / "outputs" / "clustering" / "cluster_assignments.parquet"
+if retrain_core and not cluster_path.exists():
+    print("❌ Training ran but cluster_assignments.parquet is missing — fetch or clustering likely failed.")
+    sys.exit(1)
+
 
 # -----------------------------------------------------------------------------
 # 6. Commit trained models back to main
@@ -125,7 +148,7 @@ paths_to_commit = [
     "outputs/models/",
     "outputs/clustering/",
     "outputs/forecasting/models/",
-    "outputs/selected/",
+    # outputs/selected/ is gitignored (regenerated on each run)
 ]
 
 subprocess.run(["git", "add"] + paths_to_commit, cwd=REPO_DIR)
