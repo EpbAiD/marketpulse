@@ -102,53 +102,54 @@ jobs:
           echo "workflow=$WORKFLOW" >> $GITHUB_OUTPUT
           echo "features_to_train=$FEATURES_TO_TRAIN" >> $GITHUB_OUTPUT
 
-      - name: Set up Cloud SDK (for training trigger)
-        if: steps.check_models.outputs.workflow != 'inference'
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-
-      - name: Configure gcloud
-        if: steps.check_models.outputs.workflow != 'inference'
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          # Cloud Run job is deployed in coms-452404, not regime01
-          project_id: coms-452404
-
-      - name: Enable Cloud Run API if needed
-        if: steps.check_models.outputs.workflow != 'inference'
-        run: |
-          echo "🔧 Ensuring Cloud Run Admin API is enabled..."
-          gcloud services enable run.googleapis.com --project=coms-452404 --quiet || echo "Note: API enablement may require additional permissions"
-
-      - name: Trigger Cloud Run for training (if needed)
-        id: cloud_run_training
+      - name: Trigger Kaggle GPU training (if needed)
+        id: kaggle_training
         if: steps.check_models.outputs.workflow != 'inference'
         continue-on-error: true
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
         run: |
-          echo "🚀 Training needed - triggering Cloud Run GPU job..."
+          echo "🚀 Training needed - triggering Kaggle GPU kernel..."
           echo "Workflow: ${{ steps.check_models.outputs.workflow }}"
           echo "Features: ${{ steps.check_models.outputs.features_to_train }}"
 
-          # Trigger Cloud Run job with auto mode
-          # Cloud Run ONLY trains models - it detects which features need training
-          # and trains them one at a time with immediate commits for memory efficiency
-          gcloud run jobs execute marketpulse-training \
-            --region=us-central1 \
-            --project=coms-452404 \
-            --update-env-vars="MODE=auto" \
-            --wait
+          pip install -q kaggle
 
-          echo "✅ Cloud Run training complete!"
+          # Inject KAGGLE_USERNAME into the kernel metadata (repo-committed file
+          # uses a placeholder since the username is secret).
+          sed -i "s|KAGGLE_USERNAME|${KAGGLE_USERNAME}|g" kaggle/kernel-metadata.json
 
-          # Pull the latest models from repo (Cloud Run pushed them)
+          # Push + run the kernel. Kaggle runs it on T4 GPU automatically.
+          kaggle kernels push -p kaggle/
+
+          # Poll for completion (max ~2 hours)
+          KERNEL_ID="${KAGGLE_USERNAME}/marketpulse-training"
+          echo "⏳ Waiting for Kaggle kernel to finish..."
+          for i in $(seq 1 60); do
+            sleep 120
+            STATUS=$(kaggle kernels status "$KERNEL_ID" 2>&1 | tail -1)
+            echo "[$((i*2)) min] $STATUS"
+            if echo "$STATUS" | grep -qE "complete|error|cancelled"; then
+              break
+            fi
+          done
+
+          if echo "$STATUS" | grep -q "error"; then
+            echo "❌ Kaggle kernel reported an error"
+            exit 1
+          fi
+
+          echo "✅ Kaggle training complete!"
+
+          # Pull the latest models from repo (Kaggle pushed them)
           git pull origin main
 
       - name: Log training result
         if: steps.check_models.outputs.workflow != 'inference'
         run: |
-          if [ "${{ steps.cloud_run_training.outcome }}" = "failure" ]; then
-            echo "⚠️ Cloud Run training failed — continuing with existing models for inference"
+          if [ "${{ steps.kaggle_training.outcome }}" = "failure" ]; then
+            echo "⚠️ Kaggle training failed — continuing with existing models for inference"
           else
             echo "✅ Training completed successfully"
           fi
