@@ -80,15 +80,15 @@ def engineer_features(cfg_path="configs/feature_policy.yaml", use_bigquery=False
 
     # Get list of features to process
     if use_bigquery:
-        # Query BigQuery for distinct feature names
-        from google.cloud import bigquery
-        client = bigquery.Client()
+        # Reuse the BigQueryStorage client — it has explicit service-account
+        # credentials. A bare bigquery.Client() falls into Kaggle's hijacked
+        # default auth flow and hits 403.
         query = f"""
             SELECT DISTINCT feature_name
             FROM `{storage.dataset_id}.raw_features`
             ORDER BY feature_name
         """
-        result = client.query(query).to_dataframe()
+        result = storage.client.query(query).to_dataframe()
         feature_names = result['feature_name'].tolist()
         print(f"📂 Found {len(feature_names)} features in BigQuery")
     else:

@@ -1269,15 +1269,14 @@ def run_forecasting_agent(mode="all", config_path=None, single_daily=None, singl
     if use_bigquery:
         print("📡 Loading feature list from BigQuery...")
         from data_agent.storage import get_storage
-        from google.cloud import bigquery
         storage = get_storage(use_bigquery=True)
-        client = bigquery.Client()
+        # Reuse storage.client (credentialed); avoid Kaggle's default-auth hijack.
         query = f"""
             SELECT DISTINCT feature_name
             FROM `{storage.dataset_id}.raw_features`
             ORDER BY feature_name
         """
-        result = client.query(query).to_dataframe()
+        result = storage.client.query(query).to_dataframe()
         feature_names = result['feature_name'].tolist()
         # In BigQuery mode, we don't use file paths - pass feature names
         name_to_path = {name: name for name in feature_names}

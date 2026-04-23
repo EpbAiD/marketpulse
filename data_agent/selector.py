@@ -74,15 +74,14 @@ def load_engineered_features(use_bigquery=False):
         # Load from BigQuery
         storage = get_storage(use_bigquery=True)
 
-        # Get list of all feature names
-        from google.cloud import bigquery
-        client = bigquery.Client()
+        # Reuse the storage's pre-authenticated client (service-account creds).
+        # A bare bigquery.Client() gets intercepted by Kaggle's default auth.
         query = f"""
             SELECT DISTINCT base_feature
             FROM `{storage.dataset_id}.engineered_features`
             ORDER BY base_feature
         """
-        result = client.query(query).to_dataframe()
+        result = storage.client.query(query).to_dataframe()
         feature_names = result['base_feature'].tolist()
         print(f"📂 Found {len(feature_names)} engineered features in BigQuery")
 
