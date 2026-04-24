@@ -72,3 +72,7 @@
 
 **[00:01:31]** (23.1min) ✅ **SUCCESS**: Regime classifier trained (9.7s) - Model saved
 
+**[00:01:33]** (23.1min) 📍 **STAGE**: Starting stage: Forecasting
+
+**[00:01:33]** (23.1min) ✅ **SUCCESS**: All forecasting models are fresh - Skipping training
+
