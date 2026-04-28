@@ -1,0 +1,23 @@
+{
+  "0": "Bull Market",
+  "1": "Bear Market",
+  "2": "Transitional",
+  "_meta": {
+    "rule": "lowest VIX mean \u2192 Bull, highest \u2192 Bear, middle \u2192 Transitional",
+    "vix_col": "VIX_value",
+    "per_regime_stats": {
+      "0": {
+        "vix_mean": 16.55289067792739,
+        "n_days": 3110
+      },
+      "1": {
+        "vix_mean": 46.96442868368966,
+        "n_days": 70
+      },
+      "2": {
+        "vix_mean": 19.258734460094658,
+        "n_days": 2410
+      }
+    }
+  }
+}

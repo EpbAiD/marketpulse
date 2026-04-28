@@ -73,12 +73,12 @@ def log_daily_predictions(output_file="DAILY_PREDICTIONS.md"):
     log_entry += f"**Forecast Period:** {predictions['ds'].min().date()} to {predictions['ds'].max().date()}\n\n"
     log_entry += f"**Total Days:** {len(predictions)}\n\n"
 
-    # Regime distribution — labels verified empirically from cluster_assignments:
-    #   Regime 0: ~1761 days, VIX mean 16, drawdown -2.4%  → calm / near highs (Bull)
-    #   Regime 1:   ~49 days, VIX mean 47, drawdown -20%   → crisis (Bear)
-    #   Regime 2: ~1539 days, VIX mean 18, drawdown -5%    → choppy (Transitional)
+    # Regime distribution — load labels from outputs/models/regime_label_map.json
+    # (saved at HMM training time). Hardcoding numeric→name dicts breaks every
+    # time the HMM retrains and assigns regime IDs in a different order.
     log_entry += "### Regime Distribution\n\n"
-    regime_names = {0: "Bull Market", 1: "Bear Market", 2: "Transitional"}
+    from clustering_agent.labels import get_regime_names
+    regime_names = get_regime_names()
 
     for regime_id in sorted(predictions['regime'].unique()):
         count = (predictions['regime'] == regime_id).sum()

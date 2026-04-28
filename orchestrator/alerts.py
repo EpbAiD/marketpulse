@@ -18,15 +18,10 @@ from typing import Optional, Dict, List
 from data_agent.storage import get_storage
 
 
-# Regime names for display — empirical from cluster_assignments:
-#   0: VIX 16, near highs        → Bull
-#   1: VIX 47, -20% drawdown     → Bear
-#   2: VIX 18, off-highs         → Transitional
-REGIME_NAMES = {
-    0: "Bull Market",
-    1: "Bear Market",
-    2: "Transitional"
-}
+# Regime names for display — load from training-time mapping so labels stay
+# in sync after each HMM retrain (HMM IDs are arbitrary across retrains).
+from clustering_agent.labels import get_regime_names as _get_regime_names
+REGIME_NAMES = _get_regime_names()
 
 
 class AlertSystem:

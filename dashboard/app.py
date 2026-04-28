@@ -219,12 +219,20 @@ forecast = data['forecast']
 history = data.get('history')
 market = data.get('market', {})
 
-# Regime labels — verified empirically from cluster_assignments.parquet:
-#   Regime 0: 1761 days, VIX mean 16, drawdown -2.4%  → calm / near highs (Bull)
-#   Regime 1:   49 days, VIX mean 47, drawdown -20%   → crisis (Bear)
-#   Regime 2: 1539 days, VIX mean 18, drawdown -5%    → choppy (Transitional)
-regime_names = {0: "Growing Market", 1: "Declining Market", 2: "Stable Market"}
-regime_colors = {0: '#2ecc71', 1: '#e74c3c', 2: '#3498db'}  # green, red, blue
+# Regime labels — load at runtime from outputs/models/regime_label_map.json
+# (saved at HMM training time). HMM IDs are arbitrary across retrains, so a
+# hardcoded dict goes silently wrong after every retrain.
+from clustering_agent.labels import get_regime_names, get_regime_colors
+
+_raw_names = get_regime_names()
+# Dashboard prefers "...Market" suffixes for display; map Bull/Bear → Growing/Declining
+_display_aliases = {
+    "Bull Market": "Growing Market",
+    "Bear Market": "Declining Market",
+    "Transitional": "Stable Market",
+}
+regime_names = {rid: _display_aliases.get(name, name) for rid, name in _raw_names.items()}
+regime_colors = get_regime_colors()
 
 current = forecast.iloc[0]
 current_regime = int(current['regime'])
@@ -420,8 +428,8 @@ fig.update_layout(
     xaxis=dict(title="Forecast Horizon"),
     yaxis=dict(
         tickmode='array',
-        tickvals=[0, 1, 2],
-        ticktext=['Growing Market', 'Declining Market', 'Stable Market']
+        tickvals=sorted(regime_names.keys()),
+        ticktext=[regime_names[i] for i in sorted(regime_names.keys())]
     ),
     showlegend=False,
     hovermode='closest'
@@ -805,16 +813,20 @@ if history is not None and 'GSPC' in market:
         sharpe = current_metrics['Score']
         ann_return = current_metrics['Return']
 
-        # Investment recommendation based on regime type AND risk-adjusted returns
-        # Regime 0 = Growing (bull), Regime 1 = Declining (bear), Regime 2 = Stable
-        if current_regime == 0:  # Growing/Bull market
+        # Investment recommendation based on regime type AND risk-adjusted returns.
+        # Branch on the semantic name (loaded from regime_label_map.json) so
+        # this stays correct even after HMM retrains shuffle the numeric IDs.
+        _current_name = regime_names.get(current_regime, "")
+        _is_growing = ("Growing" in _current_name) or ("Bull" in _current_name)
+        _is_declining = ("Declining" in _current_name) or ("Bear" in _current_name)
+        if _is_growing:
             if sharpe > 0.3:
                 sizing = "Invest More"
                 color = "🟢"
             else:
                 sizing = "Stay Balanced"
                 color = "🟡"
-        elif current_regime == 1:  # Declining/Bear market
+        elif _is_declining:
             sizing = "Invest Less"
             color = "🔴"
         else:  # Stable/Transitional

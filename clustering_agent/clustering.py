@@ -80,6 +80,54 @@ def compute_cluster_stats(X_scaled: pd.DataFrame, states: np.ndarray) -> pd.Data
     return summary
 
 
+def derive_regime_label_map(
+    X_raw: pd.DataFrame,
+    states: np.ndarray,
+    vix_col: str = "VIX_value",
+) -> dict:
+    """Assign Bull/Bear/Transitional labels to numeric HMM regime IDs.
+
+    HMMs have a label-switching property: each retrain may converge to the
+    same 3 latent regimes but assign them arbitrary integer IDs. To keep
+    downstream display consistent, we derive labels from each regime's mean
+    VIX:
+      - Lowest mean VIX  → Bull Market (calm)
+      - Highest mean VIX → Bear Market (fear/crisis)
+      - Middle mean VIX  → Transitional
+
+    Returns a dict mapping str(regime_id) → label, plus a `_meta` key with
+    the per-regime VIX stats used for the assignment (for debugging/audit).
+    """
+    if vix_col not in X_raw.columns:
+        # Fall back to identity mapping with no semantic claim
+        return {
+            "_meta": {"warning": f"{vix_col} not found; using identity labels"},
+            **{str(i): f"Regime {i}" for i in sorted(set(states))},
+        }
+
+    per_regime = {}
+    for s in sorted(set(states)):
+        mask = states == s
+        per_regime[int(s)] = {
+            "vix_mean": float(X_raw.loc[mask, vix_col].mean()),
+            "n_days": int(mask.sum()),
+        }
+
+    # Sort regime IDs by ascending VIX mean
+    by_vix = sorted(per_regime.items(), key=lambda kv: kv[1]["vix_mean"])
+    label_map = {str(by_vix[0][0]): "Bull Market"}
+    label_map[str(by_vix[-1][0])] = "Bear Market"
+    if len(by_vix) >= 3:
+        label_map[str(by_vix[1][0])] = "Transitional"
+
+    label_map["_meta"] = {
+        "rule": "lowest VIX mean → Bull, highest → Bear, middle → Transitional",
+        "vix_col": vix_col,
+        "per_regime_stats": per_regime,
+    }
+    return label_map
+
+
 def plot_regime_sequence(index, states, n_regimes: int, out_path: str):
     """Save a timeline plot of HMM regime sequence."""
     plt.figure(figsize=(15, 4))
@@ -183,6 +231,20 @@ def run_hmm_clustering(use_bigquery=False):
     }
     joblib.dump(model_obj, MODEL_PATH)
     print(f"💾 Saved HMM model → {MODEL_PATH}")
+
+    # Derive Bull/Bear/Transitional labels from this run's regime IDs (HMM
+    # IDs are arbitrary across retrains — see label-switching). Save next
+    # to the model so dashboard/alerts/log_daily_predictions load it
+    # instead of hardcoding numeric → name mappings that drift on retrain.
+    label_map = derive_regime_label_map(X.loc[X_scaled.index], states)
+    label_map_path = os.path.join(MODEL_DIR, "regime_label_map.json")
+    import json as _json
+    with open(label_map_path, "w") as _f:
+        _json.dump(label_map, _f, indent=2)
+    semantic_summary = ", ".join(
+        f"{rid}={label}" for rid, label in label_map.items() if not rid.startswith("_")
+    )
+    print(f"💾 Saved regime label map → {label_map_path}  ({semantic_summary})")
 
     df_out = df.loc[X_scaled.index].copy()
     df_out["regime"] = states
