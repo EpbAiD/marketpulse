@@ -4,15 +4,20 @@ MarketPulse Training — Kaggle GPU Kernel
 Runs the LangGraph training pipeline on Kaggle's free T4 GPU.
 
 Flow:
-  1. Clone marketpulse repo using GITHUB_TOKEN
-  2. Install dependencies
-  3. Check which models need retraining (uses intelligent_model_checker)
-  4. Try BigQuery first for data; fall back to committed parquets if it fails
-  5. Run `run_pipeline.py --workflow training` with feature subset
+  1. Read secrets from attached Kaggle Dataset (NOT UserSecretsClient — that
+     resets on every `kaggle kernels push` and breaks GH Actions automation).
+  2. Clone marketpulse repo using GITHUB_TOKEN
+  3. Install dependencies
+  4. Check which models need retraining (uses intelligent_model_checker)
+  5. Run `run_pipeline.py --workflow auto` (uses BigQuery; parquet fallback inside)
   6. Commit trained models back to main branch
 
 Triggered by GitHub Actions via kaggle-api when model checker detects stale models.
-Uses Kaggle Secrets: GITHUB_TOKEN, GCP_CREDENTIALS.
+
+The secrets dataset (private) lives at: eeshanprasadbhanap/marketpulse-secrets
+and contains a single file `secrets.json` with shape:
+    {"GITHUB_TOKEN": "...", "GCP_CREDENTIALS": "<full GCP service account JSON as string>"}
+It's attached via kernel-metadata.json so it persists across version pushes.
 """
 import os
 import sys
@@ -21,20 +26,26 @@ import json
 from pathlib import Path
 
 # -----------------------------------------------------------------------------
-# 1. Load secrets from Kaggle
+# 1. Load secrets from attached Kaggle Dataset
 # -----------------------------------------------------------------------------
-from kaggle_secrets import UserSecretsClient
+SECRETS_PATH = "/kaggle/input/marketpulse-secrets/secrets.json"
+if not os.path.exists(SECRETS_PATH):
+    raise FileNotFoundError(
+        f"Secrets file not found at {SECRETS_PATH}. "
+        f"Make sure the 'marketpulse-secrets' dataset is attached to this kernel "
+        f"(see kernel-metadata.json -> dataset_sources)."
+    )
 
-secrets = UserSecretsClient()
-GITHUB_TOKEN = secrets.get_secret("GITHUB_TOKEN")
+with open(SECRETS_PATH) as f:
+    _secrets = json.load(f)
+
+GITHUB_TOKEN = _secrets["GITHUB_TOKEN"]
 GITHUB_REPO = "EpbAiD/marketpulse"
 
-try:
-    GCP_CREDENTIALS = secrets.get_secret("GCP_CREDENTIALS")
-    HAS_BIGQUERY = True
-except Exception:
-    print("⚠️  GCP_CREDENTIALS not found — will use parquet fallback for data")
-    HAS_BIGQUERY = False
+GCP_CREDENTIALS = _secrets.get("GCP_CREDENTIALS")
+HAS_BIGQUERY = bool(GCP_CREDENTIALS)
+if not HAS_BIGQUERY:
+    print("⚠️  GCP_CREDENTIALS not in secrets.json — will use parquet fallback for data")
 
 # Write GCP creds to a temp file for google-cloud-bigquery to pick up
 if HAS_BIGQUERY:
