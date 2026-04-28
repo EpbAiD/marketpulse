@@ -123,20 +123,34 @@ jobs:
           # Push + run the kernel. Kaggle runs it on T4 GPU automatically.
           kaggle kernels push -p kaggle/
 
-          # Poll for completion (max ~2 hours)
+          # Poll for completion (max ~50 min — kernel itself usually finishes <30 min;
+          # kill earlier so a hung/failed kernel doesn't burn GH Actions minutes).
+          # Status strings (case-sensitive in Kaggle CLI output):
+          #   KernelWorkerStatus.RUNNING / QUEUED → keep polling
+          #   KernelWorkerStatus.COMPLETE         → success
+          #   KernelWorkerStatus.ERROR / CANCELED → fail-fast
           KERNEL_ID="${KAGGLE_USERNAME}/marketpulse-training"
           echo "⏳ Waiting for Kaggle kernel to finish..."
-          for i in $(seq 1 60); do
+          STATUS=""
+          for i in $(seq 1 25); do
             sleep 120
             STATUS=$(kaggle kernels status "$KERNEL_ID" 2>&1 | tail -1)
             echo "[$((i*2)) min] $STATUS"
-            if echo "$STATUS" | grep -qE "complete|error|cancelled"; then
+            # Use -i for case-insensitive (matches both COMPLETE and complete).
+            if echo "$STATUS" | grep -qiE "complete|error|cancel"; then
               break
             fi
           done
 
-          if echo "$STATUS" | grep -q "error"; then
-            echo "❌ Kaggle kernel reported an error"
+          if echo "$STATUS" | grep -qiE "error|cancel"; then
+            echo "❌ Kaggle kernel reported an error/cancellation"
+            echo "    Final status: $STATUS"
+            exit 1
+          fi
+
+          if ! echo "$STATUS" | grep -qi "complete"; then
+            echo "❌ Kaggle kernel did not complete within 50 min — giving up to save CI time"
+            echo "    Last status: $STATUS"
             exit 1
           fi
 
