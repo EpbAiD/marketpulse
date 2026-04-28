@@ -73,11 +73,12 @@ def log_daily_predictions(output_file="DAILY_PREDICTIONS.md"):
     log_entry += f"**Forecast Period:** {predictions['ds'].min().date()} to {predictions['ds'].max().date()}\n\n"
     log_entry += f"**Total Days:** {len(predictions)}\n\n"
 
-    # Regime distribution
-    # Regime labels based on HMM clustering (matching clustering_agent/validate.py colors)
-    # Regime 0 = Bear (red #f94144), Regime 1 = Bull (green #43aa8b), Regime 2 = Neutral (blue #577590)
+    # Regime distribution — labels verified empirically from cluster_assignments:
+    #   Regime 0: ~1761 days, VIX mean 16, drawdown -2.4%  → calm / near highs (Bull)
+    #   Regime 1:   ~49 days, VIX mean 47, drawdown -20%   → crisis (Bear)
+    #   Regime 2: ~1539 days, VIX mean 18, drawdown -5%    → choppy (Transitional)
     log_entry += "### Regime Distribution\n\n"
-    regime_names = {0: "Bear Market", 1: "Bull Market", 2: "Transitional"}
+    regime_names = {0: "Bull Market", 1: "Bear Market", 2: "Transitional"}
 
     for regime_id in sorted(predictions['regime'].unique()):
         count = (predictions['regime'] == regime_id).sum()

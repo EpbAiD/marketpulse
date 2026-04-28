@@ -18,11 +18,14 @@ from typing import Optional, Dict, List
 from data_agent.storage import get_storage
 
 
-# Regime names for display
+# Regime names for display — empirical from cluster_assignments:
+#   0: VIX 16, near highs        → Bull
+#   1: VIX 47, -20% drawdown     → Bear
+#   2: VIX 18, off-highs         → Transitional
 REGIME_NAMES = {
-    0: "Consolidation",
-    1: "Expansion",
-    2: "Compression"
+    0: "Bull Market",
+    1: "Bear Market",
+    2: "Transitional"
 }
 
 

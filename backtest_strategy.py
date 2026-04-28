@@ -78,8 +78,11 @@ def regime_based_backtest():
     regime_dist = regimes['regime'].value_counts().sort_index()
 
     print("\n🎯 Regime Distribution:")
-    # Regime labels based on HMM clustering (matching clustering_agent/validate.py colors)
-    regime_names = {0: "Bear Market", 1: "Bull Market", 2: "Transitional"}
+    # Empirical labels from cluster_assignments:
+    #   Regime 0: VIX 16, drawdown -2.4% → Bull
+    #   Regime 1: VIX 47, drawdown -20%  → Bear (rare crisis)
+    #   Regime 2: VIX 18, drawdown -5%   → Transitional
+    regime_names = {0: "Bull Market", 1: "Bear Market", 2: "Transitional"}
     for regime_id, count in regime_dist.items():
         pct = count / len(regimes) * 100
         regime_name = regime_names.get(regime_id, f"Regime {regime_id}")

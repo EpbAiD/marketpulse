@@ -78,7 +78,8 @@ def render():
         current_regime = forecast.iloc[0]['regime'] if len(forecast) > 0 else None
 
         if current_regime is not None:
-            regime_names = {0: "Consolidation", 1: "Expansion", 2: "Compression"}
+            # Empirical: 0=Bull (VIX 16), 1=Bear (VIX 47, crisis), 2=Transitional (VIX 18)
+            regime_names = {0: "Bull Market", 1: "Bear Market", 2: "Transitional"}
 
             st.header(regime_names[current_regime])
 

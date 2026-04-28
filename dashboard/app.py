@@ -219,10 +219,12 @@ forecast = data['forecast']
 history = data.get('history')
 market = data.get('market', {})
 
-# Regime labels based on HMM clustering (matching clustering_agent/validate.py colors)
-# Regime 0 = Bear (red #f94144), Regime 1 = Bull (green #43aa8b), Regime 2 = Neutral (blue #577590)
-regime_names = {0: "Declining Market", 1: "Growing Market", 2: "Stable Market"}
-regime_colors = {0: '#e74c3c', 1: '#2ecc71', 2: '#3498db'}
+# Regime labels — verified empirically from cluster_assignments.parquet:
+#   Regime 0: 1761 days, VIX mean 16, drawdown -2.4%  → calm / near highs (Bull)
+#   Regime 1:   49 days, VIX mean 47, drawdown -20%   → crisis (Bear)
+#   Regime 2: 1539 days, VIX mean 18, drawdown -5%    → choppy (Transitional)
+regime_names = {0: "Growing Market", 1: "Declining Market", 2: "Stable Market"}
+regime_colors = {0: '#2ecc71', 1: '#e74c3c', 2: '#3498db'}  # green, red, blue
 
 current = forecast.iloc[0]
 current_regime = int(current['regime'])
@@ -419,7 +421,7 @@ fig.update_layout(
     yaxis=dict(
         tickmode='array',
         tickvals=[0, 1, 2],
-        ticktext=['Declining Market', 'Growing Market', 'Stable Market']
+        ticktext=['Growing Market', 'Declining Market', 'Stable Market']
     ),
     showlegend=False,
     hovermode='closest'
@@ -804,15 +806,15 @@ if history is not None and 'GSPC' in market:
         ann_return = current_metrics['Return']
 
         # Investment recommendation based on regime type AND risk-adjusted returns
-        # Regime 0 = Declining (bear), Regime 1 = Growing (bull), Regime 2 = Stable
-        if current_regime == 1:  # Growing/Bull market
+        # Regime 0 = Growing (bull), Regime 1 = Declining (bear), Regime 2 = Stable
+        if current_regime == 0:  # Growing/Bull market
             if sharpe > 0.3:
                 sizing = "Invest More"
                 color = "🟢"
             else:
                 sizing = "Stay Balanced"
                 color = "🟡"
-        elif current_regime == 0:  # Declining/Bear market
+        elif current_regime == 1:  # Declining/Bear market
             sizing = "Invest Less"
             color = "🔴"
         else:  # Stable/Transitional
