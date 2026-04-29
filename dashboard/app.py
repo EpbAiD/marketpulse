@@ -244,7 +244,12 @@ current = forecast.iloc[0]
 current_regime = int(current['regime'])
 current_conf = current['regime_probability']
 
-st.title("Market Condition Forecast")
+st.title("10-Day Market Environment Forecast")
+st.caption(
+    "For active allocators reallocating short-term: a per-day risk environment "
+    "label for each of the next 10 trading days. Used for sizing equity exposure "
+    "vs defensive assets ahead of regime shifts — not for predicting prices."
+)
 
 # Add refresh button and version in sidebar for debugging
 with st.sidebar:
