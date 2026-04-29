@@ -225,11 +225,17 @@ market = data.get('market', {})
 from clustering_agent.labels import get_regime_names, get_regime_colors
 
 _raw_names = get_regime_names()
-# Dashboard prefers "...Market" suffixes for display; map Bull/Bear → Growing/Declining
+# Dashboard prefers "...Market" / softer phrasings. The k=5 spectrum has
+# names: Bull / Calm / Transitional / Caution / Bear. Map them to wording
+# that's friendlier for non-technical viewers but still ranked the same.
 _display_aliases = {
     "Bull Market": "Growing Market",
-    "Bear Market": "Declining Market",
+    "Calm":        "Mild Growth",
+    "Steady":      "Steady",
     "Transitional": "Stable Market",
+    "Caution":     "Caution",
+    "Stress":      "Stress",
+    "Bear Market": "Declining Market",
 }
 regime_names = {rid: _display_aliases.get(name, name) for rid, name in _raw_names.items()}
 regime_colors = get_regime_colors()

@@ -1,23 +1,23 @@
 {
-  "0": "Bull Market",
-  "1": "Bear Market",
-  "2": "Transitional",
+  "1": "Bull Market",
+  "0": "Transitional",
+  "2": "Bear Market",
   "_meta": {
-    "rule": "lowest VIX mean \u2192 Bull, highest \u2192 Bear, middle \u2192 Transitional",
-    "vix_col": "VIX_value",
-    "per_regime_stats": {
-      "0": {
-        "vix_mean": 16.55289067792739,
-        "n_days": 3110
-      },
-      "1": {
-        "vix_mean": 46.96442868368966,
-        "n_days": 70
-      },
-      "2": {
-        "vix_mean": 19.258734460094658,
-        "n_days": 2410
-      }
-    }
+    "rule": "forward-21d drawdown rate (>5.0%): lowest\u2192Bull, highest\u2192Bear",
+    "drawdown_rate_per_cluster": {
+      "0": 0.0576,
+      "1": 0.0204,
+      "2": 0.0974
+    },
+    "n_days_per_cluster": {
+      "0": 3110,
+      "1": 70,
+      "2": 2410
+    },
+    "spectrum_used": [
+      "Bull Market",
+      "Transitional",
+      "Bear Market"
+    ]
   }
 }

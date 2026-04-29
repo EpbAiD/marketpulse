@@ -63,12 +63,25 @@ def regime_based_backtest():
         print(f"❌ Error loading regimes: {e}")
         return None
 
-    # Define allocation strategies
-    allocations = {
-        0: {'SPY': 0.70, 'QQQ': 0.20, 'TLT': 0.00, 'Cash': 0.10},  # Bull
-        1: {'SPY': 0.20, 'QQQ': 0.10, 'TLT': 0.70, 'Cash': 0.00},  # Bear
-        2: {'SPY': 0.40, 'QQQ': 0.20, 'TLT': 0.40, 'Cash': 0.00},  # Transitional
+    # Allocation table keyed by SEMANTIC NAME (not numeric ID), so the
+    # mapping survives HMM retrains that permute cluster IDs and regime
+    # count changes (3→5 etc.). Names not in this table fall back to the
+    # closest semantic match: anything containing "Calm" or "Steady" → Bull
+    # tilt, "Caution" or "Stress" → Bear tilt, default → balanced.
+    name_allocations = {
+        "Bull Market":   {"SPY": 0.70, "QQQ": 0.20, "TLT": 0.00, "Cash": 0.10},
+        "Calm":          {"SPY": 0.65, "QQQ": 0.20, "TLT": 0.05, "Cash": 0.10},
+        "Steady":        {"SPY": 0.55, "QQQ": 0.20, "TLT": 0.15, "Cash": 0.10},
+        "Transitional":  {"SPY": 0.40, "QQQ": 0.20, "TLT": 0.40, "Cash": 0.00},
+        "Caution":       {"SPY": 0.30, "QQQ": 0.15, "TLT": 0.55, "Cash": 0.00},
+        "Stress":        {"SPY": 0.25, "QQQ": 0.10, "TLT": 0.65, "Cash": 0.00},
+        "Bear Market":   {"SPY": 0.20, "QQQ": 0.10, "TLT": 0.70, "Cash": 0.00},
     }
+    # Resolve each cluster id → allocation via the loaded label_map names.
+    allocations = {}
+    for regime_id in regimes['regime'].unique():
+        # Will be populated below once regime_names is loaded
+        allocations[int(regime_id)] = None
 
     # Simulate returns (placeholder - would need actual price data)
     print("\n📊 BACKTEST RESULTS")
@@ -86,6 +99,15 @@ def regime_based_backtest():
         pct = count / len(regimes) * 100
         regime_name = regime_names.get(regime_id, f"Regime {regime_id}")
         print(f"   {regime_name}: {count} days ({pct:.1f}%)")
+
+    # Now resolve the allocation table using semantic names.
+    for regime_id in list(allocations.keys()):
+        name = regime_names.get(regime_id, "")
+        allocations[regime_id] = name_allocations.get(
+            name,
+            # Fallback for any name not in name_allocations: 50/50 balanced
+            {"SPY": 0.40, "QQQ": 0.20, "TLT": 0.40, "Cash": 0.00},
+        )
 
     print("\n📈 Strategy Allocations:")
     for regime_id, alloc in allocations.items():

@@ -54,16 +54,31 @@ def get_regime_names() -> Dict[int, str]:
 def get_regime_colors() -> Dict[int, str]:
     """Return {regime_id (int): hex color} keyed by display name.
 
-    Bull/Growing → green, Bear/Declining → red, anything else → blue.
+    Maps along a green→blue→red spectrum so the 5-regime case looks like:
+        Bull (green) → Calm (light green) → Transitional (blue) →
+        Caution (orange) → Bear (red)
     """
     names = get_regime_names()
     color_for = {}
+    palette = {
+        "bull": "#2ecc71",       # green
+        "growing": "#2ecc71",
+        "calm": "#7dd87e",       # light green
+        "steady": "#7dd87e",
+        "transitional": "#3498db",  # blue
+        "stable": "#3498db",
+        "caution": "#f39c12",    # orange
+        "stress": "#e67e22",     # darker orange
+        "bear": "#e74c3c",       # red
+        "declining": "#e74c3c",
+    }
     for rid, name in names.items():
         lower = name.lower()
-        if "bull" in lower or "growing" in lower:
-            color_for[rid] = "#2ecc71"  # green
-        elif "bear" in lower or "declining" in lower:
-            color_for[rid] = "#e74c3c"  # red
-        else:
-            color_for[rid] = "#3498db"  # blue
+        chosen = None
+        # Match on the most-specific keyword first
+        for keyword, color in palette.items():
+            if keyword in lower:
+                chosen = color
+                break
+        color_for[rid] = chosen if chosen else "#3498db"  # fallback blue
     return color_for
