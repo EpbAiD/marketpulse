@@ -24,3 +24,5 @@
 
 **[13:09:30]** (11.7min) ℹ️ **INFO**: Using existing HMM model (21 days old < 30 day threshold)
 
+**[13:09:31]** (11.7min) ℹ️ **INFO**: Using existing RF classifier (21 days old < 30 day threshold)
+
