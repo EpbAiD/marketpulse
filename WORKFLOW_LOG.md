@@ -26,3 +26,9 @@
 
 **[14:44:01]** (10.0min) ℹ️ **INFO**: Using existing RF classifier (24 days old < 30 day threshold)
 
+**[14:44:19]** (10.3min) 📍 **STAGE**: Starting stage: Forecasting
+
+**[14:44:19]** (10.3min) ℹ️ **INFO**: Selective training: 18 features (GSPC, IXIC, DXY, UUP, VIX...)
+
+**[14:44:19]** (10.3min) 📍 **STAGE**: Starting stage: Forecasting - Training Models
+
