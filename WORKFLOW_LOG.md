@@ -10,3 +10,9 @@
 
 **[14:14:49]** (2.2min) ✅ **SUCCESS**: Data fetch completed (129.9s) - Saved to BigQuery
 
+**[14:14:52]** (2.2min) 📍 **STAGE**: Starting stage: Feature Engineering
+
+**[14:14:52]** (2.2min) ℹ️ **INFO**: Starting feature engineering (BigQuery: True)
+
+**[14:17:19]** (4.7min) ✅ **SUCCESS**: Feature engineering completed (147.4s) - Saved to BigQuery
+
