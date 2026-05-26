@@ -24,3 +24,9 @@
 
 **[18:09:09]** (9.9min) ℹ️ **INFO**: Using existing HMM model (1 days old < 30 day threshold)
 
+**[18:09:11]** (9.9min) 📍 **STAGE**: Starting stage: Regime Classification
+
+**[18:09:11]** (9.9min) ℹ️ **INFO**: Starting Random Forest classifier training (BigQuery: True)
+
+**[18:09:22]** (10.1min) ✅ **SUCCESS**: Regime classifier trained (10.7s) - Model saved
+
