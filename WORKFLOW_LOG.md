@@ -22,3 +22,5 @@
 
 **[12:19:26]** (10.9min) ✅ **SUCCESS**: Feature selection completed (314.6s) - Selected features saved to BigQuery
 
+**[12:19:27]** (11.0min) ℹ️ **INFO**: Using existing HMM model (4 days old < 30 day threshold)
+
