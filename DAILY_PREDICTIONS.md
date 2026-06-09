@@ -4232,3 +4232,32 @@ This file tracks daily regime forecasts from the MarketPulse system.
 | 2026-06-17 | Transitional | 0.642 |
 
 ---
+
+## 2026-06-09 14:16:16
+
+**Source:** BigQuery
+
+**Forecast Period:** 2026-06-09 to 2026-06-23
+
+**Total Days:** 10
+
+### Regime Distribution
+
+- **Transitional**: 10 days (100.0%) - Avg confidence: 0.690
+
+### Daily Predictions
+
+| Date | Regime | Confidence |
+|------|--------|------------|
+| 2026-06-09 | Transitional | 0.716 |
+| 2026-06-10 | Transitional | 0.824 |
+| 2026-06-11 | Transitional | 0.840 |
+| 2026-06-12 | Transitional | 0.654 |
+| 2026-06-15 | Transitional | 0.660 |
+| 2026-06-16 | Transitional | 0.650 |
+| 2026-06-17 | Transitional | 0.644 |
+| 2026-06-18 | Transitional | 0.650 |
+| 2026-06-22 | Transitional | 0.622 |
+| 2026-06-23 | Transitional | 0.644 |
+
+---
