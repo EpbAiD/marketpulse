@@ -22,3 +22,9 @@
 
 **[13:31:32]** (15.4min) ✅ **SUCCESS**: Feature selection completed (374.4s) - Selected features saved to BigQuery
 
+**[13:31:34]** (15.4min) 📍 **STAGE**: Starting stage: Regime Clustering (HMM)
+
+**[13:31:34]** (15.4min) ℹ️ **INFO**: Starting HMM clustering (BigQuery: True)
+
+**[13:31:46]** (15.6min) ❌ **ERROR**: HMM clustering FAILED: cannot reindex on an axis with duplicate labels
+
