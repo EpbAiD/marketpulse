@@ -28,3 +28,9 @@
 
 **[13:31:46]** (15.6min) ❌ **ERROR**: HMM clustering FAILED: cannot reindex on an axis with duplicate labels
 
+**[13:32:02]** (15.9min) 📍 **STAGE**: Starting stage: Forecasting
+
+**[13:32:02]** (15.9min) ℹ️ **INFO**: Selective training: 18 features (GSPC, IXIC, DXY, UUP, VIX...)
+
+**[13:32:02]** (15.9min) 📍 **STAGE**: Starting stage: Forecasting - Training Models
+
