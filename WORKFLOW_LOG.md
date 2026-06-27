@@ -30,3 +30,9 @@
 
 **[12:27:20]** (13.2min) ✅ **SUCCESS**: Regime classifier trained (10.9s) - Model saved
 
+**[12:27:40]** (13.6min) 📍 **STAGE**: Starting stage: Forecasting
+
+**[12:27:40]** (13.6min) ℹ️ **INFO**: Selective training: 18 features (GSPC, IXIC, DXY, UUP, VIX...)
+
+**[12:27:40]** (13.6min) 📍 **STAGE**: Starting stage: Forecasting - Training Models
+
