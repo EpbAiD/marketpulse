@@ -1,36 +1,12 @@
 # Workflow Execution Log
 
-**Started**: 2026-07-04 12:11:07 UTC
+**Started**: 2026-07-04 12:27:11 UTC
 
 ---
 
-**[12:11:07]** (0.0min) 📍 **STAGE**: Starting stage: Data Fetching
+**[12:27:11]** (0.0min) 📍 **STAGE**: Starting stage: Data Fetching
 
-**[12:11:55]** (0.8min) ℹ️ **INFO**: Starting data fetch (BigQuery: True)
+**[12:27:13]** (0.0min) ℹ️ **INFO**: Starting data fetch (BigQuery: True)
 
-**[12:13:14]** (2.1min) ✅ **SUCCESS**: Data fetch completed (127.0s) - Saved to BigQuery
-
-**[12:13:16]** (2.1min) 📍 **STAGE**: Starting stage: Feature Engineering
-
-**[12:13:16]** (2.1min) ℹ️ **INFO**: Starting feature engineering (BigQuery: True)
-
-**[12:15:28]** (4.3min) ✅ **SUCCESS**: Feature engineering completed (132.0s) - Saved to BigQuery
-
-**[12:15:29]** (4.4min) 📍 **STAGE**: Starting stage: Feature Selection
-
-**[12:15:30]** (4.4min) ℹ️ **INFO**: Starting feature selection (PCA + correlation + mRMR, BigQuery: True)
-
-**[12:21:03]** (9.9min) ✅ **SUCCESS**: Feature selection completed (334.1s) - Selected features saved to BigQuery
-
-**[12:21:04]** (10.0min) ℹ️ **INFO**: Using existing HMM model (7 days old < 30 day threshold)
-
-**[12:21:06]** (10.0min) ℹ️ **INFO**: Using existing RF classifier (6 days old < 30 day threshold)
-
-**[12:21:21]** (10.2min) 📍 **STAGE**: Starting stage: Forecasting
-
-**[12:21:21]** (10.2min) ℹ️ **INFO**: Selective training: 18 features (GSPC, IXIC, DXY, UUP, VIX...)
-
-**[12:21:21]** (10.2min) 📍 **STAGE**: Starting stage: Forecasting - Training Models
-
-**[12:21:46]** (10.7min) ✅ **SUCCESS**: Forecasting completed (39.1s) - Models trained and saved
+**[12:28:16]** (1.1min) ✅ **SUCCESS**: Data fetch completed (64.9s) - Saved to BigQuery
 
