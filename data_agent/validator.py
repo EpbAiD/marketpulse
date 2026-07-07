@@ -18,17 +18,58 @@ from typing import Dict, List, Optional
 from .storage import get_storage
 
 
-# SMAPE thresholds per feature (data-driven from historical statistics)
-# Based on coefficient of variation (CV = stddev/mean)
-# Threshold = 50% of CV, allowing reasonable forecast error before retraining
+# SMAPE thresholds per feature — expert-informed, based on published forecasting benchmarks.
+#
+# Anchors:
+#   Lewis (1982) universal scale: <10% highly accurate, 10-20% good, 20-50% reasonable, >50% inaccurate.
+#   Asset-class benchmarks from peer-reviewed literature (published models achieve the low end;
+#   we set our alarm at roughly 2-3x that so we fire only on genuine degradation, not on noise):
+#     - S&P 500 / equity indices: deep-learning benchmarks reach 3-5% MAPE → threshold 10%
+#     - Gold: LSTM/ARIMA best-in-class 3.7-4.9% → threshold 10%
+#     - Crude oil: top models 1.5-5.5% (monthly up to 12%) → threshold 15%
+#     - 10Y Treasury yield: ML benchmarks typically <5% → threshold 10%
+#     - DXY dollar index: ML models 0.55-3% → threshold 8%
+#     - VIX-family / short-vol: best diffusion ~4%, but 15-30% typical in practice due to
+#         noise floor of implied vol → threshold 30% (VIX9D 40% — 9-day vol is noisier)
+#     - Yield spreads: near-zero denominators inflate SMAPE → threshold 40%
+#     - Financial-conditions indexes (NFCI): weekly, coarse-grained → threshold 30%
+#     - Macro monthly (CPI, INDPRO, UNRATE): near-zero-noise series → threshold 10%
+#
+# Refresh policy (SR 11-7 aligned): retrain triggered when SMAPE exceeds threshold for
+# 3 consecutive validations (event-based) OR annual mandatory refresh (time-based).
 SMAPE_THRESHOLDS = {
-    'GSPC': 40.0,     # S&P 500: CV=79%, threshold=40%
-    'VIX': 20.0,      # VIX: CV=40%, threshold=20%
-    'DGS10': 23.0,    # 10-Year Treasury: CV=46%, threshold=23%
-    'DGS2': 35.0,     # 2-Year Treasury: CV=70%, threshold=35%
-    'T10Y2Y': 45.0,   # Yield spread: CV=91%, threshold=45%
-    'DFF': 41.0,      # Federal Funds Rate: CV=82%, threshold=41%
-    '_default': 30.0  # Default for unknown features
+    # Equity indices
+    'GSPC': 10.0,
+    'IXIC': 10.0,
+    # Volatility complex
+    'VIX': 30.0,
+    'VIX9D': 40.0,
+    'VIX3M': 25.0,
+    # Rates
+    'DGS10': 10.0,
+    'TNX': 10.0,
+    'DGS2': 10.0,
+    'DGS3MO': 10.0,
+    'DFF': 10.0,
+    'T10Y2Y': 40.0,
+    # Credit
+    'HY_YIELD': 10.0,
+    'IG_YIELD': 10.0,
+    # Commodities
+    'GOLD': 10.0,
+    'COPPER': 12.0,
+    'OIL': 15.0,
+    # Currency
+    'DXY': 8.0,
+    'UUP': 8.0,
+    # Financial conditions
+    'NFCI': 30.0,
+    # Macro (monthly)
+    'CPI': 10.0,
+    'INDPRO': 10.0,
+    'UNRATE': 10.0,
+    # Fallback
+    '_default': 20.0,
 }
 
 

@@ -67,13 +67,22 @@ def get_feature_cadence_map() -> Dict[str, str]:
 
 def get_retraining_threshold(cadence: str) -> int:
     """
-    Get the retraining threshold in days for a given cadence.
+    Get the age-based retraining threshold in days for a given cadence.
 
-    Daily features: Retrain every 3 months (90 days) - ~90 new data points
-    Weekly features: Retrain every 6 months (180 days) - ~26 new data points
-    Monthly features: Retrain yearly (365 days) - 12 new data points
+    Aligned with Federal Reserve SR 11-7 model-risk guidance: material models
+    are validated at least annually, with out-of-cycle retraining triggered by
+    performance events (SMAPE breach) rather than by rigid schedules.
 
-    Models need significant new data to learn meaningful patterns.
+    This function returns the MAX age at which we force a mandatory refresh even
+    when performance is fine. The primary retrain trigger is SMAPE-breach in
+    data_agent/validator.py (see SMAPE_THRESHOLDS); this age gate is the
+    long-horizon safety net.
+
+    Cadence-specific caps:
+      - daily:   365 days (annual refresh; matches SR 11-7 material-model cycle)
+      - weekly:  540 days (18 months; ~78 weekly points is plenty for retrain)
+      - monthly: 730 days (24 months; monthly series need long history to
+                  meaningfully change; forcing shorter cycles adds noise)
 
     Args:
         cadence: 'daily', 'weekly', or 'monthly'
@@ -82,11 +91,11 @@ def get_retraining_threshold(cadence: str) -> int:
         Threshold in days
     """
     thresholds = {
-        'daily': 90,      # Retrain if older than 90 days (3 months)
-        'weekly': 180,    # Retrain if older than 180 days (6 months)
-        'monthly': 365    # Retrain if older than 365 days (1 year)
+        'daily': 365,
+        'weekly': 540,
+        'monthly': 730,
     }
-    return thresholds.get(cadence, 90)  # Default to 90 days if unknown
+    return thresholds.get(cadence, 365)
 
 
 def check_feature_model_status(feature_name: str, cadence: str) -> Dict:
