@@ -48,19 +48,43 @@ jobs:
           fi
 
           echo ""
-          echo "📊 Feature Models:"
-          MODEL_COUNT=$(find outputs/forecasting/models -name "nf_bundle_v*" -type d 2>/dev/null | wc -l | tr -d ' ')
-          VERSION_COUNT=$(find outputs/forecasting/models -name "*_versions.json" -type f 2>/dev/null | wc -l | tr -d ' ')
-          ENSEMBLE_COUNT=$(find outputs/forecasting/models -name "*_ensemble_v*.json" -type f 2>/dev/null | wc -l | tr -d ' ')
-          echo "  Model bundles: $MODEL_COUNT"
-          echo "  Version files: $VERSION_COUNT"
-          echo "  Ensemble files: $ENSEMBLE_COUNT (REQUIRED for inference)"
+          echo "📊 Feature Models (checking active version per feature):"
+          # Total historical bundles are kept in the repo for rollback/history
+          # so raw counts overstate what needs to exist for inference. What
+          # actually matters is: for each feature, does the ensemble JSON
+          # matching the *active* version in its metadata exist?
+          MISSING_ACTIVE=0
+          TOTAL_FEATURES=0
+          for META in outputs/forecasting/models/*_versions.json; do
+            [ -f "$META" ] || continue
+            TOTAL_FEATURES=$((TOTAL_FEATURES + 1))
+            FEAT=$(basename "$META" _versions.json)
+            ACTIVE=$(python -c "import json; d=json.load(open('$META')); print(d.get('active_version',''))" 2>/dev/null)
+            if [ -z "$ACTIVE" ]; then
+              echo "  ⚠️  $FEAT: no active_version in metadata"
+              MISSING_ACTIVE=$((MISSING_ACTIVE + 1))
+              continue
+            fi
+            EXPECTED="outputs/forecasting/models/$FEAT/${FEAT}_ensemble_v${ACTIVE}.json"
+            BUNDLE_DIR="outputs/forecasting/models/$FEAT/nf_bundle_v${ACTIVE}"
+            if [ ! -f "$EXPECTED" ] || [ ! -d "$BUNDLE_DIR" ]; then
+              echo "  ✗ $FEAT (active v${ACTIVE}): missing ensemble or bundle"
+              MISSING_ACTIVE=$((MISSING_ACTIVE + 1))
+            fi
+          done
 
-          # Warn if ensemble files are missing
-          if [ "$ENSEMBLE_COUNT" -lt "$MODEL_COUNT" ]; then
+          BUNDLE_TOTAL=$(find outputs/forecasting/models -name "nf_bundle_v*" -type d 2>/dev/null | wc -l | tr -d ' ')
+          ENSEMBLE_TOTAL=$(find outputs/forecasting/models -name "*_ensemble_v*.json" -type f 2>/dev/null | wc -l | tr -d ' ')
+          echo "  Features tracked: $TOTAL_FEATURES"
+          echo "  Historical bundles on disk: $BUNDLE_TOTAL (includes prior versions kept for rollback)"
+          echo "  Ensemble files on disk:     $ENSEMBLE_TOTAL"
+          echo "  Features missing active ensemble/bundle: $MISSING_ACTIVE"
+
+          if [ "$MISSING_ACTIVE" -gt 0 ]; then
             echo ""
-            echo "  ⚠️  WARNING: Some ensemble files are missing!"
-            echo "     Models without ensemble files will need retraining."
+            echo "  ⚠️  $MISSING_ACTIVE feature(s) missing their active ensemble/bundle — will need retraining."
+          else
+            echo "  ✓ All features have their active ensemble + bundle."
           fi
 
           echo ""
