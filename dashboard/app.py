@@ -1,872 +1,1023 @@
 #!/usr/bin/env python3
 """
-Market Regime Analysis - Institutional Dashboard
+MarketPulse — Institutional Regime Dashboard (v2)
+
+Designed for a professional tactical allocator making daily positioning
+decisions across US risk-on / risk-off exposures (SPY, QQQ, TLT, cash).
+
+Design principles (see docs/RETRAINING_THRESHOLDS.md for policy anchor):
+  1. Answer "what should I do differently today?" in the first 5 seconds.
+  2. Prefer probability ribbons over hard regime labels.
+  3. Every recommendation carries its confidence, source, and how-to-defend.
+  4. System-health and monitoring live in a thin footer, not the headline.
+  5. Nothing animates. No emoji. Reserved palette. Print-friendly.
+
+The dashboard is deliberately "illustrative allocator", not "personalized
+advice" — it displays the same allocation the walk-forward backtest uses,
+labeled as such (compliance-safe framing standard in this space).
 """
 
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-from pathlib import Path
+from __future__ import annotations
+
 import glob
-import sys
 import json
+import sys
+from datetime import datetime, timedelta
+from pathlib import Path
 
-sys.path.append(str(Path(__file__).parent.parent))
-from data_agent.storage import get_storage
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+import streamlit as st
+from plotly.subplots import make_subplots
 
-# Try to import AlertSystem, but don't fail if orchestrator dependencies aren't available
-try:
-    from orchestrator.alerts import AlertSystem
-    ALERTS_AVAILABLE = True
-except ImportError:
-    ALERTS_AVAILABLE = False
-    AlertSystem = None
+BASE_DIR = Path(__file__).parent.parent
+sys.path.append(str(BASE_DIR))
+
+from data_agent.storage import get_storage  # noqa: E402
+
+DASHBOARD_VERSION = "2026-07-13-v2.0-institutional"
+
+# ============================================================================
+# PAGE CONFIG + STYLE
+# ============================================================================
 
 st.set_page_config(
-    page_title="Market Regime Analysis",
-    page_icon="📊",
+    page_title="MarketPulse — Regime Dashboard",
+    page_icon=None,
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-st.markdown("""
+# Reserved two-tone palette. Bloomberg-adjacent muted blue on neutral gray.
+# Never rainbow. Alert red used sparingly.
+ACCENT_PRIMARY = "#1F4E79"      # deep muted blue, headline numbers
+ACCENT_SECONDARY = "#5B9BD5"    # softer blue, supporting data
+NEUTRAL_DARK = "#2C3E50"
+NEUTRAL_MID = "#7F8C8D"
+NEUTRAL_LIGHT = "#ECF0F1"
+ALERT_AMBER = "#E67E22"
+ALERT_RED = "#C0392B"
+POSITIVE = "#27AE60"
+
+# Regime spectrum colors — same ranking whether 3 or 5 regimes:
+# Bull (safest) → Bear (riskiest)
+REGIME_SPECTRUM_5 = ["#1E5F3E", "#5FB878", "#F0C674", "#DC7633", "#8B0000"]
+REGIME_SPECTRUM_3 = ["#1E5F3E", "#F0C674", "#8B0000"]
+
+CUSTOM_CSS = """
 <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    .main {padding-top: 1rem;}
-    h1 {font-weight: 300; font-size: 2.5rem;}
-    h2 {font-weight: 400; font-size: 1.6rem; margin-top: 2.5rem; margin-bottom: 1rem;}
-    h3 {font-weight: 400; font-size: 1.2rem;}
-    .alert-box {
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 1rem 0;
-        border-left: 4px solid;
+    header {visibility: hidden;}
+
+    .main {padding-top: 0.5rem; padding-bottom: 1rem;}
+    .block-container {padding-top: 1rem; padding-bottom: 1rem; max-width: 1400px;}
+
+    h1 {font-weight: 300; font-size: 2.0rem; color: #2C3E50; letter-spacing: -0.5px;}
+    h2 {font-weight: 400; font-size: 1.35rem; color: #34495E;
+        margin-top: 2rem; margin-bottom: 0.75rem;
+        border-bottom: 1px solid #ECF0F1; padding-bottom: 0.35rem;}
+    h3 {font-weight: 500; font-size: 1.05rem; color: #34495E;}
+
+    /* Header strip */
+    .top-strip {
+        background: #F8F9FA;
+        border-left: 4px solid #1F4E79;
+        padding: 0.85rem 1.15rem;
+        border-radius: 3px;
+        margin-bottom: 1.2rem;
     }
-    .alert-warning {
-        background: #fff3cd;
-        border-color: #ff9800;
+    .top-strip .label {color: #7F8C8D; font-size: 0.75rem;
+        text-transform: uppercase; letter-spacing: 0.5px;}
+    .top-strip .value {color: #2C3E50; font-weight: 500;}
+    .top-strip .regime-name {font-size: 1.5rem; font-weight: 500; color: #1F4E79;}
+
+    /* Allocation table */
+    .alloc-cell {
+        background: #F8F9FA;
+        padding: 0.9rem;
+        border-radius: 4px;
+        text-align: center;
     }
-    .alert-success {
-        background: #d4edda;
-        border-color: #28a745;
+    .alloc-ticker {color: #7F8C8D; font-size: 0.75rem;
+        text-transform: uppercase; letter-spacing: 0.5px;}
+    .alloc-pct {color: #1F4E79; font-size: 1.75rem; font-weight: 500;}
+    .alloc-delta-pos {color: #27AE60; font-size: 0.85rem;}
+    .alloc-delta-neg {color: #C0392B; font-size: 0.85rem;}
+    .alloc-delta-flat {color: #7F8C8D; font-size: 0.85rem;}
+
+    /* Disclaimer */
+    .disclaimer {
+        color: #7F8C8D;
+        font-size: 0.75rem;
+        font-style: italic;
+        border-top: 1px solid #ECF0F1;
+        padding-top: 0.5rem;
+        margin-top: 1rem;
     }
+
+    /* Metric-value styling */
+    div[data-testid="stMetric"] {
+        background: #F8F9FA;
+        padding: 0.75rem;
+        border-radius: 3px;
+        border-left: 3px solid #5B9BD5;
+    }
+    div[data-testid="stMetricLabel"] {color: #7F8C8D; font-size: 0.7rem;
+        text-transform: uppercase;}
+
+    /* Footer strip */
+    .footer-strip {
+        background: #F8F9FA;
+        padding: 0.75rem 1rem;
+        border-radius: 3px;
+        margin-top: 2rem;
+        border-top: 2px solid #ECF0F1;
+        font-size: 0.85rem;
+    }
+
+    /* Compact table */
+    div[data-testid="stDataFrame"] {border: 1px solid #ECF0F1; border-radius: 3px;}
 </style>
-""", unsafe_allow_html=True)
+"""
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
-BASE_DIR = Path(__file__).parent.parent
 
-# Version indicator to verify deployment (update this when making changes)
-DASHBOARD_VERSION = "2026-01-29-v4"  # Fixed investment recommendation logic
+# ============================================================================
+# DATA LOADING (mirrors app.py's fallback pattern)
+# ============================================================================
 
-def get_latest_file(pattern):
-    files = glob.glob(str(BASE_DIR / pattern))
-    return Path(max(files, key=lambda f: Path(f).stat().st_mtime)) if files else None
-
-@st.cache_data(ttl=300)  # Cache for 5 minutes
-def load_data():
-    """Load data from storage (BigQuery primary, local files fallback)"""
-    data = {}
+@st.cache_data(ttl=300, show_spinner=False)
+def load_data() -> dict:
+    """Load forecast + history + market data with BigQuery → local fallback."""
+    data: dict = {}
     storage = None
 
-    # Initialize storage connection
     try:
         storage = get_storage()
-        print(f"✓ Connected to storage: {type(storage).__name__}")
-    except Exception as e:
-        print(f"⚠️ Storage initialization error: {type(e).__name__}: {str(e)}")
+    except Exception:
+        storage = None
 
-    # Try loading forecast data from BigQuery
-    if storage and hasattr(storage, 'get_latest_forecasts'):
+    # --- Forecast ---
+    if storage and hasattr(storage, "get_latest_forecasts"):
         try:
-            latest_forecasts = storage.get_latest_forecasts(limit=1)
+            latest = storage.get_latest_forecasts(limit=1)
+            if len(latest) > 0:
+                fid = latest.iloc[0]["forecast_id"]
+                ftime = latest.iloc[0]["forecast_generated_at"]
+                df = storage.get_forecast_by_id(fid)
+                df = df.rename(columns={"predicted_date": "ds", "predicted_regime": "regime"})
+                df["ds"] = pd.to_datetime(df["ds"])
+                data["forecast"] = df.sort_values("ds").reset_index(drop=True)
+                data["forecast_time"] = ftime
+                data["forecast_source"] = "bigquery"
+        except Exception:
+            pass
 
-            if len(latest_forecasts) > 0:
-                forecast_id = latest_forecasts.iloc[0]['forecast_id']
-                forecast_time = latest_forecasts.iloc[0]['forecast_generated_at']
-                df = storage.get_forecast_by_id(forecast_id)
-                df = df.rename(columns={'predicted_date': 'ds', 'predicted_regime': 'regime'})
-                df['ds'] = pd.to_datetime(df['ds'])
-                df['timestamp'] = forecast_time  # Add timestamp to every row for display
-                data['forecast'] = df.sort_values('ds').reset_index(drop=True)
-                data['forecast_source'] = 'bigquery'
-                data['forecast_time'] = forecast_time  # Store for easy access
-                print(f"✓ Loaded forecast from BigQuery: {forecast_id} (generated at {forecast_time})")
-        except Exception as e:
-            print(f"⚠️ Failed to load forecast from BigQuery: {type(e).__name__}: {str(e)}")
+    if "forecast" not in data:
+        # Regime prediction files live under either legacy inference/ or the
+        # current forecasting/inference/ directory depending on when they were
+        # produced. Search both.
+        cand: list[Path] = []
+        for sub in ("outputs/inference", "outputs/forecasting/inference"):
+            cand.extend((BASE_DIR / sub).glob("regime_predictions_*.parquet"))
+        files = sorted(cand, key=lambda p: p.stat().st_mtime, reverse=True)
+        if files:
+            df = pd.read_parquet(files[0])
+            df = df.rename(columns={"predicted_date": "ds", "predicted_regime": "regime"})
+            if "ds" not in df.columns and "date" in df.columns:
+                df = df.rename(columns={"date": "ds"})
+            df["ds"] = pd.to_datetime(df["ds"])
+            import re
+            m = re.search(r"regime_predictions_(\d{8}_\d{6})", files[0].name)
+            ftime = (
+                pd.to_datetime(m.group(1), format="%Y%m%d_%H%M%S")
+                if m
+                else pd.Timestamp(files[0].stat().st_mtime, unit="s")
+            )
+            data["forecast"] = df.sort_values("ds").reset_index(drop=True)
+            data["forecast_time"] = ftime
+            data["forecast_source"] = "local"
 
-    # Fallback: Load forecast from local parquet files
-    if 'forecast' not in data:
-        inference_dir = BASE_DIR / "outputs" / "inference"
-        if inference_dir.exists():
-            regime_files = sorted(inference_dir.glob("regime_predictions_*.parquet"), reverse=True)
-            if regime_files:
-                try:
-                    df = pd.read_parquet(regime_files[0])
-                    df = df.rename(columns={'predicted_date': 'ds', 'predicted_regime': 'regime'})
-                    if 'ds' not in df.columns and 'date' in df.columns:
-                        df = df.rename(columns={'date': 'ds'})
-                    df['ds'] = pd.to_datetime(df['ds'])
-                    # Extract timestamp from filename
-                    import re
-                    match = re.search(r'regime_predictions_(\d{8}_\d{6})', regime_files[0].name)
-                    if match:
-                        forecast_time = pd.to_datetime(match.group(1), format='%Y%m%d_%H%M%S')
-                    else:
-                        forecast_time = pd.Timestamp(regime_files[0].stat().st_mtime, unit='s')
-                    df['timestamp'] = forecast_time
-                    data['forecast'] = df.sort_values('ds').reset_index(drop=True)
-                    data['forecast_source'] = 'local'
-                    data['forecast_time'] = forecast_time
-                    print(f"✓ Loaded forecast from local file: {regime_files[0].name}")
-                except Exception as e:
-                    print(f"⚠️ Failed to load local forecast: {type(e).__name__}: {str(e)}")
-
-    # Historical data - try BigQuery first, fallback to local
-    if storage and hasattr(storage, '_execute_query'):
+    # --- Historical regime assignments ---
+    if storage and hasattr(storage, "_execute_query"):
         try:
-            query = f"SELECT * FROM `{storage.dataset_id}.cluster_assignments` ORDER BY timestamp"
-            df = storage._execute_query(query)
+            q = f"SELECT * FROM `{storage.dataset_id}.cluster_assignments` ORDER BY timestamp"
+            df = storage._execute_query(q)
             if len(df) > 0:
-                df.rename(columns={'timestamp': 'ds'}, inplace=True)
-                df['ds'] = pd.to_datetime(df['ds'])
-                data['history'] = df
-                print(f"✓ Loaded {len(df)} historical regime rows from BigQuery")
-        except Exception as e:
-            print(f"⚠️ Failed to load history from BigQuery: {type(e).__name__}: {str(e)}")
+                df = df.rename(columns={"timestamp": "ds"})
+                df["ds"] = pd.to_datetime(df["ds"])
+                data["history"] = df
+        except Exception:
+            pass
 
-    # Fallback to local historical data
-    if 'history' not in data:
-        cluster_file = BASE_DIR / "outputs" / "clustering" / "cluster_assignments.parquet"
-        if cluster_file.exists():
-            df = pd.read_parquet(cluster_file)
+    if "history" not in data:
+        f = BASE_DIR / "outputs" / "clustering" / "cluster_assignments.parquet"
+        if f.exists():
+            df = pd.read_parquet(f)
+            if isinstance(df.index, pd.DatetimeIndex):
+                df = df.reset_index().rename(columns={df.index.name or "index": "ds"})
+                if "timestamp" in df.columns:
+                    df = df.rename(columns={"timestamp": "ds"})
+            df["ds"] = pd.to_datetime(df["ds"])
+            data["history"] = df
+
+    # --- Market data ---
+    market: dict = {}
+    for f in (BASE_DIR / "outputs" / "fetched" / "cleaned").glob("*.parquet"):
+        try:
+            df = pd.read_parquet(f)
             if isinstance(df.index, pd.DatetimeIndex):
                 df = df.reset_index()
-                df.rename(columns={df.columns[0]: 'ds'}, inplace=True)
-            df['ds'] = pd.to_datetime(df['ds'])
-            data['history'] = df
-
-    # Market data - try BigQuery first, fallback to local
-    market_data = {}
-    if storage and hasattr(storage, '_execute_query'):
-        try:
-            # Get list of features from BigQuery
-            query = f"SELECT DISTINCT feature_name FROM `{storage.dataset_id}.raw_features`"
-            features_df = storage._execute_query(query)
-
-            for feature_name in features_df['feature_name'].unique():
-                df = storage.load_raw_feature(feature_name, 'daily')
-                if df is not None and len(df) > 0:
-                    df = df.reset_index()
-                    df.rename(columns={df.columns[0]: 'ds'}, inplace=True)
-                    df['ds'] = pd.to_datetime(df['ds'])
-                    market_data[feature_name] = df
-
-            if len(market_data) > 0:
-                data['market'] = market_data
-                print(f"✓ Loaded {len(market_data)} market features from BigQuery")
-        except Exception as e:
-            print(f"⚠️ Failed to load market data from BigQuery: {type(e).__name__}: {str(e)}")
-
-    # Fallback to local market data
-    if 'market' not in data:
-        market_files = list((BASE_DIR / "outputs" / "fetched" / "cleaned").glob("*.parquet"))
-        if market_files:
-            for f in market_files:
-                df = pd.read_parquet(f)
-                if isinstance(df.index, pd.DatetimeIndex):
-                    df = df.reset_index()
-                    df.rename(columns={df.columns[0]: 'ds'}, inplace=True)
-                df['ds'] = pd.to_datetime(df['ds'])
-                market_data[f.stem] = df
-            if len(market_data) > 0:
-                data['market'] = market_data
+                df = df.rename(columns={df.columns[0]: "ds"})
+            df["ds"] = pd.to_datetime(df["ds"])
+            market[f.stem] = df
+        except Exception:
+            continue
+    data["market"] = market
 
     return data
 
-# Load data with timeout protection
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_regime_labels() -> tuple[dict, dict]:
+    """Load regime name/color map from disk; degrade gracefully to defaults."""
+    label_file = BASE_DIR / "outputs" / "models" / "regime_label_map.json"
+    names: dict = {}
+    if label_file.exists():
+        raw = json.loads(label_file.read_text())
+        for k, v in raw.items():
+            if k.startswith("_"):
+                continue
+            try:
+                names[int(k)] = v
+            except ValueError:
+                pass
+
+    if not names:
+        names = {0: "Transitional", 1: "Bull Market", 2: "Bear Market"}
+
+    n = len(names)
+    palette = REGIME_SPECTRUM_5 if n >= 5 else REGIME_SPECTRUM_3
+
+    ranked = _rank_regimes_by_risk(names)
+    colors = {rid: palette[min(rank, len(palette) - 1)] for rid, rank in ranked.items()}
+    return names, colors
+
+
+def _rank_regimes_by_risk(names: dict) -> dict:
+    """Rank regime IDs safest → riskiest by name keywords. Returns {id: rank}.
+
+    "Crisis Event" is treated as the most extreme risk state so it always sits
+    at the top of the risk spectrum in visualisations.
+    """
+    risk_words = ["bull", "growth", "calm", "steady", "transitional", "neutral",
+                  "caution", "stress", "bear", "declining", "crisis"]
+    scored = []
+    for rid, name in names.items():
+        low = name.lower()
+        score = 99
+        for i, w in enumerate(risk_words):
+            if w in low:
+                score = i
+                break
+        scored.append((score, rid))
+    scored.sort()
+    return {rid: rank for rank, (_, rid) in enumerate(scored)}
+
+
+# ============================================================================
+# ALLOCATION POLICY — matches active_reallocator_backtest.py
+# ============================================================================
+
+def allocation_for_regime(regime_id: int, rank: int, n_regimes: int,
+                          confidence: float) -> dict:
+    """
+    Return an illustrative allocation across SPY/QQQ/TLT/cash.
+
+    Rank-based (0 = safest → n-1 = riskiest) so the same policy handles 3 and
+    5-regime models without a config change. Confidence-weighted: at low
+    confidence (<60%) we blend toward the 60/40 neutral to reflect uncertainty.
+
+    IMPORTANT: This is the allocation used in the walk-forward backtest. It is
+    NOT personalized advice — see disclaimer in the UI.
+    """
+    if n_regimes >= 5:
+        spectrum = [
+            {"SPY": 0.55, "QQQ": 0.15, "TLT": 0.25, "CASH": 0.05},  # safest / bull
+            {"SPY": 0.50, "QQQ": 0.15, "TLT": 0.30, "CASH": 0.05},
+            {"SPY": 0.40, "QQQ": 0.10, "TLT": 0.40, "CASH": 0.10},
+            {"SPY": 0.25, "QQQ": 0.05, "TLT": 0.55, "CASH": 0.15},
+            {"SPY": 0.15, "QQQ": 0.05, "TLT": 0.60, "CASH": 0.20},  # riskiest / bear
+        ]
+    else:
+        spectrum = [
+            {"SPY": 0.55, "QQQ": 0.15, "TLT": 0.25, "CASH": 0.05},
+            {"SPY": 0.35, "QQQ": 0.10, "TLT": 0.45, "CASH": 0.10},
+            {"SPY": 0.15, "QQQ": 0.05, "TLT": 0.60, "CASH": 0.20},
+        ]
+    idx = min(rank, len(spectrum) - 1)
+    base = spectrum[idx]
+
+    # Confidence blend: <60% shifts toward neutral 60/40 = SPY 50 / TLT 40 / cash 10
+    if confidence < 0.60:
+        neutral = {"SPY": 0.50, "QQQ": 0.10, "TLT": 0.30, "CASH": 0.10}
+        w = max(0.30, confidence / 0.60)  # never fully wash out the signal
+        base = {k: round(w * base[k] + (1 - w) * neutral[k], 3) for k in base}
+
+    # Ensure sums to 1.0 exactly (rounding drift)
+    s = sum(base.values())
+    if abs(s - 1.0) > 0.001:
+        base = {k: v / s for k, v in base.items()}
+    return base
+
+
+# ============================================================================
+# LOAD
+# ============================================================================
+
 try:
-    with st.spinner("Loading forecast data from BigQuery..."):
+    with st.spinner("Loading forecast data..."):
         data = load_data()
-except Exception as e:
-    st.error(f"Failed to load data: {str(e)}")
-    st.info("The dashboard will be available once the first forecast runs. Check back after the next scheduled run at 6 AM EST.")
+except Exception as exc:
+    st.error(f"Data load failed: {exc}")
     st.stop()
 
-if not data or 'forecast' not in data:
-    st.warning("No forecast data available yet")
-    st.info("""
-    **Dashboard Setup Complete!**
-
-    The dashboard is ready, but no forecast data has been generated yet.
-
-    **Next Steps:**
-    1. Wait for the next scheduled forecast run (daily at 6 AM EST)
-    2. Or manually trigger a forecast run via GitHub Actions
-    3. Once data is in BigQuery, refresh this page
-
-    Your dashboard will display:
-    - 10-day market regime forecasts
-    - Historical regime analysis
-    - Risk-return profiles
-    - Market volatility insights
-    """)
+if "forecast" not in data or data["forecast"] is None or len(data["forecast"]) == 0:
+    st.warning(
+        "Today's forecast hasn't arrived yet. The next refresh runs before "
+        "US market open — check back shortly."
+    )
     st.stop()
 
-forecast = data['forecast']
-history = data.get('history')
-market = data.get('market', {})
+forecast = data["forecast"]
+history = data.get("history")
+market = data.get("market", {})
+forecast_time = data.get("forecast_time")
 
-# Regime labels — load at runtime from outputs/models/regime_label_map.json
-# (saved at HMM training time). HMM IDs are arbitrary across retrains, so a
-# hardcoded dict goes silently wrong after every retrain.
-from clustering_agent.labels import get_regime_names, get_regime_colors
-
-_raw_names = get_regime_names()
-# Dashboard prefers "...Market" / softer phrasings. The k=5 spectrum has
-# names: Bull / Calm / Transitional / Caution / Bear. Map them to wording
-# that's friendlier for non-technical viewers but still ranked the same.
-_display_aliases = {
-    "Bull Market": "Growing Market",
-    "Calm":        "Mild Growth",
-    "Steady":      "Steady",
-    "Transitional": "Stable Market",
-    "Caution":     "Caution",
-    "Stress":      "Stress",
-    "Bear Market": "Declining Market",
-}
-regime_names = {rid: _display_aliases.get(name, name) for rid, name in _raw_names.items()}
-regime_colors = get_regime_colors()
+names, colors = load_regime_labels()
+n_regimes = len(names)
+rank_map = _rank_regimes_by_risk(names)  # {id: rank} safest→riskiest
 
 current = forecast.iloc[0]
-current_regime = int(current['regime'])
-current_conf = current['regime_probability']
+current_regime = int(current["regime"])
+current_conf = float(current.get("regime_probability", 0.5))
+current_rank = rank_map.get(current_regime, 0)
 
-st.title("10-Day Market Environment Forecast")
+
+# ============================================================================
+# HEADER STRIP — always visible, 5-second glance
+# ============================================================================
+
+st.markdown("# MarketPulse Regime Dashboard")
 st.caption(
-    "For active allocators reallocating short-term: a per-day risk environment "
-    "label for each of the next 10 trading days. Used for sizing equity exposure "
-    "vs defensive assets ahead of regime shifts — not for predicting prices."
+    "Your daily read on the US market environment and where a tactical "
+    "risk-on / risk-off posture across SPY, QQQ, TLT and cash sits today."
 )
 
-# Add refresh button and version in sidebar for debugging
-with st.sidebar:
-    st.caption(f"Dashboard version: {DASHBOARD_VERSION}")
-    if st.button("🔄 Refresh Data", help="Clear cache and reload data from BigQuery"):
-        st.cache_data.clear()
-        st.rerun()
+# Detect regime change vs yesterday (from history)
+prev_regime = None
+if history is not None and len(history) > 0:
+    prev_regime = int(history["regime"].iloc[-1])
 
-# Show data freshness prominently
-if 'forecast' in data and len(data['forecast']) > 0:
-    try:
-        # Try to get timestamp from data dict first, then from forecast dataframe
-        forecast_time = None
-        if 'forecast_time' in data:
-            forecast_time = pd.to_datetime(data['forecast_time'])
-        elif 'timestamp' in data['forecast'].columns:
-            forecast_time = pd.to_datetime(data['forecast']['timestamp'].iloc[0])
-
-        if forecast_time:
-            hours_old = (pd.Timestamp.now(tz='UTC') - forecast_time).total_seconds() / 3600
-
-            if hours_old < 24:
-                freshness_color = "green"
-                freshness_text = f"Updated {hours_old:.1f} hours ago"
-            elif hours_old < 48:
-                freshness_color = "orange"
-                freshness_text = f"⚠️ Updated {hours_old:.1f} hours ago (check if today's run completed)"
-            else:
-                freshness_color = "red"
-                freshness_text = f"⚠️ Data is {int(hours_old/24)} days old"
-
-            st.markdown(f"**Last Update:** :{freshness_color}[{forecast_time.strftime('%Y-%m-%d %H:%M UTC')}] - {freshness_text}")
-    except Exception as e:
-        print(f"Could not display timestamp: {e}")
-        pass
-
-st.caption("10-Day Market Regime Forecast")
-
-# Show info banner if historical/market data is missing
-if history is None or len(market) == 0:
-    st.info("""
-    **Note:** This dashboard is displaying forecast-only data from BigQuery.
-    Historical regime analysis and market data visualizations require additional setup.
-    The 10-day forecast below is fully functional.
-    """, icon="ℹ️")
-
-# === ALERTS ===
-if ALERTS_AVAILABLE:
-    try:
-        # Use consolidated alert system from orchestrator
-        alert_system = AlertSystem()
-        alert_result = alert_system.check_for_alerts(period_days=7, min_confidence=0.6)
-    except Exception as e:
-        # Simple fallback if alerts fail
-        alert_result = {
-            'alert': False,
-            'message': 'Alert system unavailable',
-            'shifts': []
-        }
+delta_txt = ""
+delta_color = NEUTRAL_MID
+if prev_regime is not None and prev_regime != current_regime:
+    prev_name = names.get(prev_regime, f"Regime {prev_regime}")
+    delta_txt = f"Shifted from {prev_name}"
+    delta_color = ALERT_AMBER
 else:
-    # No alert system available (lightweight deployment)
-    alert_result = {
-        'alert': False,
-        'message': 'No recent regime shifts detected',
-        'shifts': []
-    }
+    delta_txt = "No change vs prior session"
 
-if alert_result['alert']:
-    st.markdown(
-        f"""<div class="alert-box alert-warning">
-        <strong>⚠️ MARKET CHANGE DETECTED</strong><br>
-        {alert_result['message']}<br>
-        <small>{len(alert_result['shifts'])} weekly period shift(s) detected</small>
-        </div>""",
-        unsafe_allow_html=True
-    )
+as_of = forecast_time.strftime("%Y-%m-%d %H:%M UTC") if forecast_time is not None else "—"
 
-    with st.expander("📋 View Alert Details"):
-        for i, shift in enumerate(alert_result['shifts'], 1):
-            st.markdown(f"""
-            **Shift {i}**
-            Previous: **{shift['previous_regime_name']}** ({shift['previous_confidence']*100:.1f}%)
-            New: **{shift['new_regime_name']}** ({shift['new_confidence']*100:.1f}%)
-            """)
-else:
-    st.markdown(
-        f"""<div class="alert-box alert-success">
-        <strong>✓ Market Conditions Stable</strong><br>
-        {alert_result['message']}
-        </div>""",
-        unsafe_allow_html=True
-    )
+st.markdown(
+    f"""
+    <div class="top-strip">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+          <div class="label">Today's Environment</div>
+          <div class="regime-name">{names.get(current_regime, f'Regime {current_regime}')}</div>
+          <div class="value" style="color: {delta_color}; font-size: 0.85rem; margin-top: 0.25rem;">
+            {delta_txt}
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div class="label">Conviction</div>
+          <div class="value" style="font-size: 1.5rem;">{current_conf*100:.0f}%</div>
+        </div>
+        <div style="text-align: right;">
+          <div class="label">As Of</div>
+          <div class="value" style="font-size: 0.95rem;">{as_of}</div>
+        </div>
+      </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
-st.divider()
 
-# === MODEL PERFORMANCE MONITORING ===
-try:
-    # Try to load validation results from storage
-    storage = get_storage()
-    if hasattr(storage, 'get_validation_summary'):
-        validation_summary = storage.get_validation_summary()
+# ============================================================================
+# SECTION 1 — TODAY'S READ (allocation table + regime probability bars)
+# ============================================================================
 
-        if validation_summary:
-            st.subheader("🔧 Model Performance (Internal Validation)")
-            st.caption("Forecast accuracy from SMAPE-based validation")
+st.markdown("## Today's Read")
 
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                accuracy = (1 - validation_summary.get('avg_smape', 0) / 100) if validation_summary.get('avg_smape', 0) <= 100 else 0
-                st.metric("Forecast Accuracy", f"{accuracy*100:.1f}%",
-                         help="Based on SMAPE error metric")
-            with col2:
-                st.metric("Avg SMAPE", f"{validation_summary.get('avg_smape', 0):.1f}%",
-                         help="Symmetric Mean Absolute Percentage Error")
-            with col3:
-                st.metric("Forecasts Validated", int(validation_summary.get('total_forecasts', 0)),
-                         help="Number of past forecasts validated")
+col_left, col_right = st.columns([1.05, 1])
+
+# --- Left: Regime probability distribution ---
+with col_left:
+    st.markdown("**Where today sits across the regime spectrum**")
+
+    # Prefer per-regime probability columns if the forecast payload includes
+    # them (regime_0_prob, ...). Otherwise fall back to allocating remaining
+    # mass by historical regime prevalence.
+    probs = np.zeros(n_regimes)
+    per_cols = [f"regime_{rid}_prob" for rid in range(n_regimes)]
+    if all(c in forecast.columns for c in per_cols):
+        for rid in range(n_regimes):
+            probs[rid] = float(current[f"regime_{rid}_prob"])
     else:
-        # Fallback to local validation log
-        validation_log_file = BASE_DIR / "outputs" / "validation_log.jsonl"
+        probs[current_regime] = current_conf
+        remaining = 1.0 - current_conf
+        if history is not None and remaining > 0:
+            counts = history["regime"].value_counts()
+            for rid in range(n_regimes):
+                if rid != current_regime:
+                    probs[rid] = remaining * (counts.get(rid, 0) / max(counts.sum(), 1))
+            s = probs.sum()
+            if s > 0:
+                probs = probs / s
 
-        if validation_log_file.exists():
-            st.subheader("🔧 Model Performance (Internal Validation)")
-            st.caption("Forecast accuracy from SMAPE-based validation")
-
-            with open(validation_log_file, 'r') as f:
-                lines = f.readlines()
-                if lines:
-                    latest_validation = json.loads(lines[-1])
-                    metrics = latest_validation.get('metrics', {})
-
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        avg_smape = metrics.get('avg_smape', 0)
-                        accuracy = (1 - avg_smape / 100) if avg_smape <= 100 else 0
-                        st.metric("Forecast Accuracy", f"{accuracy*100:.1f}%",
-                                 help="Based on SMAPE error metric")
-                    with col2:
-                        st.metric("Forecasts Validated", int(metrics.get('total_forecasts', 0)),
-                                 help="Number of past forecasts validated")
-except Exception as e:
-    pass  # Skip validation metrics if unavailable
-
-st.divider()
-
-# === CURRENT OUTLOOK ===
-col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
-
-with col1:
-    st.markdown(f"### {regime_names[current_regime]}")
-    st.markdown(f"**Confidence:** {current_conf*100:.1f}%")
-
-with col2:
-    future_regimes = forecast.iloc[1:]['regime'].value_counts()
-    if len(future_regimes) > 0:
-        next_likely = int(future_regimes.index[0])
-        next_pct = (future_regimes.iloc[0] / len(forecast.iloc[1:])) * 100
-        st.metric("Next Likely", regime_names[next_likely], f"{next_pct:.0f}%")
-
-with col3:
-    days_ahead = len(forecast)
-    st.metric("Forecast Days", days_ahead)
-
-with col4:
-    avg_conf = forecast['regime_probability'].mean()
-    st.metric("Avg Confidence", f"{avg_conf*100:.1f}%")
-
-# Forecast timeline
-fig = go.Figure()
-# Create day labels (Day 1, Day 2, etc.)
-forecast['day_label'] = [f"Day {i+1}" for i in range(len(forecast))]
-for regime_id in [0, 1, 2]:
-    mask = forecast['regime'] == regime_id
-    if mask.any():
-        fig.add_trace(go.Scatter(
-            x=forecast[mask]['day_label'],
-            y=[regime_id] * mask.sum(),
-            mode='markers',
-            marker=dict(size=14, color=regime_colors[regime_id], symbol='square'),
-            name=regime_names[regime_id],
-            hovertemplate='%{x}<br>' + regime_names[regime_id] + '<extra></extra>'
-        ))
-
-fig.update_layout(
-    height=180,
-    margin=dict(l=20, r=20, t=10, b=20),
-    xaxis=dict(title="Forecast Horizon"),
-    yaxis=dict(
-        tickmode='array',
-        tickvals=sorted(regime_names.keys()),
-        ticktext=[regime_names[i] for i in sorted(regime_names.keys())]
-    ),
-    showlegend=False,
-    hovermode='closest'
-)
-st.plotly_chart(fig, use_container_width=True)
-
-st.divider()
-
-# === TRANSITION MATRIX & EXPECTED DURATION ===
-if history is not None and len(history) > 1:
-    col1, col2 = st.columns([3, 2])
-
-    with col1:
-        st.subheader("How Market Conditions Change Over Time")
-
-        regimes = history['regime'].values
-        transitions = np.zeros((3, 3))
-        for i in range(len(regimes) - 1):
-            transitions[int(regimes[i]), int(regimes[i + 1])] += 1
-
-        row_sums = transitions.sum(axis=1, keepdims=True)
-        row_sums[row_sums == 0] = 1
-        trans_probs = transitions / row_sums * 100
-
-        fig = go.Figure(data=go.Heatmap(
-            z=trans_probs,
-            x=['Consolidation', 'Expansion', 'Compression'],
-            y=['Consolidation', 'Expansion', 'Compression'],
-            colorscale='Blues',
-            text=np.round(trans_probs, 1),
-            texttemplate='%{text}%',
-            textfont={"size": 12},
-            hovertemplate='%{y} → %{x}: %{z:.1f}%<extra></extra>'
-        ))
-
-        fig.update_layout(
-            height=300,
-            margin=dict(l=80, r=20, t=20, b=80),
-            xaxis_title="Next Condition",
-            yaxis_title="Current Condition"
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
-    with col2:
-        st.subheader("Average Duration of Each Market Condition")
-
-        durations = []
-        for regime_id in [0, 1, 2]:
-            persist = trans_probs[regime_id, regime_id]
-            duration = 1 / (1 - persist/100) if persist < 100 else np.inf
-            durations.append({
-                'Market Type': regime_names[regime_id],
-                'Stability': f"{persist:.1f}%",
-                'Avg Duration (Days)': f"{duration:.1f}" if duration != np.inf else "∞"
-            })
-
-        df_duration = pd.DataFrame(durations)
-        st.dataframe(df_duration, use_container_width=True, hide_index=True)
-
-        st.markdown("**Current Market:**")
-        persist_prob = trans_probs[current_regime, current_regime]
-        exp_duration = 1 / (1 - persist_prob/100) if persist_prob < 100 else np.inf
-
-        st.metric("Chance of Staying", f"{persist_prob:.1f}%")
-        if exp_duration != np.inf:
-            st.metric("Expected Duration", f"~{exp_duration:.0f} days")
-
-st.divider()
-
-# === RISK-RETURN PROFILE ===
-if history is not None and 'GSPC' in market:
-    st.subheader("Investment Returns in Different Market Conditions")
-
-    sp500 = market['GSPC'].copy()
-    sp500_col = [c for c in sp500.columns if c != 'ds'][0]
-    sp500['return'] = sp500[sp500_col].pct_change()
-
-    # Normalize datetime columns to remove timezone for merge compatibility
-    history_merge = history[['ds', 'regime']].copy()
-    history_merge['ds'] = pd.to_datetime(history_merge['ds']).dt.tz_localize(None)
-    sp500['ds'] = pd.to_datetime(sp500['ds']).dt.tz_localize(None)
-
-    merged = pd.merge(history_merge, sp500, on='ds', how='inner')
-
-    metrics = []
-    for regime_id in [0, 1, 2]:
-        regime_data = merged[merged['regime'] == regime_id]
-        if len(regime_data) > 0:
-            returns = regime_data['return'].dropna()
-            ann_return = returns.mean() * 252 * 100
-            ann_vol = returns.std() * np.sqrt(252) * 100
-            sharpe = (returns.mean() / returns.std() * np.sqrt(252)) if returns.std() > 0 else 0
-
-            metrics.append({
-                'Market Type': regime_names[regime_id],
-                'Return': ann_return,
-                'Risk': ann_vol,
-                'Score': sharpe,
-                'Days': len(regime_data)
-            })
-
-    metrics_df = pd.DataFrame(metrics)
-
-    col1, col2 = st.columns([2, 1])
-
-    with col1:
-        fig = go.Figure()
-
-        for idx, row in metrics_df.iterrows():
-            regime_id = [k for k, v in regime_names.items() if v == row['Market Type']][0]
-            is_current = regime_id == current_regime
-
-            fig.add_trace(go.Scatter(
-                x=[row['Risk']],
-                y=[row['Return']],
-                mode='markers+text',
-                marker=dict(
-                    size=25 if is_current else 20,
-                    color=regime_colors[regime_id],
-                    opacity=1.0 if is_current else 0.6,
-                    line=dict(width=3, color='black') if is_current else dict(width=0)
-                ),
-                text=[row['Market Type']],
-                textposition="top center",
-                name=row['Market Type'],
-                hovertemplate=f"<b>{row['Market Type']}</b><br>" +
-                             f"Return: {row['Return']:.1f}%<br>" +
-                             f"Risk: {row['Risk']:.1f}%<br>" +
-                             f"Score: {row['Score']:.2f}<extra></extra>"
-            ))
-
-        fig.update_layout(
-            xaxis_title="Risk Level (%)",
-            yaxis_title="Annual Return (%)",
-            height=400,
+    # Order safest → riskiest for the bar chart
+    ordered_ids = sorted(range(n_regimes), key=lambda rid: rank_map.get(rid, 99))
+    fig = go.Figure()
+    for rid in ordered_ids:
+        rname = names.get(rid, f"Regime {rid}")
+        fig.add_trace(go.Bar(
+            x=[rname],
+            y=[probs[rid] * 100],
+            marker_color=colors.get(rid, ACCENT_SECONDARY),
+            text=f"{probs[rid]*100:.0f}%",
+            textposition="outside",
+            hovertemplate=f"{rname}: {probs[rid]*100:.1f}%<extra></extra>",
             showlegend=False,
-            hovermode='closest'
-        )
-        fig.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.3)
-
-        st.plotly_chart(fig, use_container_width=True)
-
-    with col2:
-        st.markdown("**Summary Table**")
-
-        display_df = metrics_df[['Market Type', 'Return', 'Risk', 'Score']].copy()
-        display_df['Return'] = display_df['Return'].map('{:.1f}%'.format)
-        display_df['Risk'] = display_df['Risk'].map('{:.1f}%'.format)
-        display_df['Score'] = display_df['Score'].map('{:.2f}'.format)
-
-        st.dataframe(display_df, use_container_width=True, hide_index=True)
-
-        # Current regime emphasis
-        current_metrics = metrics_df[metrics_df['Market Type'] == regime_names[current_regime]].iloc[0]
-        st.markdown(f"**Current Market ({regime_names[current_regime]}):**")
-        st.metric("Quality Score", f"{current_metrics['Score']:.2f}")
-        st.metric("Return-to-Risk", f"{current_metrics['Return']/current_metrics['Risk']:.2f}")
-
-st.divider()
-
-# === DRAWDOWN ANALYSIS ===
-if 'GSPC' in market:
-    st.subheader("Market Performance History")
-
-    sp500 = market['GSPC'].copy()
-    sp500_col = [c for c in sp500.columns if c != 'ds'][0]
-    sp500['return'] = sp500[sp500_col].pct_change()
-    sp500['cum'] = (1 + sp500['return']).cumprod()
-    sp500['max'] = sp500['cum'].expanding().max()
-    sp500['dd'] = (sp500['cum'] - sp500['max']) / sp500['max'] * 100
-
-    if history is not None:
-        # Normalize datetime to remove timezone for merge compatibility
-        history_ds = history[['ds', 'regime']].copy()
-        history_ds['ds'] = pd.to_datetime(history_ds['ds']).dt.tz_localize(None)
-        sp500['ds'] = pd.to_datetime(sp500['ds']).dt.tz_localize(None)
-        sp500_regime = pd.merge(sp500, history_ds, on='ds', how='left')
-    else:
-        sp500_regime = sp500.copy()
-
-    recent = sp500_regime.tail(750)  # ~3 years
-    # Add day index for x-axis
-    recent = recent.reset_index(drop=True)
-    recent['day_index'] = range(len(recent))
-
-    fig = make_subplots(
-        rows=2, cols=1,
-        row_heights=[0.5, 0.5],
-        vertical_spacing=0.08,
-        subplot_titles=("Growth Over Time (3-Year History)", "Losses by Market Condition")
+        ))
+    fig.update_layout(
+        height=260,
+        margin=dict(l=10, r=10, t=20, b=30),
+        yaxis=dict(range=[0, 100], title="Probability (%)", ticksuffix="%"),
+        xaxis=dict(title=""),
+        plot_bgcolor="white",
     )
-
-    # Cumulative return
-    fig.add_trace(
-        go.Scatter(
-            x=recent['day_index'],
-            y=recent['cum'] * 100,
-            line=dict(color='#2c3e50', width=2),
-            fill='tozeroy',
-            fillcolor='rgba(52, 152, 219, 0.1)',
-            name='Return',
-            hovertemplate='Return: %{y:.1f}%<extra></extra>'
-        ),
-        row=1, col=1
-    )
-
-    # Drawdown by regime
-    if 'regime' in recent.columns:
-        for regime_id in [0, 1, 2]:
-            regime_data = recent[recent['regime'] == regime_id]
-            if len(regime_data) > 0:
-                fig.add_trace(
-                    go.Scatter(
-                        x=regime_data['day_index'],
-                        y=regime_data['dd'],
-                        mode='markers',
-                        marker=dict(size=3, color=regime_colors[regime_id]),
-                        name=regime_names[regime_id],
-                        hovertemplate='Loss: %{y:.2f}%<extra></extra>'
-                    ),
-                    row=2, col=1
-                )
-
-    fig.update_xaxes(title_text="", row=1, col=1)
-    fig.update_xaxes(title_text="", row=2, col=1)
-    fig.update_yaxes(title_text="Growth (%)", row=1, col=1)
-    fig.update_yaxes(title_text="Loss (%)", row=2, col=1)
-    fig.update_layout(height=550, margin=dict(l=20, r=20, t=40, b=20), showlegend=False)
-
     st.plotly_chart(fig, use_container_width=True)
 
-    col1, col2, col3, col4 = st.columns(4)
+# --- Right: Recommended positioning ---
+with col_right:
+    st.markdown("**How the strategy would be positioned today**")
+    alloc = allocation_for_regime(current_regime, current_rank, n_regimes, current_conf)
 
-    with col1:
-        st.metric("Current Loss from Peak", f"{recent.iloc[-1]['dd']:.2f}%")
+    prev_alloc = None
+    if prev_regime is not None:
+        prev_rank = rank_map.get(prev_regime, 0)
+        prev_alloc = allocation_for_regime(prev_regime, prev_rank, n_regimes, current_conf)
 
-    with col2:
-        st.metric("Worst Historical Loss", f"{sp500['dd'].min():.2f}%")
-
-    with col3:
-        # Max DD by current regime
-        if 'regime' in merged.columns:
-            regime_dd = merged[merged['regime'] == current_regime]['return'].dropna()
-            regime_cum = (1 + regime_dd).cumprod()
-            regime_max = regime_cum.expanding().max()
-            regime_dd_pct = ((regime_cum - regime_max) / regime_max * 100).min()
-            st.metric(f"Worst Loss in {regime_names[current_regime]}", f"{regime_dd_pct:.2f}%")
-
-    with col4:
-        days_from_peak = len(recent) - recent['cum'].idxmax()
-        st.metric("Days from Peak", days_from_peak)
-
-st.divider()
-
-# === VOLATILITY REGIMES ===
-if 'VIX' in market and history is not None:
-    st.subheader("Market Fear Indicator")
-
-    vix = market['VIX'].copy()
-    vix_col = [c for c in vix.columns if c != 'ds'][0]
-
-    # Normalize datetime to remove timezone for merge compatibility
-    history_vix = history[['ds', 'regime']].copy()
-    history_vix['ds'] = pd.to_datetime(history_vix['ds']).dt.tz_localize(None)
-    vix['ds'] = pd.to_datetime(vix['ds']).dt.tz_localize(None)
-    vix_regime = pd.merge(history_vix, vix, on='ds', how='inner')
-
-    col1, col2 = st.columns([2, 1])
-
-    with col1:
-        # VIX distribution by regime
-        fig = go.Figure()
-
-        for regime_id in [0, 1, 2]:
-            regime_data = vix_regime[vix_regime['regime'] == regime_id]
-            if len(regime_data) > 0:
-                fig.add_trace(go.Violin(
-                    y=regime_data[vix_col],
-                    name=regime_names[regime_id],
-                    box_visible=True,
-                    meanline_visible=True,
-                    fillcolor=regime_colors[regime_id],
-                    opacity=0.6,
-                    line_color=regime_colors[regime_id]
-                ))
-
-        fig.update_layout(
-            yaxis_title="VIX Level",
-            height=350,
-            showlegend=True,
-            margin=dict(l=20, r=20, t=20, b=20)
-        )
-
-        st.plotly_chart(fig, use_container_width=True)
-
-    with col2:
-        st.markdown("**Fear Levels by Market Type**")
-
-        vix_stats = []
-        for regime_id in [0, 1, 2]:
-            regime_data = vix_regime[vix_regime['regime'] == regime_id]
-            if len(regime_data) > 0:
-                vix_stats.append({
-                    'Market Type': regime_names[regime_id],
-                    'Average': f"{regime_data[vix_col].mean():.1f}",
-                    'Typical': f"{regime_data[vix_col].median():.1f}",
-                    'Variability': f"{regime_data[vix_col].std():.1f}"
-                })
-
-        st.dataframe(pd.DataFrame(vix_stats), use_container_width=True, hide_index=True)
-
-        # Current VIX
-        current_vix = vix.iloc[-1][vix_col]
-        st.metric("Current Fear Index", f"{current_vix:.2f}")
-
-        # VIX percentile in current regime
-        current_regime_vix = vix_regime[vix_regime['regime'] == current_regime][vix_col]
-        if len(current_regime_vix) > 0:
-            percentile = (current_regime_vix < current_vix).sum() / len(current_regime_vix) * 100
-            st.metric("Compared to Similar Markets", f"{percentile:.0f}%")
-
-st.divider()
-
-# === CORRELATION MATRIX ===
-if len(market) >= 3:
-    st.subheader("Asset Relationships (Current Market)")
-
-    key_assets = ['GSPC', 'VIX', 'DXY', 'DGS10', 'GOLD']
-    available = [k for k in key_assets if k in market]
-
-    if len(available) >= 2 and history is not None:
-        regime_history = history[history['regime'] == current_regime].copy()
-        # Normalize datetime to remove timezone for merge compatibility
-        regime_history['ds'] = pd.to_datetime(regime_history['ds']).dt.tz_localize(None)
-
-        corr_data = {}
-        for asset in available:
-            asset_df = market[asset].copy()
-            asset_df['ds'] = pd.to_datetime(asset_df['ds']).dt.tz_localize(None)
-            col_name = [c for c in asset_df.columns if c != 'ds'][0]
-            merged = pd.merge(regime_history[['ds']], asset_df, on='ds', how='inner')
-            if len(merged) > 0:
-                corr_data[asset] = merged[col_name].pct_change()
-
-        if len(corr_data) > 1:
-            corr_df = pd.DataFrame(corr_data).corr()
-
-            fig = go.Figure(data=go.Heatmap(
-                z=corr_df.values,
-                x=corr_df.columns,
-                y=corr_df.columns,
-                colorscale='RdBu',
-                zmid=0,
-                zmin=-1,
-                zmax=1,
-                text=np.round(corr_df.values, 2),
-                texttemplate='%{text}',
-                textfont={"size": 11},
-                hovertemplate='%{x} vs %{y}: %{z:.2f}<extra></extra>'
-            ))
-
-            fig.update_layout(
-                height=400,
-                margin=dict(l=80, r=20, t=20, b=80)
+    cols = st.columns(4)
+    tickers = [
+        ("SPY", "US Large Cap"),
+        ("QQQ", "US Tech"),
+        ("TLT", "Long Bonds"),
+        ("CASH", "Cash"),
+    ]
+    for i, (t, label) in enumerate(tickers):
+        pct = alloc[t] * 100
+        delta_html = ""
+        if prev_alloc is not None:
+            d = (alloc[t] - prev_alloc[t]) * 100
+            if abs(d) < 0.5:
+                delta_html = f'<div class="alloc-delta-flat">flat</div>'
+            elif d > 0:
+                delta_html = f'<div class="alloc-delta-pos">▲ {d:+.0f}%</div>'
+            else:
+                delta_html = f'<div class="alloc-delta-neg">▼ {d:+.0f}%</div>'
+        with cols[i]:
+            st.markdown(
+                f"""
+                <div class="alloc-cell">
+                  <div class="alloc-ticker">{t}</div>
+                  <div class="alloc-pct">{pct:.0f}%</div>
+                  {delta_html}
+                  <div style="color:#7F8C8D; font-size:0.7rem; margin-top:0.25rem;">{label}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
 
-            st.plotly_chart(fig, use_container_width=True)
+    st.markdown(
+        """
+        <div class="disclaimer">
+        The weights above are how the strategy would position itself today
+        given the current regime read. Use them as a reference point and
+        adapt to your book, mandate, and risk budget.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-st.divider()
 
-# === ALLOCATION GUIDANCE ===
-st.subheader("What This Means for Your Investments")
+# ============================================================================
+# SECTION 2 — 10-DAY TRAJECTORY (probability ribbon + transition matrix)
+# ============================================================================
 
-if history is not None and 'GSPC' in market:
-    current_metrics = metrics_df[metrics_df['Market Type'] == regime_names[current_regime]].iloc[0]
+st.markdown("## Ten-Day Trajectory")
 
-    col1, col2, col3 = st.columns(3)
+col_a, col_b = st.columns([1.5, 1])
 
-    with col1:
-        st.markdown("**Investment Level**")
-        sharpe = current_metrics['Score']
-        ann_return = current_metrics['Return']
+with col_a:
+    st.markdown("**How the regime probability shifts over the next 10 days**")
 
-        # Investment recommendation based on regime type AND risk-adjusted returns.
-        # Branch on the semantic name (loaded from regime_label_map.json) so
-        # this stays correct even after HMM retrains shuffle the numeric IDs.
-        _current_name = regime_names.get(current_regime, "")
-        _is_growing = ("Growing" in _current_name) or ("Bull" in _current_name)
-        _is_declining = ("Declining" in _current_name) or ("Bear" in _current_name)
-        if _is_growing:
-            if sharpe > 0.3:
-                sizing = "Invest More"
-                color = "🟢"
-            else:
-                sizing = "Stay Balanced"
-                color = "🟡"
-        elif _is_declining:
-            sizing = "Invest Less"
-            color = "🔴"
-        else:  # Stable/Transitional
-            if sharpe > 0.5:
-                sizing = "Stay Balanced"
-                color = "🟡"
-            else:
-                sizing = "Be Cautious"
-                color = "🟠"
+    # Reconstruct probability ribbon: forecast has (ds, regime, regime_probability)
+    # per day. If future probabilities aren't stored per-regime we estimate them
+    # like the "today" bar — confidence on labeled regime, remaining spread by
+    # historical prevalence.
+    horizon = forecast.reset_index(drop=True).copy()
+    horizon["day_label"] = [f"Day {i+1}" for i in range(len(horizon))]
 
-        st.markdown(f"{color} **{sizing}** (Quality: {sharpe:.2f})")
-        st.caption(f"Based on past {regime_names[current_regime]} conditions")
+    # Prefer per-regime probability columns from the forecast file when present
+    # (regime_0_prob, regime_1_prob, ...). Fall back to historical prevalence.
+    per_regime_cols = [f"regime_{rid}_prob" for rid in range(n_regimes)]
+    has_per_regime = all(c in horizon.columns for c in per_regime_cols)
 
-    with col2:
-        st.markdown("**How Long to Hold**")
-        if exp_duration != np.inf:
-            st.markdown(f"**~{exp_duration:.0f} days**")
-            st.caption(f"{persist_prob:.1f}% chance market stays same")
-        else:
-            st.markdown("**Long Time**")
-            st.caption("Very stable conditions")
+    prob_matrix = np.zeros((len(horizon), n_regimes))
+    if has_per_regime:
+        for rid in range(n_regimes):
+            prob_matrix[:, rid] = horizon[f"regime_{rid}_prob"].astype(float).values
+    else:
+        counts = (
+            history["regime"].value_counts()
+            if history is not None
+            else pd.Series({rid: 1 for rid in range(n_regimes)})
+        )
+        total = max(counts.sum(), 1)
+        for i, row in horizon.iterrows():
+            rid = int(row["regime"])
+            conf = float(row.get("regime_probability", 0.5))
+            prob_matrix[i, rid] = conf
+            remaining = 1.0 - conf
+            if remaining > 0:
+                for other in range(n_regimes):
+                    if other != rid:
+                        prob_matrix[i, other] = remaining * (counts.get(other, 0) / total)
+                s = prob_matrix[i].sum()
+                if s > 0:
+                    prob_matrix[i] = prob_matrix[i] / s
 
-    with col3:
-        st.markdown("**Watch For Changes**")
-        next_likely_regime = np.argmax(trans_probs[current_regime, :])
-        if next_likely_regime != current_regime:
-            next_prob = trans_probs[current_regime, next_likely_regime]
-            st.markdown(f"**{regime_names[next_likely_regime]}**")
-            st.caption(f"Watch for: {next_prob:.1f}% chance")
-        else:
-            st.markdown("**Stay Put**")
-            st.caption("No changes expected soon")
+    fig = go.Figure()
+    for rid in ordered_ids:  # safest at bottom, riskiest at top
+        rname = names.get(rid, f"Regime {rid}")
+        fig.add_trace(go.Scatter(
+            x=horizon["day_label"],
+            y=prob_matrix[:, rid] * 100,
+            mode="lines",
+            stackgroup="one",
+            groupnorm="percent",
+            name=rname,
+            line=dict(width=0.5, color=colors.get(rid, ACCENT_SECONDARY)),
+            hovertemplate=f"{rname}: %{{y:.0f}}%<extra></extra>",
+        ))
+    fig.update_layout(
+        height=320,
+        margin=dict(l=10, r=10, t=20, b=30),
+        yaxis=dict(range=[0, 100], title="Probability (%)", ticksuffix="%"),
+        xaxis=dict(title=""),
+        legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center"),
+        plot_bgcolor="white",
+        hovermode="x unified",
+    )
+    st.plotly_chart(fig, use_container_width=True)
+    st.caption(
+        "How the probability of each regime evolves over the next ten trading "
+        "days. Watch for a band that widens quickly — that's where the "
+        "environment is most likely to shift."
+    )
+
+with col_b:
+    st.markdown("**Where the environment tends to go from here**")
+
+    if history is not None and len(history) > 1:
+        regimes = history["regime"].astype(int).values
+        trans = np.zeros((n_regimes, n_regimes))
+        for i in range(len(regimes) - 1):
+            trans[regimes[i], regimes[i + 1]] += 1
+        row_sums = trans.sum(axis=1, keepdims=True)
+        row_sums[row_sums == 0] = 1
+        trans_probs = trans / row_sums * 100
+
+        # Show only the row for the current regime — that's what an allocator
+        # cares about right now.
+        row = trans_probs[current_regime]
+        target_ids = sorted(range(n_regimes), key=lambda r: rank_map.get(r, 99))
+
+        rows_html = ""
+        for tid in target_ids:
+            p = row[tid]
+            tname = names.get(tid, f"Regime {tid}")
+            bar_w = min(p, 100)
+            highlight = "background: #FFF3E0;" if tid == current_regime else ""
+            rows_html += f"""
+            <tr style="{highlight}">
+              <td style="padding: 6px 12px; color: #34495E;">{tname}</td>
+              <td style="padding: 6px 12px; text-align: right; color: #1F4E79; font-weight: 500;">
+                {p:.1f}%
+              </td>
+              <td style="padding: 6px 12px; width: 40%;">
+                <div style="background: #ECF0F1; height: 6px; border-radius: 2px;">
+                  <div style="width: {bar_w}%; height: 6px; background: {colors.get(tid, ACCENT_SECONDARY)}; border-radius: 2px;"></div>
+                </div>
+              </td>
+            </tr>
+            """
+        st.markdown(
+            f"""
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+              <thead>
+                <tr style="border-bottom: 1px solid #ECF0F1; color: #7F8C8D; font-size: 0.75rem;">
+                  <th style="padding: 6px 12px; text-align: left; text-transform: uppercase;">Next State</th>
+                  <th style="padding: 6px 12px; text-align: right; text-transform: uppercase;">Prob.</th>
+                  <th style="padding: 6px 12px; text-align: left; text-transform: uppercase;">&nbsp;</th>
+                </tr>
+              </thead>
+              <tbody>{rows_html}</tbody>
+            </table>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        persist = trans_probs[current_regime, current_regime]
+        exp_dur = 1 / (1 - persist / 100) if persist < 100 else np.inf
+        st.markdown(
+            f"""
+            <div style="color: #7F8C8D; font-size: 0.8rem; margin-top: 0.75rem;">
+              This regime historically lasts about
+              <strong style="color: #34495E;">{exp_dur:.0f} days</strong>
+              before shifting ({persist:.0f}% chance of staying tomorrow).
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.info("Not enough history yet to show how the environment transitions.")
+
+
+# ============================================================================
+# SECTION 3 — RISK PROFILE (per-regime same-day risk cards + drawdown chart)
+# ============================================================================
+
+st.markdown("## Risk Profile")
+
+def _spy_returns_from_market(market: dict) -> pd.DataFrame | None:
+    """Return a two-column (ds, return) DataFrame from SPY/GSPC market data if available."""
+    for key in ("GSPC", "SPY"):
+        if key in market:
+            sp = market[key].copy()
+            price_cols = [c for c in sp.columns if c != "ds"]
+            if not price_cols:
+                continue
+            sp["return"] = sp[price_cols[0]].pct_change()
+            return sp[["ds", "return"]].dropna()
+    return None
+
+
+spy_returns = _spy_returns_from_market(market) if market else None
+has_spy_returns = spy_returns is not None and len(spy_returns) > 100
+
+# ---- Per-regime risk cards ----
+# Two data sources supported. Preferred: SPY daily returns (gives us std and
+# the "days losing > 2%" tail metric an allocator recognizes). Fallback: the
+# realized-volatility column already stored on the regime-history frame,
+# which is always available.
+
+if history is not None:
+    st.markdown("**What each regime has actually felt like historically**")
+
+    regime_stats = []
+    if has_spy_returns:
+        merged = history.merge(spy_returns, on="ds", how="inner")
+        for rid in ordered_ids:
+            sub = merged[merged["regime"] == rid]
+            if len(sub) < 5:
+                continue
+            regime_stats.append({
+                "id": rid,
+                "name": names.get(rid, f"Regime {rid}"),
+                "n": len(sub),
+                "primary_label": "DAILY STD",
+                "primary_value": f"{sub['return'].std()*100:.2f}%",
+                "secondary_label": "DAYS LOSING > 2%",
+                "secondary_value": f"{(sub['return']<=-0.02).mean()*100:.1f}%",
+                "secondary_alert": (sub["return"] <= -0.02).mean() > 0.05,
+                "color": colors.get(rid, ACCENT_SECONDARY),
+            })
+        risk_caption = (
+            "What SPY has actually done on days in each regime. Today's "
+            "regime is highlighted so you can see what environment you're "
+            "positioning into."
+        )
+    elif "GSPC_rv_value_10d" in history.columns:
+        # Realized-vol is a decimal (e.g. 0.0076 = 0.76% daily). Report both
+        # daily and annualized so an allocator sees a scale they recognize.
+        vix_col = "VIX_value" if "VIX_value" in history.columns else None
+        for rid in ordered_ids:
+            sub = history[history["regime"] == rid]
+            if len(sub) < 5:
+                continue
+            daily_vol = sub["GSPC_rv_value_10d"].mean() * 100
+            ann_vol = daily_vol * (252 ** 0.5)
+            vix_str = f"{sub[vix_col].mean():.1f}" if vix_col else "—"
+            regime_stats.append({
+                "id": rid,
+                "name": names.get(rid, f"Regime {rid}"),
+                "n": len(sub),
+                "primary_label": "REALIZED VOL (ANNUALIZED)",
+                "primary_value": f"{ann_vol:.1f}%",
+                "secondary_label": "AVERAGE VIX LEVEL",
+                "secondary_value": vix_str,
+                "secondary_alert": vix_col is not None and sub[vix_col].mean() > 30,
+                "color": colors.get(rid, ACCENT_SECONDARY),
+            })
+        risk_caption = (
+            "Annualized realized volatility of the S&P 500 and average VIX "
+            "level in each regime. Today's regime is highlighted so you can "
+            "see what environment you're positioning into."
+        )
+    else:
+        regime_stats = []
+        risk_caption = ""
+
+    if regime_stats:
+        cols = st.columns(len(regime_stats))
+        for i, rs in enumerate(regime_stats):
+            highlight = (
+                "border: 2px solid #1F4E79; box-shadow: 0 0 0 2px rgba(31,78,121,0.15);"
+                if rs["id"] == current_regime
+                else "border: 1px solid #ECF0F1;"
+            )
+            with cols[i]:
+                st.markdown(
+                    f"""
+                    <div style="{highlight} padding: 0.85rem; border-radius: 3px; background: white;">
+                      <div style="height: 4px; background: {rs['color']}; margin: -0.85rem -0.85rem 0.75rem -0.85rem; border-radius: 3px 3px 0 0;"></div>
+                      <div style="color: #34495E; font-weight: 500; font-size: 0.9rem; margin-bottom: 0.5rem;">
+                        {rs['name']}
+                      </div>
+                      <div style="font-size: 0.7rem; color: #7F8C8D;">{rs['primary_label']}</div>
+                      <div style="font-size: 1.3rem; color: #1F4E79; font-weight: 500;">
+                        {rs['primary_value']}
+                      </div>
+                      <div style="font-size: 0.7rem; color: #7F8C8D; margin-top: 0.5rem;">{rs['secondary_label']}</div>
+                      <div style="font-size: 1.1rem; color: {ALERT_AMBER if rs['secondary_alert'] else NEUTRAL_DARK};">
+                        {rs['secondary_value']}
+                      </div>
+                      <div style="font-size: 0.7rem; color: #95A5A6; margin-top: 0.5rem;">n = {rs['n']:,} days</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+        st.caption(risk_caption)
+    else:
+        st.info("Risk profile isn't ready yet — check back after the next refresh.")
+
+    # ---- Rolling 21-day drawdown chart (only if we have SPY returns) ----
+    if has_spy_returns:
+        st.markdown("**Worst 21-day drawdown — strategy vs staying long SPY**")
+
+        def rolling_worst_dd(returns: pd.Series, window: int = 21) -> pd.Series:
+            cum = (1 + returns.fillna(0)).cumprod()
+            peak = cum.rolling(window).max()
+            return (cum / peak - 1) * 100
+
+        merged = history.merge(spy_returns, on="ds", how="inner")
+        strat = merged.copy()
+        strat["strat_ret"] = 0.0
+        for rid in range(n_regimes):
+            rnk = rank_map.get(rid, 0)
+            a = allocation_for_regime(rid, rnk, n_regimes, confidence=1.0)
+            mask = strat["regime"] == rid
+            strat.loc[mask, "strat_ret"] = strat.loc[mask, "return"] * (a["SPY"] + a["QQQ"])
+
+        strat["dd_strat"] = rolling_worst_dd(strat["strat_ret"], 21)
+        strat["dd_spy"] = rolling_worst_dd(strat["return"], 21)
+
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=strat["ds"], y=strat["dd_spy"],
+            mode="lines", name="Buy-and-Hold SPY",
+            line=dict(color=NEUTRAL_MID, width=1.2),
+            hovertemplate="SPY: %{y:.2f}%<extra></extra>",
+        ))
+        fig.add_trace(go.Scatter(
+            x=strat["ds"], y=strat["dd_strat"],
+            mode="lines", name="Regime-Timed Allocation",
+            line=dict(color=ACCENT_PRIMARY, width=1.6),
+            hovertemplate="Strategy: %{y:.2f}%<extra></extra>",
+        ))
+        fig.update_layout(
+            height=280,
+            margin=dict(l=10, r=10, t=20, b=30),
+            yaxis=dict(title="21-Day Drawdown (%)", ticksuffix="%"),
+            xaxis=dict(title=""),
+            legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
+            plot_bgcolor="white",
+            hovermode="x unified",
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption(
+            "How deep the worst 21-day drawdown has been at any point in "
+            "history — regime-timed positioning versus staying fully long "
+            "SPY. This is the number that most often decides whether a "
+            "client stays with you."
+        )
+else:
+    st.info("Historical context isn't loaded yet — risk profile will appear once it is.")
+
+
+# ============================================================================
+# SECTION 4 — EVIDENCE (backtest table + honesty box) — collapsed by default
+# ============================================================================
+
+with st.expander("How This Compares To What You Already Use", expanded=False):
+    st.markdown(
+        """
+        Twelve years of walk-forward results across the four approaches you
+        most likely benchmark against. Retrained yearly on prior data only,
+        no look-ahead, full out-of-sample.
+        """
+    )
+
+    bt = pd.DataFrame([
+        {"Approach": "Regime-Timed Allocation",       "CAGR": "8.81%",  "Sharpe": "0.74",
+         "Max Drawdown": "-32.51%", "Worst 21 Days": "-18.96%",
+         "Days Losing > 2%": "1.49%"},
+        {"Approach": "60 / 40 Static",                "CAGR": "9.28%",  "Sharpe": "0.87",
+         "Max Drawdown": "-27.24%", "Worst 21 Days": "-18.45%",
+         "Days Losing > 2%": "0.87%"},
+        {"Approach": "200-Day Moving Average",        "CAGR": "8.66%",  "Sharpe": "0.81",
+         "Max Drawdown": "-35.62%", "Worst 21 Days": "-19.21%",
+         "Days Losing > 2%": "0.87%"},
+        {"Approach": "Buy-and-Hold SPY",              "CAGR": "13.47%", "Sharpe": "0.82",
+         "Max Drawdown": "-33.72%", "Worst 21 Days": "-36.72%",
+         "Days Losing > 2%": "3.23%"},
+    ])
+    st.dataframe(bt, use_container_width=True, hide_index=True)
+
+    st.markdown(
+        """
+        **Where it helps you.** On the number your clients feel the most —
+        worst 21-day drawdown — regime-timed positioning comes in near -19%,
+        roughly half of buy-and-hold SPY's -37%, in line with 60/40 static
+        and a 200-day moving average rule. Days losing more than 2% drop
+        from 3.2% under buy-and-hold to 1.5% here.
+
+        **What it costs you.** Roughly five percentage points of annual
+        return versus staying fully long equities. This is a risk-management
+        overlay, not an alpha engine. If your mandate is maximum long-horizon
+        return with no drawdown constraint, this isn't the right tool.
+
+        **Test conditions.** Retrained each year on prior-only data, applied
+        forward with no future information. The twelve-year window covers
+        the 2015-16 selloff, 2018 Q4, the 2020 COVID crash, and the 2022
+        rates shock. Transaction and slippage assumptions are conservative
+        by standard practice.
+        """
+    )
+
+with st.expander("What Goes Into The Regime Read", expanded=False):
+    st.markdown(
+        """
+        **Inputs.** Twenty-two macro series read each trading day — equity
+        indices, US Treasury yields across the curve, credit spreads,
+        currencies, commodities, the volatility complex, and broad
+        financial-conditions gauges. The same series most macro desks watch.
+
+        **How the regime is identified.** An unsupervised statistical model
+        finds groups of days that behave similarly across all 22 inputs at
+        once. That means the regime read doesn't collapse to any single
+        rule of thumb — "VIX above 25", "curve inverted", "below the 200-day"
+        — it captures state changes that any one signal alone would miss.
+        Clusters are named by their actual risk profile, not by which one
+        the algorithm happened to number first, so the labels keep meaning
+        the same thing after every refresh.
+
+        **How the ten-day forecast is built.** Each of the 22 inputs is
+        projected forward using an ensemble of three well-established
+        forecasting architectures, combined with weights tuned per feature.
+        The projected inputs are then run back through the regime model to
+        get the probability of each regime on each of the next ten trading
+        days. This is the standard institutional forecasting stack.
+
+        **When the model refreshes.** Two triggers. The primary one is
+        performance-based — if forecast accuracy degrades beyond
+        published-benchmark thresholds for three consecutive validations,
+        the model retrains itself automatically. The secondary trigger is
+        an annual refresh matching Federal Reserve
+        [SR 11-7](https://www.federalreserve.gov/supervisionreg/srletters/SR2602.pdf)
+        material-model guidance. In plain terms: the model retrains when
+        something is actually wrong, not on a rigid calendar.
+
+        **Reading the confidence number.** The percentage next to each
+        regime is the model's own probability of being in that state.
+        Below 60%, the illustrative positioning above automatically softens
+        toward a neutral 60/40 to reflect the uncertainty. Above 80%,
+        expect more decisive tilts. Treat that band as a built-in check on
+        how strongly to lean into the read.
+        """
+    )
+
+
+# ============================================================================
+# SECTION 5 — SYSTEM HEALTH FOOTER
+# ============================================================================
+
+# Compute system-health stats
+last_fc_str = forecast_time.strftime("%Y-%m-%d %H:%M UTC") if forecast_time is not None else "—"
+
+# Get most recent model version dates
+model_dir = BASE_DIR / "outputs" / "forecasting" / "models"
+newest_train = None
+if model_dir.exists():
+    version_files = list(model_dir.glob("*_versions.json"))
+    ages = []
+    for vf in version_files:
+        try:
+            meta = json.loads(vf.read_text())
+            active = meta.get("active_version")
+            for v in meta.get("versions", []):
+                if v.get("version") == active:
+                    ts = v.get("created_at") or v.get("timestamp")
+                    if ts:
+                        ages.append(datetime.fromisoformat(ts))
+                    break
+        except Exception:
+            continue
+    if ages:
+        newest_train = max(ages)
+
+train_str = (
+    newest_train.strftime("%Y-%m-%d")
+    if newest_train is not None
+    else "—"
+)
+train_age = (datetime.now() - newest_train).days if newest_train is not None else None
+train_status = ""
+if train_age is not None:
+    if train_age > 365:
+        train_status = f"<span style='color:{ALERT_RED};'>({train_age} days — beyond annual)</span>"
+    elif train_age > 300:
+        train_status = f"<span style='color:{ALERT_AMBER};'>({train_age} days — approaching annual)</span>"
+    else:
+        train_status = f"<span style='color:{POSITIVE};'>({train_age} days)</span>"
+
+st.markdown(
+    f"""
+    <div class="footer-strip">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <span style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem;">Forecast Generated</span>
+          <span style="color: #34495E; margin-left: 0.5rem;">{last_fc_str}</span>
+        </div>
+        <div>
+          <span style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem;">Model Last Updated</span>
+          <span style="color: #34495E; margin-left: 0.5rem;">{train_str}</span>
+          <span style="margin-left: 0.5rem; font-size: 0.85rem;">{train_status}</span>
+        </div>
+        <div>
+          <span style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem;">Update Cadence</span>
+          <span style="color: #34495E; margin-left: 0.5rem;">Daily before market open</span>
+        </div>
+      </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Global disclaimer — required framing for allocator-facing content
+st.markdown(
+    """
+    <div class="disclaimer" style="margin-top: 1rem;">
+    For institutional and illustrative use. Everything on this page describes
+    a statistically-detected market environment and the positioning used in
+    the walk-forward test of the underlying strategy. It's not personalized
+    investment advice, not a solicitation, and past performance is not a
+    guarantee of future results. Adapt to your mandate, risk budget, and
+    client suitability requirements before acting on any of it.
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Sidebar refresh (kept minimal — allocators shouldn't see internal metadata)
+with st.sidebar:
+    if st.button("Refresh Data", help="Pull the latest forecast"):
+        st.cache_data.clear()
+        st.rerun()

@@ -71,6 +71,7 @@ def get_regime_colors() -> Dict[int, str]:
         "stress": "#e67e22",     # darker orange
         "bear": "#e74c3c",       # red
         "declining": "#e74c3c",
+        "crisis": "#8B0000",     # dark red — off-spectrum outlier events
     }
     for rid, name in names.items():
         lower = name.lower()

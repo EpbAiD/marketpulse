@@ -291,19 +291,38 @@ def check_core_models_status() -> Dict:
     classifier_exists = classifier_path.exists()
     cluster_exists = cluster_path.exists()
 
-    # Check age of each core model
-    # Use git commit date (reliable on CI where file mtimes are reset by checkout)
-    # Fall back to file mtime for local development
+    # Check age of each core model.
+    # PREFERENCE ORDER:
+    #   1. hmm_fit_metadata.json sidecar (authoritative fit timestamp, written
+    #      only when the HMM is actually re-fit — safest against cosmetic
+    #      commits that re-touch the .joblib without re-fitting)
+    #   2. Git commit date (reliable on CI where file mtimes are reset)
+    #   3. File mtime (last resort, local dev)
     hmm_age_days = None
     classifier_age_days = None
 
     if hmm_path.exists():
-        git_date = get_git_commit_date(hmm_path)
-        if git_date:
-            hmm_age_days = (datetime.now(git_date.tzinfo) - git_date).days
-        else:
-            mtime = datetime.fromtimestamp(hmm_path.stat().st_mtime)
-            hmm_age_days = (datetime.now() - mtime).days
+        sidecar_path = models_dir / "hmm_fit_metadata.json"
+        used_sidecar = False
+        if sidecar_path.exists():
+            try:
+                fit_meta = json.loads(sidecar_path.read_text())
+                fit_ts = fit_meta.get("fit_timestamp")
+                if fit_ts:
+                    # Trim trailing 'Z' if present
+                    fit_ts_clean = fit_ts.rstrip("Z")
+                    fit_dt = datetime.fromisoformat(fit_ts_clean)
+                    hmm_age_days = (datetime.utcnow() - fit_dt).days
+                    used_sidecar = True
+            except Exception:
+                pass
+        if not used_sidecar:
+            git_date = get_git_commit_date(hmm_path)
+            if git_date:
+                hmm_age_days = (datetime.now(git_date.tzinfo) - git_date).days
+            else:
+                mtime = datetime.fromtimestamp(hmm_path.stat().st_mtime)
+                hmm_age_days = (datetime.now() - mtime).days
 
     if classifier_path.exists():
         git_date = get_git_commit_date(classifier_path)

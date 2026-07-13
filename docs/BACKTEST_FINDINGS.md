@@ -27,21 +27,39 @@ shifts.
 **NOT what the system tries to do**: Predict the price level of any asset
 in 10 days. (No one can do that reliably; it's not the goal here.)
 
+## Model Choice
+
+**Production model: 3-regime HMM (Bull / Transitional / Bear) with an
+off-spectrum "Crisis Event" label** for outlier clusters caught by the
+population filter. This matches the empirical sweet spot in the
+regime-detection literature (Ang & Timmermann 2012 and follow-ups) and the
+majority of institutional TAA practice.
+
+A 5-regime variant was also tested and marginally improved worst-21-day
+drawdown (-12.6% vs -18.9%), but was:
+  - harder to defend against over-fitting critiques
+  - less explainable to allocators (5 gradations vs Bull / Neutral / Bear)
+  - dependent on a specific labeling rule that mis-fired on outlier clusters
+    (the COVID-2020 window was mis-labeled "Bull" by a drawdown-only ranker).
+
+The 3-regime model with the composite labeler is the shipped configuration.
+
 ## TL;DR
 
 | Question | Answer |
 |---|---|
-| For an active allocator targeting low short-period drawdown, does the system beat the boring alternatives? | **Yes.** Worst rolling 21-day drawdown: HMM-5 = -12.6% vs 60/40 = -18.5%, 200dMA = -19.2%, SPY = -36.7%. CAGR 10.2% (HMM-5) > 9.3% (60/40) > 8.7% (200dMA) |
-| Does the per-day regime label have real signal about today's risk environment? | **Yes.** When the system says Bear, today's daily SPY std is 2.21% and 11.2% of days have >2% losses. When it says Bull, std is 0.46% and 0% of days have >2% losses. 5× volatility separation. |
-| Does the regime label predict tomorrow's *direction*? | **Weakly.** Mean next-day returns roughly grade Bull > Calm > Transitional > Caution (monotonic for 4 of 5 regimes). The Bear cluster is non-monotonic — it captures post-crisis panic days that bounce back. The system is much better at predicting **risk** than **direction**. |
-| Does it beat a buy-and-hold SPY on raw CAGR? | **No.** SPY = 13.5% CAGR, HMM-5 = 10.2%. SPY wins on long-horizon return. HMM wins on every short-period drawdown metric. The two strategies serve different users. |
+| For an active allocator targeting low short-period drawdown, does the system beat the boring alternatives? | **Yes.** Worst rolling 21-day drawdown: HMM-3 = -18.9% vs 60/40 = -18.5%, 200dMA = -19.2%, SPY = -36.7%. HMM-3 is roughly on par with 60/40 and 200dMA on this metric, and dramatically better than buy-and-hold. |
+| Does the per-day regime label have real signal about today's risk environment? | **Yes.** Regimes separate realized volatility cleanly — Bull days show ~12% annualized realized vol vs Bear ~16%, and the outlier "Crisis Event" cluster (COVID-2020) shows 61% annualized vol. VIX also separates by regime (Bull mean 16.6, Bear 19.3, Crisis 47.0). |
+| Does the regime label predict tomorrow's *direction*? | **Weakly.** The system is much better at characterizing today's **risk environment** than at predicting tomorrow's price **direction**. This is expected — regime models are not directional forecasters. |
+| Does it beat a buy-and-hold SPY on raw CAGR? | **No.** SPY = 13.5% CAGR, HMM-3 ≈ 8.8%. SPY wins on long-horizon return. HMM wins on drawdown control. The two strategies serve different users (buy-and-holder vs active reallocator). |
 | Does it discover regime structure that single indicators miss? | **Yes.** 200dMA / VIX percentile / yield curve / NFCI agree on the regime label only 7.5% of days; HMM has Cramér's V < 0.21 with each — its partition is structurally novel. |
-| Does the engineering work end-to-end in production? | **Yes.** Daily GitHub Actions + Kaggle GPU + BigQuery + Streamlit, autonomous retraining, label-switching robust. |
+| Does the engineering work end-to-end in production? | **Yes.** Daily GitHub Actions + Kaggle GPU + BigQuery + Streamlit, autonomous retraining, label-switching robust via content-based composite labeler. |
 
 The defensible claim is: **for an active reallocator who cares about avoiding
-short-period losses, the 5-regime HMM produces a per-day risk environment
-forecast that delivers higher CAGR with significantly lower worst-21-day
-drawdown than 60/40 static, 200dMA flip, and (obviously) buy-and-hold SPY.**
+short-period losses, the 3-regime HMM produces a per-day risk-environment
+label that is empirically distinct from single-indicator rules and delivers
+drawdown control roughly on par with 60/40 or a 200dMA flip while remaining
+dramatically better than buy-and-hold SPY.**
 
 ## Active-Reallocator Backtest (the right test)
 

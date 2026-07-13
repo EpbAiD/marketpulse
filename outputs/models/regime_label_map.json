@@ -1,22 +1,47 @@
 {
-  "1": "Bull Market",
-  "0": "Transitional",
+  "0": "Bull Market",
   "2": "Bear Market",
+  "1": "Crisis Event",
   "_meta": {
-    "rule": "forward-21d drawdown rate (>5.0%): lowest\u2192Bull, highest\u2192Bear",
-    "drawdown_rate_per_cluster": {
-      "0": 0.0576,
-      "1": 0.0204,
-      "2": 0.0974
-    },
+    "rule": "composite risk score (weights: drawdown=0.50, realized_vol=0.30, vix=0.20); clusters with population < 5% get 'Crisis Event' off-spectrum.",
+    "min_population_pct": 0.05,
+    "regular_cluster_ids": [
+      0,
+      2
+    ],
+    "outlier_cluster_ids": [
+      1
+    ],
     "n_days_per_cluster": {
       "0": 3110,
       "1": 70,
       "2": 2410
     },
+    "composite_score_per_cluster": {
+      "0": 0.0,
+      "2": 1.0
+    },
+    "drawdown_rate_per_cluster": {},
+    "realized_vol_per_cluster": {
+      "0": 0.007639,
+      "1": 0.038753,
+      "2": 0.009789
+    },
+    "vix_mean_per_cluster": {
+      "0": 16.55,
+      "1": 46.96,
+      "2": 19.26
+    },
+    "signals_used": [
+      "realized_vol",
+      "vix"
+    ],
+    "effective_weights": {
+      "realized_vol": 0.6,
+      "vix": 0.4
+    },
     "spectrum_used": [
       "Bull Market",
-      "Transitional",
       "Bear Market"
     ]
   }

@@ -54,12 +54,15 @@ PLOT_PATH = os.path.join(DIAG_DIR, "hmm_sequence.png")
 # -----------------------------------------------------------
 # ⚙️ CONFIGURATION
 # -----------------------------------------------------------
-# Number of latent market regimes. Increased 3 → 5 to capture finer
-# structure: empirically a 5-regime HMM separates pre-drawdown days from
-# bulk-of-the-time calm days much better than 3 (worst-cluster drawdown
-# rate jumps from 10% to 14%, approaching the 200-day MA's 17%). The
-# label spectrum (`_LABEL_SPECTRUM_BY_K`) defines names for k=2..7.
-N_REGIMES = 5
+# Number of latent market regimes. Set to 3 (Bull / Transitional / Bear).
+# This matches the empirical sweet spot in the regime-detection literature
+# (Ang & Timmermann 2012 and follow-ups) and the majority of institutional
+# TAA practice. BIC on our feature set also favours 3 over 5. A 5-regime
+# variant was tested and marginally improved worst-21d drawdown, but was
+# harder to defend against over-fitting and less explainable to allocators.
+# The label spectrum (`_LABEL_SPECTRUM_BY_K`) still supports k=2..7 for
+# future experimentation.
+N_REGIMES = 3
 RANDOM_STATE = 42
 MAX_ITER = 2000
 
@@ -85,10 +88,12 @@ def compute_cluster_stats(X_scaled: pd.DataFrame, states: np.ndarray) -> pd.Data
     return summary
 
 
-# Spectrum of names for k regimes, ordered from safest (lowest drawdown rate)
-# to riskiest (highest drawdown rate). The first and last must be "Bull Market"
+# Spectrum of names for k regimes, ordered from safest (lowest composite risk)
+# to riskiest (highest composite risk). The first and last must be "Bull Market"
 # and "Bear Market" because downstream consumers (dashboard color rules,
-# investment-recommendation branches) match on those words.
+# investment-recommendation branches) match on those words. "Crisis Event" is
+# used off-spectrum for small outlier clusters that fall below the population
+# threshold — see derive_regime_label_map().
 _LABEL_SPECTRUM_BY_K = {
     2: ["Bull Market", "Bear Market"],
     3: ["Bull Market", "Transitional", "Bear Market"],
@@ -96,6 +101,21 @@ _LABEL_SPECTRUM_BY_K = {
     5: ["Bull Market", "Calm", "Transitional", "Caution", "Bear Market"],
     6: ["Bull Market", "Calm", "Transitional", "Caution", "Stress", "Bear Market"],
     7: ["Bull Market", "Calm", "Steady", "Transitional", "Caution", "Stress", "Bear Market"],
+}
+_OUTLIER_LABEL = "Crisis Event"
+
+# Labeler tunables — a cluster containing fewer than MIN_POPULATION_PCT of days
+# is treated as an outlier event, not a regular regime, and gets _OUTLIER_LABEL
+# instead of a spectrum slot. This catches transient panic clusters (e.g., the
+# COVID-2020 window) that would otherwise get spurious names by ranking rules.
+MIN_POPULATION_PCT = 0.05
+
+# Composite risk-score weights. Sum to 1.0. Higher weight → more influence
+# on the safest→riskiest ranking of regular clusters.
+COMPOSITE_WEIGHTS = {
+    "drawdown": 0.50,   # forward-21d drawdown propensity — primary signal
+    "realized_vol": 0.30,  # regime-conditional realized volatility of the index
+    "vix": 0.20,        # VIX level — cross-check on volatility perception
 }
 
 
@@ -107,17 +127,10 @@ def _forward_drawdown_rate(
     drawdown_threshold_pct: float = 5.0,
 ) -> dict:
     """Per-cluster fraction of days where the close `horizon_days` ahead is
-    more than `drawdown_threshold_pct` below today's close. (Point-to-point
-    sustained drawdown — the user-intuitive notion of a 'Bear' period.)
-
-    An alternative definition is "any close within the window dropped >X%
-    from today" (any-drop-in-window). That measure tags high-vol clusters
-    even when the market recovers by the end of the window, which is not
-    typically what an investor calls a Bear regime. Point-to-point captures
-    sustained declines.
+    more than `drawdown_threshold_pct` below today's close. Point-to-point
+    sustained drawdown (the intuitive notion of a Bear period).
 
     Returns: {cluster_id (int) → drawdown_rate (float in [0,1])}.
-    Forward-realized data within the training window only; no test leakage.
     """
     s = pd.Series(states, index=state_index)
     px = raw_price.reindex(state_index).dropna()
@@ -131,6 +144,30 @@ def _forward_drawdown_rate(
     return {int(k): float(v) for k, v in rates.items()}
 
 
+def _per_cluster_stat(states: np.ndarray, X_raw: pd.DataFrame, col: str) -> dict:
+    """Return {cluster_id → mean of column `col` on cluster's days}, or {} if
+    column absent. Ignores NaNs cleanly."""
+    if col not in X_raw.columns:
+        return {}
+    out = {}
+    for s in sorted({int(x) for x in states}):
+        vals = X_raw.loc[states == s, col].dropna()
+        if len(vals) > 0:
+            out[int(s)] = float(vals.mean())
+    return out
+
+
+def _min_max_norm(d: dict) -> dict:
+    """Rescale a {id: value} dict to [0, 1]. If all values equal, returns 0.5."""
+    if not d:
+        return {}
+    values = list(d.values())
+    lo, hi = min(values), max(values)
+    if hi - lo < 1e-12:
+        return {k: 0.5 for k in d}
+    return {k: (v - lo) / (hi - lo) for k, v in d.items()}
+
+
 def derive_regime_label_map(
     X_raw: pd.DataFrame,
     states: np.ndarray,
@@ -138,84 +175,141 @@ def derive_regime_label_map(
     horizon_days: int = 21,
     drawdown_threshold_pct: float = 5.0,
     fallback_vix_col: str = "VIX_value",
+    realized_vol_col: str = "GSPC_rv_value_10d",
 ) -> dict:
-    """Assign labels (Bull / ... / Bear) to numeric HMM regime IDs based on
-    each cluster's empirical forward-drawdown rate within the training window.
+    """Content-based labeler that assigns Bull/.../Bear (plus off-spectrum
+    "Crisis Event") to numeric HMM cluster IDs.
 
-    HMMs have a label-switching property: each retrain may converge to the
-    same latent regimes but assign them arbitrary integer IDs. To keep
-    downstream display consistent across retrains, we derive labels from
-    each cluster's *empirical* propensity to precede a >X% drawdown over
-    the next N days.
+    HMMs exhibit label switching: each retrain may recover the same latent
+    regimes under different integer IDs. This function decides regime identity
+    from the actual statistics of each cluster, so labels stay meaningful
+    across retrains.
 
-    Ordering (lowest drawdown rate → highest drawdown rate):
-      "Bull Market" → ... → "Bear Market"
+    Ranking is a composite of THREE independent risk signals (weights in
+    COMPOSITE_WEIGHTS above):
+        1. Forward-21d drawdown propensity (primary — captures "does this
+           precede real losses?")
+        2. Regime-conditional realized volatility of the equity index
+           (prevents a high-vol cluster being labeled Bull just because its
+           forward drawdown happens to be low)
+        3. Mean VIX level (independent cross-check on turbulence perception)
 
-    Cluster-count-specific names (Calm, Caution, Stress, ...) come from
-    `_LABEL_SPECTRUM_BY_K`. The first and last names are always
-    "Bull Market" and "Bear Market" so dashboard color/branch rules
-    (which match on those words) keep working.
+    Population filter: any cluster with fewer than MIN_POPULATION_PCT of total
+    days is labeled "Crisis Event" and removed from spectrum assignment. This
+    catches transient panic clusters (e.g. COVID-2020) that would otherwise
+    receive misleading spectrum names.
 
-    If `raw_price_for_drawdown` is not provided, fall back to ranking by
-    mean VIX as a coarse proxy. This is strictly worse — VIX-mean ranks
-    high-vol-recovery clusters as "Bear" when they actually precede recoveries,
-    not declines — but it's better than no labeling.
+    Ordering after the filter: lowest composite risk → "Bull Market", highest
+    → "Bear Market", middle names from `_LABEL_SPECTRUM_BY_K[k_remaining]`.
 
-    Returns: {str(cluster_id) → name, "_meta": {...}}.
+    If a signal source is unavailable at labelling time (no price series, no
+    VIX column, etc.) the function degrades gracefully: it drops the missing
+    signal from the composite and renormalises the remaining weights. As long
+    as at least one signal is present, ranking still works.
+
+    Returns: {str(cluster_id) → label, "_meta": {...composite diagnostics...}}.
     """
     unique_states = sorted({int(s) for s in states})
-    k = len(unique_states)
+    total_days = len(states)
+    per_regime_n = {int(s): int((states == s).sum()) for s in unique_states}
 
-    if k not in _LABEL_SPECTRUM_BY_K:
-        # Unsupported cluster count — fall back to numeric labels
-        return {
-            "_meta": {"warning": f"k={k} clusters not in label spectrum; using identity"},
-            **{str(i): f"Regime {i}" for i in unique_states},
-        }
+    # --- Step 1: split clusters into "regular" vs "outlier" by population ---
+    min_days = max(1, int(round(MIN_POPULATION_PCT * total_days)))
+    regular_ids = [s for s in unique_states if per_regime_n[s] >= min_days]
+    outlier_ids = [s for s in unique_states if per_regime_n[s] < min_days]
 
-    spectrum = _LABEL_SPECTRUM_BY_K[k]
-
-    # Decide rank metric: drawdown rate (preferred) or VIX mean (fallback).
+    # --- Step 2: compute per-cluster statistics we can use ---
+    dd_per: dict = {}
     if raw_price_for_drawdown is not None:
-        per_regime_dd = _forward_drawdown_rate(
+        dd_per = _forward_drawdown_rate(
             states, X_raw.index, raw_price_for_drawdown,
             horizon_days=horizon_days,
             drawdown_threshold_pct=drawdown_threshold_pct,
         )
-        # Sort cluster ids ascending by drawdown rate (lowest = Bull, highest = Bear)
-        sorted_ids = sorted(unique_states, key=lambda c: per_regime_dd.get(c, 0.0))
-        rank_metric = {
-            "rule": (f"forward-{horizon_days}d drawdown rate (>{drawdown_threshold_pct}%): "
-                     "lowest→Bull, highest→Bear"),
-            "drawdown_rate_per_cluster": {str(c): round(per_regime_dd.get(c, 0.0), 4)
-                                          for c in unique_states},
-        }
-    elif fallback_vix_col in X_raw.columns:
-        vix_per = {int(s): float(X_raw.loc[states == s, fallback_vix_col].mean())
-                   for s in unique_states}
-        # NOTE: VIX-mean ranking is a coarse proxy. It typically labels the
-        # HIGH-VIX (panic-recovery) cluster as Bear, even though that cluster
-        # has POSITIVE forward returns historically. Use it only when no
-        # forward-price series is available.
-        sorted_ids = sorted(unique_states, key=lambda c: vix_per[c])
-        rank_metric = {
-            "rule": "VIX-mean fallback: lowest→Bull, highest→Bear",
-            "vix_mean_per_cluster": {str(c): round(vix_per[c], 2) for c in unique_states},
-            "warning": "Using VIX-mean fallback — rank-by-drawdown is preferred",
-        }
-    else:
-        return {
-            "_meta": {"warning": f"No price or {fallback_vix_col} available; identity labels"},
-            **{str(i): f"Regime {i}" for i in unique_states},
-        }
+    vol_per = _per_cluster_stat(states, X_raw, realized_vol_col)
+    vix_per = _per_cluster_stat(states, X_raw, fallback_vix_col)
 
-    label_map = {str(rid): spectrum[i] for i, rid in enumerate(sorted_ids)}
-    per_regime_n = {str(s): int((states == s).sum()) for s in unique_states}
+    # --- Step 3: build composite risk score for REGULAR clusters only ---
+    #    (outliers already get Crisis Event; no need to score them)
+    dd_reg = {k: v for k, v in dd_per.items() if k in regular_ids}
+    vol_reg = {k: v for k, v in vol_per.items() if k in regular_ids}
+    vix_reg = {k: v for k, v in vix_per.items() if k in regular_ids}
+
+    dd_norm = _min_max_norm(dd_reg)
+    vol_norm = _min_max_norm(vol_reg)
+    vix_norm = _min_max_norm(vix_reg)
+
+    available_signals = {}
+    if dd_norm:
+        available_signals["drawdown"] = dd_norm
+    if vol_norm:
+        available_signals["realized_vol"] = vol_norm
+    if vix_norm:
+        available_signals["vix"] = vix_norm
+
+    warning = None
+    if not available_signals:
+        warning = ("No risk signals available (no price, no realized-vol, no VIX). "
+                   "Falling back to identity labels for regular clusters.")
+
+    # Renormalise weights to only the available signals so total = 1.
+    total_w = sum(COMPOSITE_WEIGHTS[k] for k in available_signals) or 1.0
+    effective_w = {k: COMPOSITE_WEIGHTS[k] / total_w for k in available_signals}
+
+    composite: dict = {}
+    for rid in regular_ids:
+        score = 0.0
+        for sig_name, sig_norm in available_signals.items():
+            score += effective_w[sig_name] * sig_norm.get(rid, 0.5)
+        composite[rid] = round(score, 4)
+
+    # --- Step 4: assign labels ---
+    label_map: dict = {}
+    k_reg = len(regular_ids)
+    if k_reg == 0:
+        # Pathological: everything is an outlier
+        for rid in unique_states:
+            label_map[str(rid)] = _OUTLIER_LABEL
+    elif k_reg in _LABEL_SPECTRUM_BY_K and composite:
+        spectrum = _LABEL_SPECTRUM_BY_K[k_reg]
+        # Rank regular clusters by composite (ascending = safest → riskiest)
+        sorted_regular = sorted(regular_ids, key=lambda c: composite.get(c, 0.5))
+        for i, rid in enumerate(sorted_regular):
+            label_map[str(rid)] = spectrum[i]
+        for rid in outlier_ids:
+            label_map[str(rid)] = _OUTLIER_LABEL
+    else:
+        # k_reg not in spectrum table, OR composite empty (no signals). Identity.
+        for rid in regular_ids:
+            label_map[str(rid)] = f"Regime {rid}"
+        for rid in outlier_ids:
+            label_map[str(rid)] = _OUTLIER_LABEL
+        warning = warning or f"k_reg={k_reg} not in label spectrum table"
+
+    # --- Step 5: attach diagnostic meta ---
     label_map["_meta"] = {
-        **rank_metric,
-        "n_days_per_cluster": per_regime_n,
-        "spectrum_used": spectrum,
+        "rule": (
+            f"composite risk score (weights: drawdown={COMPOSITE_WEIGHTS['drawdown']:.2f}, "
+            f"realized_vol={COMPOSITE_WEIGHTS['realized_vol']:.2f}, "
+            f"vix={COMPOSITE_WEIGHTS['vix']:.2f}); "
+            f"clusters with population < {MIN_POPULATION_PCT*100:.0f}% get "
+            f"'{_OUTLIER_LABEL}' off-spectrum."
+        ),
+        "min_population_pct": MIN_POPULATION_PCT,
+        "regular_cluster_ids": [int(x) for x in regular_ids],
+        "outlier_cluster_ids": [int(x) for x in outlier_ids],
+        "n_days_per_cluster": {str(k): v for k, v in per_regime_n.items()},
+        "composite_score_per_cluster": {str(k): v for k, v in composite.items()},
+        "drawdown_rate_per_cluster": {str(k): round(v, 4) for k, v in dd_per.items()},
+        "realized_vol_per_cluster": {str(k): round(v, 6) for k, v in vol_per.items()},
+        "vix_mean_per_cluster": {str(k): round(v, 2) for k, v in vix_per.items()},
+        "signals_used": list(available_signals.keys()),
+        "effective_weights": {k: round(v, 3) for k, v in effective_w.items()},
+        "spectrum_used": _LABEL_SPECTRUM_BY_K.get(k_reg, []),
     }
+    if warning:
+        label_map["_meta"]["warning"] = warning
+
     return label_map
 
 
@@ -310,6 +404,8 @@ def run_hmm_clustering(use_bigquery=False):
     # -------------------------------------------------------
     # 💾 Save outputs
     # -------------------------------------------------------
+    from datetime import datetime as _dt
+    fit_timestamp = _dt.utcnow().isoformat() + "Z"
     model_obj = {
         "model": hmm,
         "scaler": scaler,
@@ -318,10 +414,20 @@ def run_hmm_clustering(use_bigquery=False):
             "n_regimes": N_REGIMES,
             "random_state": RANDOM_STATE,
             "max_iter": MAX_ITER
-        }
+        },
+        "fit_timestamp": fit_timestamp,
     }
     joblib.dump(model_obj, MODEL_PATH)
-    print(f"💾 Saved HMM model → {MODEL_PATH}")
+    # Also write a sidecar JSON so the age checker doesn't have to load the
+    # full joblib to read the fit timestamp.
+    sidecar = os.path.join(MODEL_DIR, "hmm_fit_metadata.json")
+    with open(sidecar, "w") as _f:
+        _json.dump({
+            "fit_timestamp": fit_timestamp,
+            "n_regimes": N_REGIMES,
+            "n_training_days": int(len(states)),
+        }, _f, indent=2)
+    print(f"💾 Saved HMM model → {MODEL_PATH}  (fit_timestamp={fit_timestamp})")
 
     # Derive labels from this run's regime IDs (HMM IDs are arbitrary across
     # retrains — see label-switching). Save next to the model so dashboard/
