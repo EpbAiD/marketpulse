@@ -6204,3 +6204,32 @@ This file tracks daily regime forecasts from the MarketPulse system.
 | 2026-08-25 | Bull Market | 0.622 |
 
 ---
+
+## 2026-08-16 11:42:38
+
+**Source:** BigQuery
+
+**Forecast Period:** 2026-08-10 to 2026-08-25
+
+**Total Days:** 10
+
+### Regime Distribution
+
+- **Bull Market**: 10 days (100.0%) - Avg confidence: 0.668
+
+### Daily Predictions
+
+| Date | Regime | Confidence |
+|------|--------|------------|
+| 2026-08-10 | Bull Market | 0.648 |
+| 2026-08-11 | Bull Market | 0.654 |
+| 2026-08-14 | Bull Market | 0.638 |
+| 2026-08-17 | Bull Market | 0.806 |
+| 2026-08-18 | Bull Market | 0.804 |
+| 2026-08-19 | Bull Market | 0.630 |
+| 2026-08-20 | Bull Market | 0.636 |
+| 2026-08-21 | Bull Market | 0.616 |
+| 2026-08-24 | Bull Market | 0.624 |
+| 2026-08-25 | Bull Market | 0.622 |
+
+---
