@@ -341,8 +341,8 @@ def evaluate_tiers(ctx: dict, year_st: dict,
             and not year_st["seasonal_buy_fired"]):
         alerts.append({
             "tier": "seasonal",
-            "subject": "gold: Q1 seasonal dip triggered",
-            "headline": "Primary buying signal fired",
+            "subject": "gold: Q1 seasonal dip triggered — BUY",
+            "headline": "Primary buying signal fired — BUY 50-100% at market",
             "detail": (
                 f"Gold pulled back {pb:.2f}% from its trailing 20-day high of "
                 f"${ctx['roll_20d_high']:.0f} to today's close of ${ctx['price']:.0f}. "
@@ -352,9 +352,19 @@ def evaluate_tiers(ctx: dict, year_st: dict,
                 f"the typical yearly price: roughly 5-8%. This is the primary "
                 f"entry point in the strategy."
             ),
-            "action": (
-                "This is a routine seasonal signal, not a rare event. "
-                "Consider buying at market."
+            "playbook_action": "BUY at market",
+            "playbook_size": "50-100% of your intended annual gold position",
+            "playbook_confidence": "High",
+            "playbook_why": (
+                "This is the seasonal + dip combination that historically "
+                "delivered the best entry each year. Deploying most of your "
+                "annual budget now typically beats waiting for a deeper dip "
+                "because -5% or -7% Q1 dips don't reliably show up: they "
+                "happen in only 55% / 15% of years."
+            ),
+            "playbook_next": (
+                "If a deeper -5% or -10% dip follows in Q1, the Opportunistic "
+                "or Major tier will fire — save 20-50% dry powder in case it does."
             ),
         })
 
@@ -366,8 +376,8 @@ def evaluate_tiers(ctx: dict, year_st: dict,
             and not year_st["seasonal_deadline_fired"]):
         alerts.append({
             "tier": "deadline",
-            "subject": "gold: Q1 seasonal window closing, no dip fired",
-            "headline": "Seasonal deadline reminder",
+            "subject": "gold: Q1 window closing — BUY NOW (no dip fired)",
+            "headline": "Seasonal deadline — BUY 100% at market today",
             "detail": (
                 f"Today is the last practical trading day of the Jan-Feb "
                 f"seasonal buying window. No -3% dip triggered this year, "
@@ -375,10 +385,18 @@ def evaluate_tiers(ctx: dict, year_st: dict,
                 f"the seasonal discount before Q2. Current close ${ctx['price']:.0f} "
                 f"(pullback from 20d high: {pb:.2f}%)."
             ),
-            "action": (
-                "Consider buying at market. Waiting into Q2 historically "
-                "costs ~2-5% because gold drifts up through the year and "
-                "the seasonal edge disappears."
+            "playbook_action": "BUY at market",
+            "playbook_size": "100% of your intended annual gold position",
+            "playbook_confidence": "High",
+            "playbook_why": (
+                "The seasonal window is closing. Waiting into Q2 historically "
+                "costs 2-5% because gold drifts up ~1% per month on average and "
+                "the seasonal edge disappears. Buy at whatever the market offers "
+                "today — don't hold out for a dip that hasn't come."
+            ),
+            "playbook_next": (
+                "If an unusual Q2-Q4 opportunity fires later (e.g. a MAJOR -10% "
+                "in Q4 with STRONG BUY tag), you can add on top with dry powder."
             ),
         })
 
@@ -386,68 +404,133 @@ def evaluate_tiers(ctx: dict, year_st: dict,
     if (month not in SEASONAL_MONTHS
             and pb <= -OPPORTUNISTIC_DIP_PCT
             and days_since(year_st["last_opportunistic_date"], date) >= OPPORTUNISTIC_MIN_GAP_DAYS):
-        q_note = {
-            2: "Caution: Q2 -5% dips have mixed history — sometimes a genuine buying opportunity, sometimes the start of a longer decline.",
-            3: "Moderate signal — Q3 dips are historically middle-of-the-road.",
-            4: "Historically strong — Q4 dips usually recover as Asian physical demand picks up.",
-        }.get(q, "")
+        # Quarter-conditional playbook — different quarters have different histories
+        q_playbook = {
+            2: {  # Q2 — dangerous
+                "subject_tag": "MONITOR",
+                "action": "MONITOR — do not chase",
+                "size": "0-20% only if you have unallocated capital",
+                "confidence": "Low",
+                "why": ("Q2 -5% dips have mixed history — sometimes real buying "
+                        "opportunities, sometimes the start of a longer decline "
+                        "(Apr 2008 and Apr 2013 were both bear-market starts). "
+                        "If you already deployed via Tier 1 or 2 in Q1, stand down."),
+            },
+            3: {  # Q3 — middle of road
+                "subject_tag": "BUY selectively",
+                "action": "BUY selectively",
+                "size": "25-40% if you skipped Q1 or have dry powder",
+                "confidence": "Medium",
+                "why": ("Q3 -5% dips are historically middle-of-the-road — modest "
+                        "positive expected return, no strong signal either way. "
+                        "Reasonable catch-up entry if you missed the seasonal window."),
+            },
+            4: {  # Q4 — strong
+                "subject_tag": "BUY",
+                "action": "BUY at market",
+                "size": "40-60% of any remaining annual budget",
+                "confidence": "Medium-High",
+                "why": ("Q4 dips are historically strong — Asian physical demand "
+                        "kicks in through Q4 (Indian wedding season Oct-Dec, "
+                        "Chinese New Year positioning Dec-Jan) providing a "
+                        "mechanical bid. Even out-of-season Q4 dips often recover."),
+            },
+        }.get(q, {
+            "subject_tag": "review", "action": "REVIEW",
+            "size": "Use judgment", "confidence": "Unknown",
+            "why": "No historical playbook for this quarter."})
+
         alerts.append({
             "tier": "opportunistic",
-            "subject": f"gold: -{OPPORTUNISTIC_DIP_PCT:.0f}% dip (Q{q}, out of season)",
-            "headline": f"Opportunistic Q{q} dip",
+            "subject": f"gold: -{OPPORTUNISTIC_DIP_PCT:.0f}% dip Q{q} — {q_playbook['subject_tag']}",
+            "headline": f"Opportunistic Q{q} dip — {q_playbook['action']}",
             "detail": (
                 f"Gold pulled back {pb:.2f}% from its trailing 20-day high "
                 f"of ${ctx['roll_20d_high']:.0f} to today's close of "
                 f"${ctx['price']:.0f}. This is outside the primary Jan-Feb "
-                f"window, but historically -5% out-of-season dips beat "
-                f"waiting for the next seasonal window 58% of the time.\n\n"
-                f"{q_note}"
+                f"window. Historically, out-of-season -5% dips beat waiting "
+                f"for the next seasonal window in 58% of cases."
             ),
-            "action": (
-                "Weigh against your Q1 seasonal plan. If you have "
-                "unallocated capital and this dip fits your risk budget, "
-                "it's a defensible add. Not a strong-buy signal on its own."
+            "playbook_action": q_playbook["action"],
+            "playbook_size": q_playbook["size"],
+            "playbook_confidence": q_playbook["confidence"],
+            "playbook_why": q_playbook["why"],
+            "playbook_next": (
+                "If a MAJOR -10% dip follows within a few weeks, that will "
+                "fire the Major tier with quarter-specific framing."
             ),
         })
 
     # Tier 4 — Major dip (any time), quarter-conditional messaging
     if (pb <= -MAJOR_DIP_PCT
             and days_since(year_st["last_major_date"], date) >= MAJOR_MIN_GAP_DAYS):
-        q_frame = {
-            1: {"tag": "STRONG BUY",
-                "note": ("Historically Q1 -10% dips recovered in 2 of 3 events with "
-                         "a median +4.6% at 90 days. This is a rare event; treat as a "
-                         "high-conviction add if it fits your allocation.")},
-            2: {"tag": "WARNING",
-                "note": ("Historically Q2 -10% dips have been dangerous: the April 2008 "
-                         "and April 2013 events both marked the start of multi-year "
-                         "gold bear markets. Only 2 of 4 Q2 events recovered, and the "
-                         "failures were severe. Consider staying out or waiting for "
-                         "the trend to confirm before adding.")},
-            3: {"tag": "USE JUDGMENT",
-                "note": ("Small historical sample (2 events) with mixed outcomes. "
-                         "No strong statistical prior. Judge based on broader macro.")},
-            4: {"tag": "STRONG BUY",
-                "note": ("Historically Q4 -10% dips recovered in 4 of 4 events with "
-                         "a median +8.3% at 90 days. Asian physical demand typically "
-                         "kicks in through Q4, providing a mechanical bid. This is "
-                         "one of the most reliable buying setups in the strategy.")},
+        q_playbook = {
+            1: {
+                "tag": "STRONG BUY",
+                "action": "BUY aggressively",
+                "size": "75% at market, 25% held for possible follow-through",
+                "confidence": "High",
+                "why": ("Q1 -10% dips historically recovered in 2 of 3 events with "
+                        "a median +4.6% at 90 days. Combined with Q1 seasonal "
+                        "cheapness, this is one of the strongest signals the strategy "
+                        "produces. Rare event — take it when it comes."),
+                "next": ("Hold 25% dry powder for 2-3 weeks in case a follow-on "
+                         "-15%+ dip occurs, in which case add the balance."),
+            },
+            2: {
+                "tag": "WARNING — STAND DOWN",
+                "action": "STAND DOWN — do not buy",
+                "size": "0%",
+                "confidence": "High that NOT buying is correct",
+                "why": ("Q2 -10% dips have historically been dangerous. April 2008 "
+                        "and April 2013 both marked the start of multi-year gold "
+                        "bear markets. Only 2 of 4 Q2 events recovered, and the "
+                        "failures were severe (-30%+ additional drawdown). The "
+                        "safest play is to wait for the trend to confirm."),
+                "next": ("Watch for gold to reclaim its 200-day moving average "
+                         "before considering an add. Do not average down blindly."),
+            },
+            3: {
+                "tag": "USE JUDGMENT",
+                "action": "SMALL POSITION only if macro supports it",
+                "size": "20-30% conservative sizing",
+                "confidence": "Medium",
+                "why": ("Q3 -10% dips have a small historical sample (2 events) "
+                        "with mixed outcomes. No strong statistical prior. If "
+                        "broader macro (real yields falling, DXY weak, credit "
+                        "spreads calm) supports gold, a modest add is defensible."),
+                "next": ("If a Q4 MAJOR fires within a month, that's the higher-"
+                         "conviction moment to deploy more."),
+            },
+            4: {
+                "tag": "STRONG BUY",
+                "action": "BUY aggressively",
+                "size": "75% at market, 25% held for possible follow-through",
+                "confidence": "Very High",
+                "why": ("Q4 -10% dips have recovered in 4 of 4 historical events "
+                        "with a median +8.3% at 90 days. Asian physical demand "
+                        "(Indian weddings Oct-Dec, Chinese New Year Dec-Jan) "
+                        "typically provides a mechanical bid. This is the most "
+                        "reliable buying setup in the strategy."),
+                "next": ("Hold 25% dry powder for 2-3 weeks. If a further -15%+ "
+                         "dip occurs, add the balance — those are extremely rare."),
+            },
         }[q]
         alerts.append({
             "tier": "major",
-            "subject": f"gold: MAJOR -{MAJOR_DIP_PCT:.0f}% dip in Q{q} — {q_frame['tag']}",
-            "headline": f"Major dip in Q{q}: {q_frame['tag']}",
+            "subject": f"gold: MAJOR -{MAJOR_DIP_PCT:.0f}% dip Q{q} — {q_playbook['tag']}",
+            "headline": f"MAJOR dip in Q{q}: {q_playbook['action']}",
             "detail": (
                 f"Gold has fallen {pb:.2f}% from its trailing 20-day high "
                 f"of ${ctx['roll_20d_high']:.0f} to today's close of "
                 f"${ctx['price']:.0f}. Events of this magnitude fire roughly "
-                f"once a year on average.\n\n{q_frame['note']}"
+                f"once a year on average."
             ),
-            "action": (
-                "Q1/Q4 dips: consider a meaningful add if allocation "
-                "allows. Q2 dips: exercise caution. Q3 dips: use your own "
-                "read of the broader macro."
-            ),
+            "playbook_action": q_playbook["action"],
+            "playbook_size": q_playbook["size"],
+            "playbook_confidence": q_playbook["confidence"],
+            "playbook_why": q_playbook["why"],
+            "playbook_next": q_playbook["next"],
         })
 
     # Tier 5 — Predicted dip advance warning (conservative)
@@ -512,10 +595,35 @@ def evaluate_tiers(ctx: dict, year_st: dict,
                                                   std_table, confidence=0.80)
             ci_low_pb = (ci_low / high - 1) * 100
             ci_high_pb = (ci_high / high - 1) * 100
+            is_high_conv = ci_high_pb <= -thresh_pct
+
+            # Suggested limit-order target: place a buy order at the FORECAST
+            # price (not the deeper CI low), so if actual arrives above
+            # forecast we still catch it, and if it drops further we let
+            # the reactive tier handle it.
+            limit_target = forecast_price
+
+            if is_high_conv:
+                action = "PREPARE — place buy limit order"
+                size = "30-50% of your intended add for this signal"
+                confidence = "High (even the optimistic end of the CI crosses the threshold)"
+                why = (f"Every plausible outcome in the 80% confidence range would "
+                       f"still trip the {tag} threshold. This is a high-conviction "
+                       f"forecast; getting a limit order in place today lets you "
+                       f"catch the entry at your target instead of chasing.")
+            else:
+                action = "MONITOR — do not act preemptively"
+                size = "0% until reactive tier confirms"
+                confidence = "Low-to-medium (probabilistic warning)"
+                why = (f"The 80% confidence range spans both a {tag} dip AND no dip. "
+                       f"This is a heads-up that the model thinks a dip is likely, "
+                       f"not a confirmed signal. Wait for the reactive tier to "
+                       f"actually fire on real prices before buying.")
+
             alerts.append({
                 "tier": "predicted",
-                "subject": f"[PREDICTED] gold: {tag} dip expected in {horizon}d",
-                "headline": f"Forecast projects a {tag} dip in ~{horizon} day(s)",
+                "subject": f"[PREDICTED] gold: {tag} dip expected in {horizon}d — {action.split(' ')[0]}",
+                "headline": f"Forecast projects a {tag} dip in ~{horizon} day(s) — {action}",
                 "detail": (
                     f"Today: spot ${ctx['price']:.0f} · 20-day high ${high:.0f} · "
                     f"pullback {current_pb:.2f}%.\n\n"
@@ -527,16 +635,19 @@ def evaluate_tiers(ctx: dict, year_st: dict,
                     f"${ci_low:.0f} to ${ci_high:.0f} "
                     f"(±{(ci_high - forecast_price)/forecast_price*100:.1f}% around the "
                     f"point estimate). In pullback terms: {ci_low_pb:.2f}% to "
-                    f"{ci_high_pb:.2f}%. Even the optimistic end "
-                    f"({'still crosses' if ci_high_pb <= -thresh_pct else 'does not cross'}) "
-                    f"the {tag} threshold, so the projection is "
-                    f"{'high conviction' if ci_high_pb <= -thresh_pct else 'probabilistic'}."
+                    f"{ci_high_pb:.2f}%."
                 ),
-                "action": (
-                    "Consider positioning: check your allocation, prepare "
-                    "sizing decisions. Do not act preemptively on the "
-                    "prediction alone — wait for the reactive alert to "
-                    "confirm the dip has occurred, then buy at the real price."
+                "playbook_action": action,
+                "playbook_size": size,
+                "playbook_confidence": confidence,
+                "playbook_why": why,
+                "playbook_limit_target": (
+                    f"${limit_target:.0f}" if is_high_conv else None),
+                "playbook_next": (
+                    "If the reactive tier fires within a few days on actual "
+                    "prices, execute the balance of your position at market. "
+                    "If gold recovers instead, cancel the limit order — this "
+                    "was a false alarm and the reactive tiers will stay quiet."
                 ),
             })
 
@@ -549,6 +660,73 @@ def evaluate_tiers(ctx: dict, year_st: dict,
 
 def render_html(alert: dict, ctx: dict, recipient_name: str | None) -> str:
     greeting = f"Hello {recipient_name}," if recipient_name else "Hello,"
+
+    # Build the prominent playbook box if the alert carries prescriptive fields
+    playbook_html = ""
+    action = alert.get("playbook_action")
+    if action:
+        size = alert.get("playbook_size", "")
+        confidence = alert.get("playbook_confidence", "")
+        why = alert.get("playbook_why", "")
+        limit_target = alert.get("playbook_limit_target")
+        next_step = alert.get("playbook_next", "")
+
+        # Colored border by action type
+        action_upper = action.upper()
+        if "STAND DOWN" in action_upper or "DO NOT" in action_upper:
+            accent = "#C0392B"  # red
+        elif "BUY" in action_upper and "SELECTIVELY" not in action_upper:
+            accent = "#27AE60"  # green
+        elif "MONITOR" in action_upper or "PREPARE" in action_upper:
+            accent = "#E67E22"  # amber
+        else:
+            accent = "#1F4E79"  # blue
+
+        limit_row = ""
+        if limit_target:
+            limit_row = f"""
+      <div style="margin-top: 0.5rem;">
+        <span style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Suggested limit order</span>
+        <div style="font-size: 1.1rem; color: {accent}; font-weight: 500;">{limit_target}</div>
+      </div>"""
+
+        playbook_html = f"""
+  <div style="border: 2px solid {accent}; padding: 1.1rem 1.3rem; border-radius: 4px; margin: 1.5rem 0; background: #FDFDFD;">
+    <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.8px;">Playbook</div>
+    <div style="font-size: 1.5rem; color: {accent}; font-weight: 600; margin: 0.3rem 0 0.9rem;">{action}</div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem 1.2rem; margin-bottom: 0.9rem;">
+      <div>
+        <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Size</div>
+        <div style="font-size: 0.95rem; color: #34495E; font-weight: 500;">{size}</div>
+      </div>
+      <div>
+        <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Confidence</div>
+        <div style="font-size: 0.95rem; color: #34495E; font-weight: 500;">{confidence}</div>
+      </div>
+    </div>
+    {limit_row}
+
+    <div style="margin-top: 0.9rem; padding-top: 0.75rem; border-top: 1px solid #ECF0F1;">
+      <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Why this size / action</div>
+      <div style="font-size: 0.9rem; color: #34495E; margin-top: 0.25rem;">{why}</div>
+    </div>
+
+    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #ECF0F1;">
+      <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">What to watch next</div>
+      <div style="font-size: 0.9rem; color: #34495E; margin-top: 0.25rem;">{next_step}</div>
+    </div>
+  </div>"""
+    else:
+        # Legacy alerts (test-email etc) still have a simple action field
+        legacy_action = alert.get("action", "")
+        if legacy_action:
+            playbook_html = f"""
+  <div style="background: #F8F9FA; padding: 0.9rem 1.1rem; border-radius: 3px; margin: 1.25rem 0;">
+    <div style="text-transform: uppercase; font-size: 0.7rem; color: #7F8C8D; margin-bottom: 0.3rem;">Suggested framing</div>
+    <div style="font-size: 0.95rem; color: #34495E;">{legacy_action}</div>
+  </div>"""
+
     return f"""<!doctype html><html><body style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 640px; margin: 0 auto; color: #2C3E50; line-height: 1.55;">
   <div style="border-left: 4px solid #1F4E79; padding: 1.25rem 1.5rem; background: #F8F9FA;">
     <div style="text-transform: uppercase; font-size: 0.75rem; color: #7F8C8D; letter-spacing: 0.5px;">Gold Dip Alert · {ctx['date']}</div>
@@ -562,10 +740,7 @@ def render_html(alert: dict, ctx: dict, recipient_name: str | None) -> str:
 
   <p style="font-size: 0.95rem;">{alert['detail'].replace(chr(10) + chr(10), '</p><p style="font-size: 0.95rem;">')}</p>
 
-  <div style="background: #F8F9FA; padding: 0.9rem 1.1rem; border-radius: 3px; margin: 1.25rem 0;">
-    <div style="text-transform: uppercase; font-size: 0.7rem; color: #7F8C8D; margin-bottom: 0.3rem;">Suggested framing</div>
-    <div style="font-size: 0.95rem; color: #34495E;">{alert['action']}</div>
-  </div>
+  {playbook_html}
 
   <p style="color: #7F8C8D; font-size: 0.8rem; margin-top: 2rem; border-top: 1px solid #ECF0F1; padding-top: 0.8rem;">
     This alert is generated from statistical analysis of 21 years of gold-futures history.
