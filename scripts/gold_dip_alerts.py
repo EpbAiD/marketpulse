@@ -63,6 +63,28 @@ MAJOR_DIP_PCT = 10.0
 OPPORTUNISTIC_MIN_GAP_DAYS = 30
 MAJOR_MIN_GAP_DAYS = 30
 
+# ---------------- Predictive tier (Tier 5) ----------------
+# Uses MarketPulse's gold price forecast (if available locally) to predict
+# dips 1-5 days ahead. Optional — the tier silently skips if forecast data
+# is missing. Design principles:
+#   - Conservative: fire only when the bias-corrected MEAN forecast crosses
+#     a threshold (not the low end of the confidence band)
+#   - Only look 1-5 days out (longer horizons are too noisy: ~3.5% MAE at 10d)
+#   - Only fire if the projected pullback is DEEPER than today's actual pullback
+#     (otherwise it's not "predictive", it's just delayed reactive)
+#   - Cooldown of 5 days so we don't spam if the projection persists
+PREDICTED_MAX_HORIZON_DAYS = 5
+PREDICTED_MIN_GAP_DAYS = 5
+
+# Empirical bias per horizon (% over-forecast vs actual), computed from
+# 3 months of feature_validations. Positive = model tends to over-forecast,
+# so bias correction subtracts these percentages from the raw forecast.
+# Recalibrate periodically from BigQuery feature_validations if the drift
+# becomes meaningful.
+GOLD_FORECAST_BIAS_PCT_BY_HORIZON = {
+    1: 0.59, 2: 1.11, 3: 1.44, 4: 1.43, 5: 1.51,
+}
+
 
 # --------------------------------------------------------------------------
 # Data
@@ -78,6 +100,70 @@ def fetch_recent_gold() -> pd.DataFrame:
     df.columns = ["ds", "price"]
     df["ds"] = pd.to_datetime(df["ds"])
     return df.sort_values("ds").reset_index(drop=True)
+
+
+def load_gold_forecast() -> list[dict] | None:
+    """Load MarketPulse's most recent GOLD forecast if present.
+
+    Reads outputs/inference/raw_forecasts_*.parquet (produced by the daily
+    MarketPulse pipeline). Returns a list of {horizon_days, forecast_value}
+    sorted by horizon (1..N), or None if no forecast is available.
+
+    This is the one place the gold alert system touches MarketPulse. It's a
+    one-way read — if the file is missing or stale, the predictive tier
+    silently skips and the reactive tiers keep working as normal.
+    """
+    fc_dir = BASE_DIR / "outputs" / "inference"
+    if not fc_dir.exists():
+        return None
+    files = sorted(fc_dir.glob("raw_forecasts_*.parquet"),
+                   key=lambda p: p.stat().st_mtime, reverse=True)
+    if not files:
+        return None
+    try:
+        df = pd.read_parquet(files[0])
+    except Exception:
+        return None
+    if "feature" not in df.columns or "ds" not in df.columns \
+            or "forecast_value" not in df.columns:
+        return None
+    g = df[df["feature"] == "GOLD"].copy()
+    if len(g) == 0:
+        return None
+    g["ds"] = pd.to_datetime(g["ds"])
+    g = g.sort_values("ds").reset_index(drop=True)
+
+    # Skip stale forecasts (>7 days old) — a stale forecast is worse than none.
+    import re
+    m = re.search(r"raw_forecasts_(\d{8})", files[0].name)
+    if m:
+        fc_date = datetime.strptime(m.group(1), "%Y%m%d").date()
+        age = (datetime.utcnow().date() - fc_date).days
+        if age > 7:
+            return None
+
+    # Filter out zero-value contamination and only keep future days
+    today = pd.Timestamp(datetime.utcnow().date())
+    g = g[(g["forecast_value"] > 100) & (g["ds"] > today)]
+    if len(g) == 0:
+        return None
+
+    out = []
+    for i, row in g.reset_index(drop=True).iterrows():
+        horizon = (row["ds"].date() - datetime.utcnow().date()).days
+        if 1 <= horizon <= PREDICTED_MAX_HORIZON_DAYS:
+            out.append({
+                "horizon_days": horizon,
+                "date": row["ds"].date().isoformat(),
+                "forecast_value": float(row["forecast_value"]),
+            })
+    return out or None
+
+
+def bias_correct(raw_forecast: float, horizon_days: int) -> float:
+    """Subtract empirical horizon-specific bias (in %) from the raw forecast."""
+    bias_pct = GOLD_FORECAST_BIAS_PCT_BY_HORIZON.get(horizon_days, 1.0)
+    return raw_forecast * (1 - bias_pct / 100.0)
 
 
 def compute_current_pullback(df: pd.DataFrame) -> dict:
@@ -123,7 +209,10 @@ def year_state(state: dict, year: int) -> dict:
             "seasonal_deadline_fired": False,
             "last_opportunistic_date": None,
             "last_major_date": None,
+            "last_predicted_date": None,
         }
+    # Backfill new keys on old state files so upgrades don't KeyError
+    state[key].setdefault("last_predicted_date", None)
     return state[key]
 
 
@@ -139,8 +228,14 @@ def days_since(state_date_str: str | None, today_iso: str) -> int:
 # Tier evaluation
 # --------------------------------------------------------------------------
 
-def evaluate_tiers(ctx: dict, year_st: dict) -> list[dict]:
-    """Return the list of alerts that should fire today (0-2 typically)."""
+def evaluate_tiers(ctx: dict, year_st: dict,
+                   forecast: list[dict] | None = None) -> list[dict]:
+    """Return the list of alerts that should fire today (0-3 typically).
+
+    `forecast`: optional MarketPulse gold forecast list from load_gold_forecast().
+    When provided, Tier 5 (PREDICTED DIP) is evaluated in addition to the
+    four reactive tiers. When None, Tier 5 silently skips.
+    """
     alerts = []
     month = ctx["month"]
     q = ctx["quarter"]
@@ -260,6 +355,67 @@ def evaluate_tiers(ctx: dict, year_st: dict) -> list[dict]:
                 "read of the broader macro."
             ),
         })
+
+    # Tier 5 — Predicted dip advance warning (conservative)
+    # Fires only when the bias-corrected mean forecast for one of the next
+    # 1-5 days projects a pullback that:
+    #   (a) crosses one of the reactive tier thresholds
+    #   (b) is DEEPER than today's actual pullback (otherwise it's not
+    #       genuinely predictive — just reactive with delay)
+    #   (c) hasn't been alerted on within the last PREDICTED_MIN_GAP_DAYS
+    if (forecast is not None
+            and days_since(year_st.get("last_predicted_date"), date) >= PREDICTED_MIN_GAP_DAYS):
+        high = ctx["roll_20d_high"]
+        current_pb = pb
+        best = None  # (projected_pb, horizon, corrected_price, tier_tag)
+        for f in forecast:
+            corrected = bias_correct(f["forecast_value"], f["horizon_days"])
+            proj_pb = (corrected / high - 1) * 100
+            # Must be deeper than today AND cross a threshold
+            if proj_pb >= current_pb:
+                continue
+            if proj_pb <= -MAJOR_DIP_PCT:
+                tag = "MAJOR"
+                thresh_pct = MAJOR_DIP_PCT
+            elif proj_pb <= -OPPORTUNISTIC_DIP_PCT:
+                tag = "OPPORTUNISTIC"
+                thresh_pct = OPPORTUNISTIC_DIP_PCT
+            elif proj_pb <= -SEASONAL_DIP_PCT and month in SEASONAL_MONTHS:
+                tag = "SEASONAL"
+                thresh_pct = SEASONAL_DIP_PCT
+            else:
+                continue
+            # Keep the deepest / soonest projection
+            if best is None or proj_pb < best[0]:
+                best = (proj_pb, f["horizon_days"], corrected, tag, thresh_pct, f["date"])
+
+        if best is not None:
+            proj_pb, horizon, corrected_price, tag, thresh_pct, proj_date = best
+            alerts.append({
+                "tier": "predicted",
+                "subject": f"[PREDICTED] gold: {tag} dip expected in {horizon}d",
+                "headline": f"Forecast projects a {tag} dip in ~{horizon} day(s)",
+                "detail": (
+                    f"Today: spot ${ctx['price']:.0f} · 20-day high ${high:.0f} · "
+                    f"pullback {current_pb:.2f}%.\n\n"
+                    f"The forecasting model (bias-corrected) projects gold at "
+                    f"~${corrected_price:.0f} on {proj_date} (in {horizon} trading "
+                    f"day(s)). If that comes in as forecast, the pullback would "
+                    f"deepen to {proj_pb:.2f}% — crossing the {tag} threshold "
+                    f"of -{thresh_pct:.0f}%.\n\n"
+                    f"This is a probabilistic advance warning, not a confirmed "
+                    f"event. Next-day forecast accuracy is ~1.7%; at horizon "
+                    f"{horizon} it's roughly {1.5 + 0.4*horizon:.1f}%. Treat this "
+                    f"as a heads-up to have capital ready and monitor the reactive "
+                    f"alert that would follow if the dip actually materializes."
+                ),
+                "action": (
+                    "Consider positioning: check your allocation, prepare "
+                    "sizing decisions. Do not act preemptively on the "
+                    "prediction alone — wait for the reactive alert to "
+                    "confirm the dip has occurred, then buy at the real price."
+                ),
+            })
 
     return alerts
 
@@ -398,11 +554,19 @@ def main() -> int:
     print(f"Current gold: ${ctx['price']:.2f} on {ctx['date']} "
           f"(pullback {ctx['pullback_pct']:.2f}% from 20d high ${ctx['roll_20d_high']:.0f}) · Q{ctx['quarter']}")
 
+    # Optional MarketPulse forecast for Tier 5 (predictive)
+    forecast = load_gold_forecast()
+    if forecast:
+        print(f"MarketPulse gold forecast loaded: {len(forecast)} horizon days available "
+              f"(range: {forecast[0]['date']} .. {forecast[-1]['date']})")
+    else:
+        print("MarketPulse gold forecast not available — predictive tier will be skipped.")
+
     state = load_state()
     yr = datetime.fromisoformat(ctx["date"]).year
     yr_st = year_state(state, yr)
 
-    alerts = evaluate_tiers(ctx, yr_st)
+    alerts = evaluate_tiers(ctx, yr_st, forecast=forecast)
 
     if not alerts:
         print("No alerts triggered today.")
@@ -436,7 +600,8 @@ def main() -> int:
         if not email:
             continue
         name = r.get("name")
-        wanted_tiers = set(r.get("tiers") or ["seasonal", "deadline", "opportunistic", "major"])
+        wanted_tiers = set(r.get("tiers") or
+                           ["seasonal", "deadline", "opportunistic", "major", "predicted"])
         for a in alerts:
             if a["tier"] not in wanted_tiers:
                 continue
@@ -458,6 +623,8 @@ def main() -> int:
             yr_st["last_opportunistic_date"] = ctx["date"]
         elif a["tier"] == "major":
             yr_st["last_major_date"] = ctx["date"]
+        elif a["tier"] == "predicted":
+            yr_st["last_predicted_date"] = ctx["date"]
     save_state(state)
     print(f"State updated → {STATE_FILE}")
 

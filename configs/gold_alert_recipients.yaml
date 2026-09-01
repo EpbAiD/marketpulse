@@ -9,9 +9,10 @@
 #   deadline      — Feb 28 reminder if the seasonal alert never fired
 #   opportunistic — Mar-Dec -5% dip (out-of-season buying opportunity)
 #   major         — -10% dip any time (quarter-conditional strong/warning)
-# Omitting `tiers` means the recipient gets all four.
+#   predicted     — advance warning from MarketPulse forecast (1-5 days ahead)
+# Omitting `tiers` means the recipient gets all five.
 
 recipients:
   - name: Eeshan Bhanap
     email: eeshan1012@gmail.com
-    # tiers: [seasonal, deadline, opportunistic, major]   # default = all
+    # tiers: [seasonal, deadline, opportunistic, major, predicted]   # default = all
