@@ -76,14 +76,20 @@ MAJOR_MIN_GAP_DAYS = 30
 PREDICTED_MAX_HORIZON_DAYS = 5
 PREDICTED_MIN_GAP_DAYS = 5
 
-# Empirical bias per horizon (% over-forecast vs actual), computed from
-# 3 months of feature_validations. Positive = model tends to over-forecast,
-# so bias correction subtracts these percentages from the raw forecast.
-# Recalibrate periodically from BigQuery feature_validations if the drift
-# becomes meaningful.
-GOLD_FORECAST_BIAS_PCT_BY_HORIZON = {
-    1: 0.59, 2: 1.11, 3: 1.44, 4: 1.43, 5: 1.51,
+# Bias correction values (%) per horizon. These are the FALLBACK values
+# used when we don't have enough recent forecast history to compute a
+# rolling median. In normal operation, compute_recent_bias_pct() replaces
+# these with a data-driven correction from the last 30 days.
+GOLD_FORECAST_BIAS_FALLBACK_PCT_BY_HORIZON = {
+    1: 0.35, 2: 0.35, 3: 0.30, 4: 0.20, 5: 0.05,
 }
+
+# Forecast confidence gate: if the Day+1 bias-corrected forecast differs
+# from current spot by more than this %, the model hasn't absorbed a
+# recent shock and Tier 5 should skip. Bias correction fixes systematic
+# drift but can't fix one-off shocks.
+FORECAST_CONFIDENCE_GAP_PCT = 3.0
+BIAS_LOOKBACK_DAYS = 30
 
 
 # --------------------------------------------------------------------------
@@ -160,9 +166,86 @@ def load_gold_forecast() -> list[dict] | None:
     return out or None
 
 
-def bias_correct(raw_forecast: float, horizon_days: int) -> float:
-    """Subtract empirical horizon-specific bias (in %) from the raw forecast."""
-    bias_pct = GOLD_FORECAST_BIAS_PCT_BY_HORIZON.get(horizon_days, 1.0)
+def compute_recent_bias_pct() -> dict[int, float]:
+    """Compute the median forecast error (%) per horizon from the last
+    BIAS_LOOKBACK_DAYS of historical forecasts vs actual gold closes.
+
+    Positive value = forecast systematically over-shoots actual.
+    Returns {horizon_days: median_pct_error}. Falls back to hardcoded
+    values when history is too thin to compute a stable median.
+    """
+    import glob, re
+    files = sorted(glob.glob(str(BASE_DIR / "outputs" / "inference"
+                                  / "raw_forecasts_*.parquet")))
+    if len(files) < 10:
+        return dict(GOLD_FORECAST_BIAS_FALLBACK_PCT_BY_HORIZON)
+
+    cutoff = datetime.utcnow().date() - pd.Timedelta(days=BIAS_LOOKBACK_DAYS).to_pytimedelta()
+    rows = []
+    for f in files:
+        m = re.search(r"raw_forecasts_(\d{8})", f)
+        if not m:
+            continue
+        issue = datetime.strptime(m.group(1), "%Y%m%d").date()
+        if issue < cutoff:
+            continue
+        try:
+            df = pd.read_parquet(f)
+        except Exception:
+            continue
+        g = df[df["feature"] == "GOLD"].copy()
+        if len(g) == 0:
+            continue
+        g["ds"] = pd.to_datetime(g["ds"])
+        g = g[g["forecast_value"] > 100]
+        g["horizon"] = (g["ds"].dt.date - issue).apply(lambda x: x.days)
+        g = g[(g["horizon"] >= 1) & (g["horizon"] <= PREDICTED_MAX_HORIZON_DAYS)]
+        rows.append(g[["ds", "horizon", "forecast_value"]])
+
+    if not rows:
+        return dict(GOLD_FORECAST_BIAS_FALLBACK_PCT_BY_HORIZON)
+
+    fc = pd.concat(rows, ignore_index=True)
+
+    # Fetch enough actuals to cover all forecast target dates
+    start = fc["ds"].min().strftime("%Y-%m-%d")
+    end = (fc["ds"].max() + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+    try:
+        actuals = yf.download(GOLD_TICKER, start=start, end=end,
+                              progress=False, auto_adjust=True)
+    except Exception:
+        return dict(GOLD_FORECAST_BIAS_FALLBACK_PCT_BY_HORIZON)
+    if isinstance(actuals.columns, pd.MultiIndex):
+        actuals.columns = [c[0] if isinstance(c, tuple) else c for c in actuals.columns]
+    actuals = (actuals.reset_index()[["Date", "Close"]]
+               .rename(columns={"Date": "ds", "Close": "actual"}))
+    actuals["ds"] = pd.to_datetime(actuals["ds"])
+    merged = fc.merge(actuals, on="ds", how="inner")
+    if len(merged) == 0:
+        return dict(GOLD_FORECAST_BIAS_FALLBACK_PCT_BY_HORIZON)
+    merged["error_pct"] = (merged["forecast_value"] / merged["actual"] - 1) * 100
+
+    bias = {}
+    for h in range(1, PREDICTED_MAX_HORIZON_DAYS + 1):
+        sub = merged[merged["horizon"] == h]
+        if len(sub) < 3:
+            bias[h] = GOLD_FORECAST_BIAS_FALLBACK_PCT_BY_HORIZON.get(h, 1.0)
+        else:
+            bias[h] = float(sub["error_pct"].median())
+    return bias
+
+
+def bias_correct(raw_forecast: float, horizon_days: int,
+                 bias_table: dict[int, float] | None = None) -> float:
+    """Subtract empirical horizon-specific bias (%) from the raw forecast.
+
+    Uses the provided bias_table when given (e.g., freshly computed from
+    recent history), otherwise falls back to the hardcoded table.
+    """
+    if bias_table is None:
+        bias_table = GOLD_FORECAST_BIAS_FALLBACK_PCT_BY_HORIZON
+    bias_pct = bias_table.get(horizon_days,
+                              GOLD_FORECAST_BIAS_FALLBACK_PCT_BY_HORIZON.get(horizon_days, 1.0))
     return raw_forecast * (1 - bias_pct / 100.0)
 
 
@@ -229,12 +312,17 @@ def days_since(state_date_str: str | None, today_iso: str) -> int:
 # --------------------------------------------------------------------------
 
 def evaluate_tiers(ctx: dict, year_st: dict,
-                   forecast: list[dict] | None = None) -> list[dict]:
+                   forecast: list[dict] | None = None,
+                   bias_table: dict[int, float] | None = None) -> list[dict]:
     """Return the list of alerts that should fire today (0-3 typically).
 
     `forecast`: optional MarketPulse gold forecast list from load_gold_forecast().
     When provided, Tier 5 (PREDICTED DIP) is evaluated in addition to the
     four reactive tiers. When None, Tier 5 silently skips.
+
+    `bias_table`: optional dict {horizon_days: pct} to override the hardcoded
+    bias correction values. Passed in by main() using a fresh 30-day rolling
+    median from historical forecasts vs actuals.
     """
     alerts = []
     month = ctx["month"]
@@ -363,13 +451,30 @@ def evaluate_tiers(ctx: dict, year_st: dict,
     #   (b) is DEEPER than today's actual pullback (otherwise it's not
     #       genuinely predictive — just reactive with delay)
     #   (c) hasn't been alerted on within the last PREDICTED_MIN_GAP_DAYS
+    #   (d) the model's Day+1 forecast is within FORECAST_CONFIDENCE_GAP_PCT
+    #       of current spot — otherwise the model hasn't absorbed a recent
+    #       shock and its projections are untrustworthy
     if (forecast is not None
             and days_since(year_st.get("last_predicted_date"), date) >= PREDICTED_MIN_GAP_DAYS):
+        # Forecast-confidence gate: is the model close enough to current spot
+        # for its projections to be trustworthy?
+        day1 = next((f for f in forecast if f["horizon_days"] == 1), None)
+        if day1 is not None:
+            day1_corrected = bias_correct(day1["forecast_value"], 1, bias_table)
+            confidence_gap_pct = abs(day1_corrected / ctx["price"] - 1) * 100
+        else:
+            confidence_gap_pct = 0.0
+        if confidence_gap_pct > FORECAST_CONFIDENCE_GAP_PCT:
+            # Skip Tier 5 — the model is out of sync with current spot; its
+            # projections aren't reliable enough to base an advance-warning
+            # alert on. Reactive tiers keep working.
+            return alerts
+
         high = ctx["roll_20d_high"]
         current_pb = pb
         best = None  # (projected_pb, horizon, corrected_price, tier_tag)
         for f in forecast:
-            corrected = bias_correct(f["forecast_value"], f["horizon_days"])
+            corrected = bias_correct(f["forecast_value"], f["horizon_days"], bias_table)
             proj_pb = (corrected / high - 1) * 100
             # Must be deeper than today AND cross a threshold
             if proj_pb >= current_pb:
@@ -562,11 +667,20 @@ def main() -> int:
     else:
         print("MarketPulse gold forecast not available — predictive tier will be skipped.")
 
+    # Compute fresh bias correction from the last 30 days of forecasts vs actuals.
+    # This replaces the stale hardcoded values with a rolling median that
+    # adapts to how the model has actually been behaving lately.
+    bias_table = None
+    if forecast is not None:
+        bias_table = compute_recent_bias_pct()
+        print(f"Bias correction (from last {BIAS_LOOKBACK_DAYS}d): "
+              + " ".join(f"D+{h}={v:+.2f}%" for h, v in sorted(bias_table.items())))
+
     state = load_state()
     yr = datetime.fromisoformat(ctx["date"]).year
     yr_st = year_state(state, yr)
 
-    alerts = evaluate_tiers(ctx, yr_st, forecast=forecast)
+    alerts = evaluate_tiers(ctx, yr_st, forecast=forecast, bias_table=bias_table)
 
     if not alerts:
         print("No alerts triggered today.")
