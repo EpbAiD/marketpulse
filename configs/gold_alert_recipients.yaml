@@ -1,0 +1,17 @@
+# Gold Dip Alert — Recipient List
+# ----------------------------------
+# Every entry below receives every alert this system fires.
+# To add someone: append another entry under `recipients:` — no code change
+# needed. Name is optional (used in the email greeting when present).
+#
+# Optional per-recipient `tiers` filter:
+#   seasonal      — Jan-Feb -3% dip trigger (the primary "buy now" signal)
+#   deadline      — Feb 28 reminder if the seasonal alert never fired
+#   opportunistic — Mar-Dec -5% dip (out-of-season buying opportunity)
+#   major         — -10% dip any time (quarter-conditional strong/warning)
+# Omitting `tiers` means the recipient gets all four.
+
+recipients:
+  - name: Eeshan Bhanap
+    email: eeshan1012@gmail.com
+    # tiers: [seasonal, deadline, opportunistic, major]   # default = all
