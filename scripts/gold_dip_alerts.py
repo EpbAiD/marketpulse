@@ -592,9 +592,18 @@ def send_email(smtp_host: str, smtp_port: int, sender: str, password: str,
 # --------------------------------------------------------------------------
 
 def _run_test_email() -> int:
-    """Send a canned test alert to every recipient. Doesn't touch state, doesn't
-    look at market data. Used to verify SMTP + secrets work before waiting for
-    a real dip."""
+    """Send synthetic sample alerts to every recipient so they can see what
+    real production alerts will look like — including the Tier 5 predictive
+    alert with its confidence-interval framing.
+
+    Sends two emails per recipient:
+      1. A canned delivery-test alert
+      2. A synthetic Tier 5 predictive alert built with realistic numbers,
+         so recipients see the CI + auto-conviction classification format
+         they'll get on real predicted dips.
+
+    Doesn't touch state or evaluate real market conditions.
+    """
     with open(RECIPIENTS_FILE) as f:
         cfg = yaml.safe_load(f)
     recipients = cfg.get("recipients", [])
@@ -610,42 +619,98 @@ def _run_test_email() -> int:
 
     smtp_host = os.environ.get("GMAIL_SMTP_HOST", "smtp.gmail.com")
     smtp_port = int(os.environ.get("GMAIL_SMTP_PORT", "465"))
+    today = datetime.utcnow().date().isoformat()
 
-    # Canned "test alert" using the same rendering pipeline as real alerts,
-    # so recipients see exactly the visual style they'll get in production.
-    test_alert = {
+    # Alert 1: canned delivery-test
+    delivery_test = {
         "tier": "test",
-        "subject": "gold: test alert (delivery check)",
+        "subject": "gold: test alert #1/2 — delivery check",
         "headline": "Delivery test — you can ignore",
         "detail": (
-            "This is a one-time test of the Gold Dip Alert system. If you "
-            "received this, delivery is wired up correctly.\n\n"
-            "You'll only receive real alerts when historically-validated "
-            "buying conditions are met — roughly 5 to 6 emails per year."
+            "This is a one-time delivery test. Alert #2 (arriving next) "
+            "is a synthetic sample of the new Tier 5 predictive-dip alert "
+            "with confidence-interval framing, so you can see the format "
+            "before any real one fires."
         ),
-        "action": "No action needed. This confirms the pipeline works.",
+        "action": "No action needed. Confirms the pipeline works.",
     }
-    test_ctx = {
-        "date": datetime.utcnow().date().isoformat(),
-        "price": 0.0, "roll_20d_high": 0.0,
-        "pullback_pct": 0.0, "quarter": 0, "month": 0,
-    }
+    zero_ctx = {"date": today, "price": 0.0, "roll_20d_high": 0.0,
+                "pullback_pct": 0.0, "quarter": 0, "month": 0}
+
+    # Alert 2: synthetic Tier 5 with realistic numbers. Uses the SAME
+    # evaluate_tiers() logic that runs in production — so what recipients
+    # see is exactly the real alert format, not a hand-written mock.
+    try:
+        df = fetch_recent_gold()
+        ctx = compute_current_pullback(df)
+    except Exception:
+        # Fallback: hardcoded realistic context
+        ctx = {"date": today, "price": 4481.0, "roll_20d_high": 4641.0,
+               "pullback_pct": -3.44, "quarter": 3, "month": 9}
+    ctx["date"] = today
+    ctx["quarter"] = 3  # force Q3 so the synthetic alert framing makes sense
+
+    try:
+        std_table = compute_recent_error_stats()
+    except Exception:
+        std_table = dict(GOLD_FORECAST_STD_FALLBACK_BY_HORIZON)
+
+    # Force a synthetic forecast that will trigger Tier 5 OPPORTUNISTIC:
+    # Day+1 close to spot (passes confidence gate), Day+3 projects a -6% dip
+    # from the 20d high.
+    synth_forecast = [
+        {"horizon_days": 1, "date": today,
+         "forecast_value": ctx["price"] * 1.002},   # ~0.2% off spot — passes gate
+        {"horizon_days": 3, "date": today,
+         "forecast_value": ctx["roll_20d_high"] * 0.937},  # -6.3% pullback
+    ]
+    empty_yr_st = {"seasonal_buy_fired": True,  # suppress Tier 1
+                   "seasonal_deadline_fired": False,
+                   "last_opportunistic_date": None,
+                   "last_major_date": None,
+                   "last_predicted_date": None}
+    real_tier5 = evaluate_tiers(ctx, empty_yr_st, forecast=synth_forecast,
+                                std_table=std_table)
+    # Filter to just the Tier 5 alert and relabel as a test
+    sample_predicted = None
+    for a in real_tier5:
+        if a["tier"] == "predicted":
+            sample_predicted = {
+                **a,
+                "subject": "gold: test alert #2/2 — sample predictive-tier alert",
+                "headline": "SAMPLE: " + a["headline"],
+                "detail": (
+                    "This is a SYNTHETIC test alert showing the format of a "
+                    "real predictive-tier email. The numbers below are real "
+                    "current market data with a fabricated forecast that "
+                    "would trigger the OPPORTUNISTIC threshold.\n\n"
+                    + a["detail"]
+                ),
+            }
+            break
+
+    alerts_to_send = [delivery_test]
+    if sample_predicted:
+        alerts_to_send.append(sample_predicted)
 
     sent, failed = 0, 0
     for r in recipients:
         email = r.get("email")
         if not email:
             continue
-        try:
-            send_email(smtp_host, smtp_port, sender, password,
-                       email, test_alert["subject"],
-                       render_html(test_alert, test_ctx, r.get("name")))
-            print(f"  sent test -> {email}")
-            sent += 1
-        except Exception as e:
-            print(f"  FAILED test -> {email}: {type(e).__name__}: {e}")
-            failed += 1
-    print(f"\nTest delivery: {sent} sent, {failed} failed.")
+        for alert in alerts_to_send:
+            ctx_for_alert = zero_ctx if alert["tier"] == "test" else ctx
+            try:
+                send_email(smtp_host, smtp_port, sender, password,
+                           email, alert["subject"],
+                           render_html(alert, ctx_for_alert, r.get("name")))
+                print(f"  sent [{alert['tier']}] -> {email}")
+                sent += 1
+            except Exception as e:
+                print(f"  FAILED [{alert['tier']}] -> {email}: {type(e).__name__}: {e}")
+                failed += 1
+    print(f"\nTest delivery: {sent} sent, {failed} failed "
+          f"({len(alerts_to_send)} emails per recipient).")
     return 0 if failed == 0 else 1
 
 
