@@ -52,52 +52,54 @@ STATE_FILE = BASE_DIR / "outputs" / "alerts" / "pm_basket_state.json"
 GOLD_TICKER = "GC=F"
 SILVER_TICKER = "SI=F"
 
-# Tier definitions: (name, gold_threshold_pct, silver_threshold_pct, min_gap_days)
+# Tier definitions in plain language.
 TIERS = [
     {
         "name": "standard",
         "g_thresh": 3.0, "s_thresh": 6.0, "min_gap": 30,
-        "subject_tag": "coordinated dip",
-        "action": "BUY basket (both metals)",
-        "size": "40% of intended precious-metals allocation (60% gold / 40% silver split)",
+        "subject_tag": "both metals dropped",
+        "action": "BUY both gold and silver",
+        "size": "About 40% of what you planned to spend on precious metals this year (split it 60% gold, 40% silver)",
         "confidence": "Medium",
-        "odds": ("~65% of past correlated -3%/-6% dips were positive at 90d "
-                 "(basket avg return) · median gain +4.0% · N = 133 events over 22y"),
-        "why": ("Both gold and silver dipping together typically means a "
-                "macro-driven pullback (dollar strength, real yields spike) "
-                "affecting the entire precious-metals complex. Buying both "
-                "captures diversified exposure — silver's higher volatility "
-                "amplifies the eventual recovery."),
+        "odds": ("This has happened 133 times in the last 22 years. About 65 "
+                 "out of every 100 times, buying here was profitable within "
+                 "3 months. Typical gain: 4% up."),
+        "why": ("When both gold AND silver drop at the same time, it usually "
+                "means the whole precious-metals market is on sale — often "
+                "because the dollar strengthened or interest rates spiked. "
+                "Buying both spreads your risk. Silver tends to bounce back "
+                "harder than gold when things recover."),
     },
     {
         "name": "strong",
         "g_thresh": 5.0, "s_thresh": 10.0, "min_gap": 45,
-        "subject_tag": "STRONG coordinated dip",
-        "action": "BUY basket aggressively",
-        "size": "60-70% of intended precious-metals allocation (60/40 gold/silver)",
+        "subject_tag": "both metals dropped a lot",
+        "action": "BUY both gold and silver — a larger amount",
+        "size": "About 60-70% of what you planned to spend on precious metals this year (split 60% gold, 40% silver)",
         "confidence": "Medium-High",
-        "odds": ("~64% of past -5%/-10% coordinated dips were positive at 90d · "
-                 "median +5.2% · silver's deeper pullback provides amplified "
-                 "recovery leverage · N = 64 events over 22y"),
-        "why": ("Silver at -10% while gold at -5% is a classic setup: silver "
-                "overshoots on the way down and typically snaps back harder "
-                "when the macro pressure eases. If you hold both metals, this "
-                "is a moment to size up in silver specifically."),
+        "odds": ("This has happened 64 times in the last 22 years. About 64 "
+                 "out of every 100 times, buying here was profitable within "
+                 "3 months. Typical gain: 5% up."),
+        "why": ("Silver has dropped twice as much as gold — that's a classic "
+                "setup where silver has been oversold and often bounces back "
+                "faster and harder than gold. Good time to buy both, and "
+                "especially good time to weight a bit more toward silver."),
     },
     {
         "name": "major",
         "g_thresh": 10.0, "s_thresh": 20.0, "min_gap": 90,
-        "subject_tag": "MAJOR crisis-level basket dip",
-        "action": "BUY basket — high conviction (rare event)",
-        "size": "80-100% of any remaining precious-metals budget",
-        "confidence": "High",
-        "odds": ("Fires ~0.5x/year historically (2020 COVID, 2013 gold crash "
-                 "recovery, 2008 crisis, etc.) · hit rate at 90d 65-70% · "
-                 "when it works, median gain 8-15% · N = 13 events over 22y"),
-        "why": ("Coordinated -10%/-20% dips are rare and typically happen "
-                "during crisis liquidation (forced selling of liquid assets). "
-                "Historically these have marked buying opportunities of "
-                "the precious-metals complex as a whole."),
+        "subject_tag": "RARE — both metals had a huge drop",
+        "action": "BUY both — this is a rare opportunity",
+        "size": "About 80-100% of any precious-metals budget you have left this year",
+        "confidence": "High — rare and historically strong",
+        "odds": ("Only 13 times in the last 22 years. About 65-70 out of every "
+                 "100 times, buying was profitable within 3 months. When it "
+                 "worked, typical gain: 8-15% up. Examples: COVID crash 2020, "
+                 "the big gold sell-off in 2013, and the 2008 financial crisis."),
+        "why": ("A big drop in both gold AND silver at the same time is rare "
+                "and usually happens during panic selling. Historically, these "
+                "moments have been some of the best buying opportunities for "
+                "the whole precious-metals market."),
     },
 ]
 
@@ -176,17 +178,28 @@ def evaluate_basket(gold_ctx: dict, silver_ctx: dict, state: dict) -> list[dict]
         if days_since(state.get(last_fire_key), date) < tier["min_gap"]:
             continue
 
+        q_name = {1: "January-March", 2: "April-June",
+                  3: "July-September", 4: "October-December"}.get(quarter, "")
+        q_note = ({
+            1: "This is happening during the historically cheap months for gold — an especially good time.",
+            4: "This is happening during the highest-demand months for gold (Indian weddings, Chinese New Year buying) — prices usually recover.",
+            2: "This is happening in April-June, which has historically been a mixed period. Be a bit more careful than usual.",
+            3: "This is happening in July-September, which has an average track record.",
+        }).get(quarter, "")
+
         alerts.append({
             "tier": tier["name"],
-            "subject": f"precious metals: {tier['subject_tag']} — {tier['action'].split(' ')[0]}",
-            "headline": f"Coordinated {tier['name'].upper()} basket dip — {tier['action']}",
+            "subject": f"gold + silver: {tier['subject_tag']}",
+            "headline": f"Both gold AND silver dropped — {tier['action']}",
             "detail": (
-                f"Both metals in coordinated pullback from 20-day highs:\n\n"
-                f"  Gold:   ${gold_ctx['price']:.2f} (down {gold_ctx['pullback_pct']:.2f}% "
-                f"from 20d high ${gold_ctx['roll_20d_high']:.2f}) · threshold -{tier['g_thresh']:.0f}%\n"
-                f"  Silver: ${silver_ctx['price']:.2f} (down {silver_ctx['pullback_pct']:.2f}% "
-                f"from 20d high ${silver_ctx['roll_20d_high']:.2f}) · threshold -{tier['s_thresh']:.0f}%\n\n"
-                f"Q{quarter} context: {'Q1 seasonal + basket dip is the strongest historical setup for precious-metals accumulation.' if quarter == 1 else ('Q4 physical demand typically provides a bid.' if quarter == 4 else 'Out-of-season dip — treat as opportunistic.')}"
+                f"Both gold and silver have dropped at the same time:\n\n"
+                f"  Gold today: ${gold_ctx['price']:.2f} — down "
+                f"{abs(gold_ctx['pullback_pct']):.1f}% from its recent 20-day peak "
+                f"of ${gold_ctx['roll_20d_high']:.2f}\n\n"
+                f"  Silver today: ${silver_ctx['price']:.2f} — down "
+                f"{abs(silver_ctx['pullback_pct']):.1f}% from its recent 20-day peak "
+                f"of ${silver_ctx['roll_20d_high']:.2f}\n\n"
+                f"Time of year: {q_name}. {q_note}"
             ),
             "playbook_action": tier["action"],
             "playbook_size": tier["size"],
@@ -194,9 +207,10 @@ def evaluate_basket(gold_ctx: dict, silver_ctx: dict, state: dict) -> list[dict]
             "playbook_odds": tier["odds"],
             "playbook_why": tier["why"],
             "playbook_next": (
-                "If either metal fires an even deeper single-metal alert "
-                "(from the gold-only system), take that as a second signal "
-                "to add. If they recover, no further action."
+                "If gold or silver keeps falling, you may get another alert "
+                "from either this system or the gold-only alert. If prices "
+                "start recovering instead, no further action needed — you've "
+                "caught a good entry."
             ),
         })
     return alerts
@@ -219,10 +233,10 @@ def render_html(alert: dict, gold_ctx: dict, silver_ctx: dict,
 
     return f"""<!doctype html><html><body style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 640px; margin: 0 auto; color: #2C3E50; line-height: 1.55;">
   <div style="border-left: 4px solid #1F4E79; padding: 1.25rem 1.5rem; background: #F8F9FA;">
-    <div style="text-transform: uppercase; font-size: 0.75rem; color: #7F8C8D; letter-spacing: 0.5px;">Precious Metals Basket Alert · {gold_ctx['date']}</div>
+    <div style="text-transform: uppercase; font-size: 0.75rem; color: #7F8C8D; letter-spacing: 0.5px;">Gold + Silver Alert · {gold_ctx['date']}</div>
     <h1 style="margin: 0.3rem 0 0.6rem; font-size: 1.4rem; color: #1F4E79; font-weight: 500;">{alert['headline']}</h1>
     <div style="color: #34495E; font-size: 0.95rem;">
-      Gold ${gold_ctx['price']:.0f} ({gold_ctx['pullback_pct']:.2f}%) · Silver ${silver_ctx['price']:.2f} ({silver_ctx['pullback_pct']:.2f}%)
+      Gold ${gold_ctx['price']:.0f} (down {abs(gold_ctx['pullback_pct']):.1f}%) · Silver ${silver_ctx['price']:.2f} (down {abs(silver_ctx['pullback_pct']):.1f}%)
     </div>
   </div>
 
@@ -231,40 +245,40 @@ def render_html(alert: dict, gold_ctx: dict, silver_ctx: dict,
   <p style="font-size: 0.95rem;">{alert['detail'].replace(chr(10) + chr(10), '</p><p style="font-size: 0.95rem;">')}</p>
 
   <div style="border: 2px solid {accent}; padding: 1.1rem 1.3rem; border-radius: 4px; margin: 1.5rem 0; background: #FDFDFD;">
-    <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.8px;">Playbook</div>
+    <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.8px;">What to do</div>
     <div style="font-size: 1.5rem; color: {accent}; font-weight: 600; margin: 0.3rem 0 0.9rem;">{alert['playbook_action']}</div>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem 1.2rem; margin-bottom: 0.9rem;">
       <div>
-        <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Size</div>
+        <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">How much to buy</div>
         <div style="font-size: 0.95rem; color: #34495E; font-weight: 500;">{alert['playbook_size']}</div>
       </div>
       <div>
-        <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Confidence</div>
+        <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">How sure I am</div>
         <div style="font-size: 0.95rem; color: #34495E; font-weight: 500;">{alert['playbook_confidence']}</div>
       </div>
     </div>
 
     <div style="margin-top: 0.9rem; padding: 0.75rem 0.9rem; background: #F8F9FA; border-left: 3px solid {accent}; border-radius: 2px;">
-      <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Historical odds</div>
+      <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; margin-bottom: 0.25rem;">How often this has worked before</div>
       <div style="font-size: 0.9rem; color: #2C3E50; font-weight: 500;">{alert['playbook_odds']}</div>
     </div>
 
     <div style="margin-top: 0.9rem; padding-top: 0.75rem; border-top: 1px solid #ECF0F1;">
-      <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Why this size / action</div>
+      <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Why this recommendation</div>
       <div style="font-size: 0.9rem; color: #34495E; margin-top: 0.25rem;">{alert['playbook_why']}</div>
     </div>
 
     <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #ECF0F1;">
-      <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">What to watch next</div>
+      <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">What might happen next</div>
       <div style="font-size: 0.9rem; color: #34495E; margin-top: 0.25rem;">{alert['playbook_next']}</div>
     </div>
   </div>
 
   <p style="color: #7F8C8D; font-size: 0.8rem; margin-top: 2rem; border-top: 1px solid #ECF0F1; padding-top: 0.8rem;">
-    This alert fires only when BOTH gold and silver are in coordinated pullbacks.
-    It is complementary to (not a replacement for) the gold-only alert system.
-    For informational use only — not personalized investment advice.
+    You'll only get this alert when both gold AND silver have dropped at the same time.
+    It's a separate signal from the gold-only alerts. Nothing here is personal
+    financial advice — only spend money you can afford to hold for years.
   </p>
 </body></html>"""
 

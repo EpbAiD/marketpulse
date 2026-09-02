@@ -341,34 +341,37 @@ def evaluate_tiers(ctx: dict, year_st: dict,
             and not year_st["seasonal_buy_fired"]):
         alerts.append({
             "tier": "seasonal",
-            "subject": "gold: Q1 seasonal dip triggered — BUY",
-            "headline": "Primary buying signal fired — BUY 50-100% at market",
+            "subject": "gold: good time to buy",
+            "headline": "Good time to buy gold — BUY today",
             "detail": (
-                f"Gold pulled back {pb:.2f}% from its trailing 20-day high of "
-                f"${ctx['roll_20d_high']:.0f} to today's close of ${ctx['price']:.0f}. "
-                f"This is inside the Jan-Feb seasonal window where gold has "
-                f"historically been ~3-5% cheaper than the yearly average, "
-                f"and a -3% dip fires in most years. Combined discount vs "
-                f"the typical yearly price: roughly 5-8%. This is the primary "
-                f"entry point in the strategy."
+                f"Gold's price today is ${ctx['price']:.0f}. Its highest price "
+                f"in the last 20 trading days was ${ctx['roll_20d_high']:.0f}, "
+                f"so it's dropped {abs(pb):.1f}% from that recent peak.\n\n"
+                f"On top of that, January and February are historically the "
+                f"cheapest months of the year to buy gold — usually 3-5% "
+                f"below the year's average price. So today you're getting "
+                f"a double discount: cheap-time-of-year plus a recent dip."
             ),
-            "playbook_action": "BUY at market",
-            "playbook_size": "50-100% of your intended annual gold position",
-            "playbook_confidence": "High",
+            "playbook_action": "BUY today",
+            "playbook_size": "About half to all of what you planned to spend on gold this year",
+            "playbook_confidence": "High — this is one of the best signals I watch for",
             "playbook_odds": (
-                "66% of past -3% dips were positive at 90 days · median gain +5.3% · "
-                "worst outcome -22% (Feb 2013) · 134 events over 22 years"
+                "In the last 22 years, this exact situation has happened 134 "
+                "times. About 66 out of every 100 times, gold was higher 3 "
+                "months later — typical gain about 5%. Worst case: down 22% "
+                "(Feb 2013)."
             ),
             "playbook_why": (
-                "This is the seasonal + dip combination that historically "
-                "delivered the best entry each year. Deploying most of your "
-                "annual budget now typically beats waiting for a deeper dip "
-                "because -5% or -7% Q1 dips don't reliably show up: they "
-                "happen in only 55% / 15% of years."
+                "January and February are the historical low-price months for "
+                "gold. A drop on top of that low-price season is unusually good. "
+                "If you wait for a bigger drop, it often doesn't come — a 5% "
+                "drop only happens about half of years, and a 7% drop only "
+                "happens 15% of years. So don't hold out for perfect."
             ),
             "playbook_next": (
-                "If a deeper -5% or -10% dip follows in Q1, the Opportunistic "
-                "or Major tier will fire — save 20-50% dry powder in case it does."
+                "If gold keeps dropping (another 5% or 10% from here), I'll "
+                "send you a bigger alert. Keep a little money aside just in "
+                "case that happens."
             ),
         })
 
@@ -380,32 +383,34 @@ def evaluate_tiers(ctx: dict, year_st: dict,
             and not year_st["seasonal_deadline_fired"]):
         alerts.append({
             "tier": "deadline",
-            "subject": "gold: Q1 window closing — BUY NOW (no dip fired)",
-            "headline": "Seasonal deadline — BUY 100% at market today",
+            "subject": "gold: last chance — buy today",
+            "headline": "Cheap-buying season is ending — BUY TODAY",
             "detail": (
-                f"Today is the last practical trading day of the Jan-Feb "
-                f"seasonal buying window. No -3% dip triggered this year, "
-                f"so the strategy defaults to buying at market to secure "
-                f"the seasonal discount before Q2. Current close ${ctx['price']:.0f} "
-                f"(pullback from 20d high: {pb:.2f}%)."
+                f"Gold's price today is ${ctx['price']:.0f}. It's only down "
+                f"{abs(pb):.1f}% from its recent high — no big dip happened "
+                f"this year during the cheap buying months.\n\n"
+                f"Today is the last practical trading day of February, the "
+                f"end of gold's historical cheap-price season. If you wait "
+                f"any longer, gold usually drifts higher through the rest "
+                f"of the year, and you'd end up paying more."
             ),
-            "playbook_action": "BUY at market",
-            "playbook_size": "100% of your intended annual gold position",
+            "playbook_action": "BUY TODAY",
+            "playbook_size": "All of what you planned to spend on gold this year",
             "playbook_confidence": "High",
             "playbook_odds": (
-                "Historically Q1-end buys land at the ~27th percentile of the "
-                "year's prices (median premium over yearly low: +5.6%) · waiting "
-                "into Q2-Q4 typically costs an additional 3-11%"
+                "Buying at the end of February has historically gotten you "
+                "a price cheaper than about 73% of the days in the year. "
+                "Waiting into spring/summer/fall usually costs an extra 3-11%."
             ),
             "playbook_why": (
-                "The seasonal window is closing. Waiting into Q2 historically "
-                "costs 2-5% because gold drifts up ~1% per month on average and "
-                "the seasonal edge disappears. Buy at whatever the market offers "
-                "today — don't hold out for a dip that hasn't come."
+                "The cheap months (January-February) are ending. Gold usually "
+                "drifts up by about 1% per month for the rest of the year. So "
+                "waiting for a better price rarely works — just buy today and "
+                "lock in the seasonal discount."
             ),
             "playbook_next": (
-                "If an unusual Q2-Q4 opportunity fires later (e.g. a MAJOR -10% "
-                "in Q4 with STRONG BUY tag), you can add on top with dry powder."
+                "If gold has an unusual big drop later in the year "
+                "(especially October-December), I'll send another alert."
             ),
         })
 
@@ -415,58 +420,68 @@ def evaluate_tiers(ctx: dict, year_st: dict,
             and days_since(year_st["last_opportunistic_date"], date) >= OPPORTUNISTIC_MIN_GAP_DAYS):
         # Quarter-conditional playbook — different quarters have different histories
         q_playbook = {
-            2: {  # Q2 — dangerous
-                "subject_tag": "MONITOR",
-                "action": "MONITOR — do not chase",
-                "size": "0-20% only if you have unallocated capital",
-                "confidence": "Low",
-                "odds": ("~55% hit rate for out-of-season -5% dips overall, but Q2 "
-                         "specifically includes Apr 2008 and Apr 2013 bear-market starts "
-                         "· expected value roughly break-even · asymmetric tail risk"),
-                "why": ("Q2 -5% dips have mixed history — sometimes real buying "
-                        "opportunities, sometimes the start of a longer decline "
-                        "(Apr 2008 and Apr 2013 were both bear-market starts). "
-                        "If you already deployed via Tier 1 or 2 in Q1, stand down."),
+            2: {  # April-June — dangerous
+                "subject_tag": "risky drop — wait",
+                "action": "WAIT — don't buy yet",
+                "size": "Zero, or a very small amount only if you have extra money set aside",
+                "confidence": "Low — this drop looks risky",
+                "odds": ("About 55% of similar drops turned into a buying "
+                         "opportunity. But the ones that failed (April 2008, "
+                         "April 2013) kept falling much further and took "
+                         "years to come back — so the risk of getting it "
+                         "wrong is high."),
+                "why": ("Drops in April-June have historically been unreliable — "
+                        "sometimes they're a chance to buy cheap, sometimes "
+                        "they're the start of a big decline that lasts years. "
+                        "Not worth risking a big purchase here. If you already "
+                        "bought earlier in the year, sit this one out."),
             },
-            3: {  # Q3 — middle of road
-                "subject_tag": "BUY selectively",
-                "action": "BUY selectively",
-                "size": "25-40% if you skipped Q1 or have dry powder",
-                "confidence": "Medium",
-                "odds": ("60-65% hit rate for Q3 -5% dips at 90 days · median gain +3-5% · "
-                         "middle-of-the-road setup with modest positive expectancy"),
-                "why": ("Q3 -5% dips are historically middle-of-the-road — modest "
-                        "positive expected return, no strong signal either way. "
-                        "Reasonable catch-up entry if you missed the seasonal window."),
+            3: {  # July-September — middle of road
+                "subject_tag": "buy a small amount",
+                "action": "BUY a small amount",
+                "size": "About a quarter to a third of what you planned to spend on gold this year",
+                "confidence": "Medium — decent but not great",
+                "odds": ("About 6 out of every 10 similar drops in July-September "
+                         "turned profitable within 3 months. When they worked, "
+                         "you'd have made about 3-5% back."),
+                "why": ("July-September drops are middle-of-the-road — not the "
+                        "best time to buy, not the worst. If you didn't buy "
+                        "earlier in the year (January-February) and have money "
+                        "set aside, this is a reasonable chance to get in."),
             },
-            4: {  # Q4 — strong
-                "subject_tag": "BUY",
-                "action": "BUY at market",
-                "size": "40-60% of any remaining annual budget",
-                "confidence": "Medium-High",
-                "odds": ("70-80% hit rate for Q4 -5% dips at 90 days · median gain +5-8% · "
-                         "Asian physical demand provides a structural bid"),
-                "why": ("Q4 dips are historically strong — Asian physical demand "
-                        "kicks in through Q4 (Indian wedding season Oct-Dec, "
-                        "Chinese New Year positioning Dec-Jan) providing a "
-                        "mechanical bid. Even out-of-season Q4 dips often recover."),
+            4: {  # October-December — strong
+                "subject_tag": "buy today",
+                "action": "BUY today",
+                "size": "About 40-60% of whatever gold-buying money you have left this year",
+                "confidence": "Medium-High — reliable time of year",
+                "odds": ("About 7-8 out of every 10 similar drops in "
+                         "October-December turned profitable within 3 months. "
+                         "Typical gain when they worked: 5-8%."),
+                "why": ("October-December is when gold demand is highest globally "
+                        "— Indian wedding season and Chinese New Year buying "
+                        "push demand up. Prices in this window tend to bounce "
+                        "back quickly."),
             },
         }.get(q, {
             "subject_tag": "review", "action": "REVIEW",
-            "size": "Use judgment", "confidence": "Unknown",
-            "odds": "No historical odds computed for this quarter.",
-            "why": "No historical playbook for this quarter."})
+            "size": "Use your judgment", "confidence": "Unknown",
+            "odds": "Not enough historical data for this quarter.",
+            "why": "Not enough historical data for this quarter."})
 
+        # Plain-English name for the quarter
+        q_name = {2: "April-June", 3: "July-September", 4: "October-December"}.get(q, "")
         alerts.append({
             "tier": "opportunistic",
-            "subject": f"gold: -{OPPORTUNISTIC_DIP_PCT:.0f}% dip Q{q} — {q_playbook['subject_tag']}",
-            "headline": f"Opportunistic Q{q} dip — {q_playbook['action']}",
+            "subject": f"gold: bigger drop — {q_playbook['subject_tag']}",
+            "headline": f"Gold dropped more than usual — {q_playbook['action']}",
             "detail": (
-                f"Gold pulled back {pb:.2f}% from its trailing 20-day high "
-                f"of ${ctx['roll_20d_high']:.0f} to today's close of "
-                f"${ctx['price']:.0f}. This is outside the primary Jan-Feb "
-                f"window. Historically, out-of-season -5% dips beat waiting "
-                f"for the next seasonal window in 58% of cases."
+                f"Gold's price today is ${ctx['price']:.0f}. Its highest price "
+                f"in the last 20 trading days was ${ctx['roll_20d_high']:.0f}, "
+                f"so it's dropped {abs(pb):.1f}% from that recent peak.\n\n"
+                f"This isn't the historically cheap buying season "
+                f"(January-February). It's happening in {q_name}. What that "
+                f"means for you depends on the time of year — see the "
+                f"recommendation below."
             ),
             "playbook_action": q_playbook["action"],
             "playbook_size": q_playbook["size"],
@@ -474,8 +489,9 @@ def evaluate_tiers(ctx: dict, year_st: dict,
             "playbook_odds": q_playbook["odds"],
             "playbook_why": q_playbook["why"],
             "playbook_next": (
-                "If a MAJOR -10% dip follows within a few weeks, that will "
-                "fire the Major tier with quarter-specific framing."
+                "If gold keeps falling and drops another 5% or more (10% total "
+                "from the recent peak), you'll get a bigger alert with a "
+                "stronger recommendation."
             ),
         })
 
@@ -484,73 +500,91 @@ def evaluate_tiers(ctx: dict, year_st: dict,
             and days_since(year_st["last_major_date"], date) >= MAJOR_MIN_GAP_DAYS):
         q_playbook = {
             1: {
-                "tag": "STRONG BUY",
-                "action": "BUY aggressively",
-                "size": "75% at market, 25% held for possible follow-through",
-                "confidence": "High",
-                "odds": ("67% hit rate (2 of 3 events) at 90 days · median gain +4.6% · "
-                         "worst outcome -12.8% (Jan 2026, still resolving)"),
-                "why": ("Q1 -10% dips historically recovered in 2 of 3 events with "
-                        "a median +4.6% at 90 days. Combined with Q1 seasonal "
-                        "cheapness, this is one of the strongest signals the strategy "
-                        "produces. Rare event — take it when it comes."),
-                "next": ("Hold 25% dry powder for 2-3 weeks in case a follow-on "
-                         "-15%+ dip occurs, in which case add the balance."),
+                "tag": "big drop in cheap season — BUY BIG",
+                "action": "BUY A LOT today",
+                "size": "About 75% of what you planned to spend on gold this year. Keep 25% aside in case it drops even more.",
+                "confidence": "High — this is a rare opportunity",
+                "odds": ("This size of drop in January-March happens only rarely "
+                         "(3 times in 22 years). 2 out of 3 times, gold was "
+                         "higher 3 months later — typical gain about 5%."),
+                "why": ("A 10% drop in gold is uncommon — it happens roughly "
+                        "once a year on average. When it happens during "
+                        "January-February (already the cheap season), it's "
+                        "historically one of the very best times to buy. "
+                        "This kind of opportunity is worth acting on."),
+                "next": ("Keep 25% aside for 2-3 weeks. If gold drops another "
+                         "5%+ from here, use that money too. If it starts "
+                         "rising, you can add it later or hold for another year."),
             },
             2: {
-                "tag": "WARNING — STAND DOWN",
-                "action": "STAND DOWN — do not buy",
-                "size": "0%",
-                "confidence": "High that NOT buying is correct",
-                "odds": ("50% hit rate (2 of 4 events) at 90 days · median outcome 0% · "
-                         "the failures (Apr 2008, Apr 2013) saw -30%+ additional drawdown"),
-                "why": ("Q2 -10% dips have historically been dangerous. April 2008 "
-                        "and April 2013 both marked the start of multi-year gold "
-                        "bear markets. Only 2 of 4 Q2 events recovered, and the "
-                        "failures were severe (-30%+ additional drawdown). The "
-                        "safest play is to wait for the trend to confirm."),
-                "next": ("Watch for gold to reclaim its 200-day moving average "
-                         "before considering an add. Do not average down blindly."),
+                "tag": "DANGER — DO NOT BUY",
+                "action": "DO NOT BUY today",
+                "size": "Zero — sit this one out",
+                "confidence": "High that skipping this is the right call",
+                "odds": ("Only 2 out of 4 similar drops in April-June recovered. "
+                         "The 2 that failed (April 2008, April 2013) kept "
+                         "dropping another 30% and took years to come back."),
+                "why": ("Big drops in April-June have historically been "
+                        "dangerous. The two most famous ones (April 2008 and "
+                        "April 2013) both marked the start of gold bear markets "
+                        "that lasted years. Trying to catch this dip is like "
+                        "trying to catch a falling knife — even if you're "
+                        "sometimes right, when you're wrong it hurts a lot."),
+                "next": ("Wait until gold has clearly stopped falling and starts "
+                         "recovering (specifically: gold trading above its "
+                         "average price over the last 200 days) before "
+                         "considering any buy."),
             },
             3: {
-                "tag": "USE JUDGMENT",
-                "action": "SMALL POSITION only if macro supports it",
-                "size": "20-30% conservative sizing",
-                "confidence": "Medium",
-                "odds": ("50% hit rate (1 of 2 events) at 90 days · small sample, "
-                         "no strong statistical prior · make the call based on macro"),
-                "why": ("Q3 -10% dips have a small historical sample (2 events) "
-                        "with mixed outcomes. No strong statistical prior. If "
-                        "broader macro (real yields falling, DXY weak, credit "
-                        "spreads calm) supports gold, a modest add is defensible."),
-                "next": ("If a Q4 MAJOR fires within a month, that's the higher-"
-                         "conviction moment to deploy more."),
+                "tag": "unclear — use judgment",
+                "action": "MAYBE BUY a small amount — use your own judgment",
+                "size": "At most 20-30%, and only if the overall economy looks stable",
+                "confidence": "Medium — not much history to go on",
+                "odds": ("Only 2 similar drops in July-September in 22 years. "
+                         "1 recovered, 1 didn't. Not enough data to make a "
+                         "strong statistical call."),
+                "why": ("Big drops in July-September are so rare (only 2 in 22 "
+                        "years) that I can't give you a confident recommendation "
+                        "either way. If the broader economy looks calm (interest "
+                        "rates falling, dollar weakening, stock markets steady), "
+                        "gold usually benefits. If things look shaky, sit it out."),
+                "next": ("If a similar big drop happens later in October-December, "
+                         "that's a much more reliable buy signal — save your "
+                         "money for that."),
             },
             4: {
-                "tag": "STRONG BUY",
-                "action": "BUY aggressively",
-                "size": "75% at market, 25% held for possible follow-through",
-                "confidence": "Very High",
-                "odds": ("100% hit rate (4 of 4 events) at 90 days · median gain +8.3% · "
-                         "worst outcome still positive (+3.6%, Dec 2011)"),
-                "why": ("Q4 -10% dips have recovered in 4 of 4 historical events "
-                        "with a median +8.3% at 90 days. Asian physical demand "
-                        "(Indian weddings Oct-Dec, Chinese New Year Dec-Jan) "
-                        "typically provides a mechanical bid. This is the most "
-                        "reliable buying setup in the strategy."),
-                "next": ("Hold 25% dry powder for 2-3 weeks. If a further -15%+ "
-                         "dip occurs, add the balance — those are extremely rare."),
+                "tag": "STRONG BUY — historically works every time",
+                "action": "BUY A LOT today",
+                "size": "About 75% of what you planned to spend on gold this year. Keep 25% aside in case it drops even more.",
+                "confidence": "Very High — historically the strongest signal",
+                "odds": ("All 4 similar drops in October-December in the last 22 "
+                         "years turned profitable within 3 months. Typical gain "
+                         "was 8%. Worst outcome was still up 3.6% (Dec 2011)."),
+                "why": ("October-December drops of this size have a perfect "
+                        "historical track record (4 for 4). This is because "
+                        "Asian gold demand (Indian weddings, Chinese New Year) "
+                        "is highest right now, so sellers hit a wall of buyers "
+                        "and prices bounce back quickly. This is the most "
+                        "reliable buy signal I watch for."),
+                "next": ("Keep 25% aside for 2-3 weeks. If gold drops another "
+                         "5%+ (extremely rare — hasn't happened in 22 years), "
+                         "use that money too."),
             },
         }[q]
+        q_name = {1: "January-March", 2: "April-June",
+                  3: "July-September", 4: "October-December"}.get(q, "")
         alerts.append({
             "tier": "major",
-            "subject": f"gold: MAJOR -{MAJOR_DIP_PCT:.0f}% dip Q{q} — {q_playbook['tag']}",
-            "headline": f"MAJOR dip in Q{q}: {q_playbook['action']}",
+            "subject": f"gold: BIG drop — {q_playbook['tag']}",
+            "headline": f"Gold has dropped a lot — {q_playbook['action']}",
             "detail": (
-                f"Gold has fallen {pb:.2f}% from its trailing 20-day high "
-                f"of ${ctx['roll_20d_high']:.0f} to today's close of "
-                f"${ctx['price']:.0f}. Events of this magnitude fire roughly "
-                f"once a year on average."
+                f"Gold's price today is ${ctx['price']:.0f}. Its highest price "
+                f"in the last 20 trading days was ${ctx['roll_20d_high']:.0f}, "
+                f"so it's dropped {abs(pb):.1f}% from that recent peak — a "
+                f"big move.\n\n"
+                f"This is happening in {q_name}, which matters a lot: "
+                f"different times of year have very different track records "
+                f"for how this kind of drop plays out. See the recommendation."
             ),
             "playbook_action": q_playbook["action"],
             "playbook_size": q_playbook["size"],
@@ -631,42 +665,43 @@ def evaluate_tiers(ctx: dict, year_st: dict,
             limit_target = forecast_price
 
             if is_high_conv:
-                action = "PREPARE — place buy limit order"
-                size = "30-50% of your intended add for this signal"
-                confidence = "High (even the optimistic end of the CI crosses the threshold)"
-                odds = ("Forecast direction accuracy at this horizon is ~65% historically · "
-                        "when CI is fully below the threshold, hit rate rises to ~75-80%")
-                why = (f"Every plausible outcome in the 80% confidence range would "
-                       f"still trip the {tag} threshold. This is a high-conviction "
-                       f"forecast; getting a limit order in place today lets you "
-                       f"catch the entry at your target instead of chasing.")
+                action = f"SET UP an automatic buy order at ${forecast_price:.0f}"
+                size = "About a third to half of what you'd normally buy on this signal"
+                confidence = "High — the model is quite sure a drop is coming"
+                odds = ("When the model is this confident, about 7-8 out of 10 "
+                        "predictions actually come true within a few days.")
+                why = (f"The model expects gold to drop to about ${forecast_price:.0f} "
+                       f"in the next {horizon} days. Setting up an automatic buy "
+                       f"order at that price now means you catch the dip if it "
+                       f"happens, without having to watch the price all day.")
             else:
-                action = "MONITOR — do not act preemptively"
-                size = "0% until reactive tier confirms"
-                confidence = "Low-to-medium (probabilistic warning)"
-                odds = ("Roughly 50-60% chance a dip of this magnitude actually "
-                        "materializes at this horizon · treat as heads-up, not signal")
-                why = (f"The 80% confidence range spans both a {tag} dip AND no dip. "
-                       f"This is a heads-up that the model thinks a dip is likely, "
-                       f"not a confirmed signal. Wait for the reactive tier to "
-                       f"actually fire on real prices before buying.")
+                action = "WAIT — just a heads-up, don't buy yet"
+                size = "Zero for now"
+                confidence = "Low-to-Medium — the model isn't fully sure"
+                odds = ("About 5-6 out of 10 predictions like this actually come "
+                        "true. Not reliable enough to act on by itself.")
+                why = (f"The model thinks a drop might happen but it's not confident. "
+                       f"Rather than buying based on a maybe, wait to see if the "
+                       f"drop actually happens. If it does, you'll get a real "
+                       f"alert with a real recommendation.")
 
             alerts.append({
                 "tier": "predicted",
-                "subject": f"[PREDICTED] gold: {tag} dip expected in {horizon}d — {action.split(' ')[0]}",
-                "headline": f"Forecast projects a {tag} dip in ~{horizon} day(s) — {action}",
+                "subject": f"gold: heads-up — a drop is likely in {horizon} days",
+                "headline": f"Heads-up: a drop is likely in about {horizon} days",
                 "detail": (
-                    f"Today: spot ${ctx['price']:.0f} · 20-day high ${high:.0f} · "
-                    f"pullback {current_pb:.2f}%.\n\n"
-                    f"The forecasting model projects gold at ~${forecast_price:.0f} "
-                    f"on {proj_date} (in {horizon} trading day(s)). If that comes "
-                    f"in as forecast, the pullback would deepen to {proj_pb:.2f}% "
-                    f"— crossing the {tag} threshold of -{thresh_pct:.0f}%.\n\n"
-                    f"Honest 80% confidence range: "
-                    f"${ci_low:.0f} to ${ci_high:.0f} "
-                    f"(±{(ci_high - forecast_price)/forecast_price*100:.1f}% around the "
-                    f"point estimate). In pullback terms: {ci_low_pb:.2f}% to "
-                    f"{ci_high_pb:.2f}%."
+                    f"Gold's price today is ${ctx['price']:.0f} (down "
+                    f"{abs(current_pb):.1f}% from its recent peak of ${high:.0f}).\n\n"
+                    f"The model that predicts gold prices thinks gold will "
+                    f"drop to about ${forecast_price:.0f} in {horizon} trading "
+                    f"days. If that actually happens, gold would be down "
+                    f"{abs(proj_pb):.1f}% from its recent peak — a bigger drop "
+                    f"than today.\n\n"
+                    f"The model isn't perfect. Based on how it's done before, "
+                    f"there's a good chance (80%) that gold will land somewhere "
+                    f"between ${ci_low:.0f} and ${ci_high:.0f} on that day. "
+                    f"That's a range of about ±{(ci_high - forecast_price)/forecast_price*100:.1f}% "
+                    f"around the guess."
                 ),
                 "playbook_action": action,
                 "playbook_size": size,
@@ -676,10 +711,10 @@ def evaluate_tiers(ctx: dict, year_st: dict,
                 "playbook_limit_target": (
                     f"${limit_target:.0f}" if is_high_conv else None),
                 "playbook_next": (
-                    "If the reactive tier fires within a few days on actual "
-                    "prices, execute the balance of your position at market. "
-                    "If gold recovers instead, cancel the limit order — this "
-                    "was a false alarm and the reactive tiers will stay quiet."
+                    "If gold actually drops as predicted in the next few days, "
+                    "you'll get a real buy alert with a real recommendation. "
+                    "If it goes up instead, cancel any limit order you set — "
+                    "this prediction turned out to be a false alarm."
                 ),
             })
 
@@ -718,7 +753,7 @@ def render_html(alert: dict, ctx: dict, recipient_name: str | None) -> str:
         if limit_target:
             limit_row = f"""
       <div style="margin-top: 0.5rem;">
-        <span style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Suggested limit order</span>
+        <span style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Suggested automatic buy price</span>
         <div style="font-size: 1.1rem; color: {accent}; font-weight: 500;">{limit_target}</div>
       </div>"""
 
@@ -727,22 +762,22 @@ def render_html(alert: dict, ctx: dict, recipient_name: str | None) -> str:
         if odds:
             odds_row = f"""
     <div style="margin-top: 0.9rem; padding: 0.75rem 0.9rem; background: #F8F9FA; border-left: 3px solid {accent}; border-radius: 2px;">
-      <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Historical odds</div>
+      <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; margin-bottom: 0.25rem;">How often this has worked before</div>
       <div style="font-size: 0.9rem; color: #2C3E50; font-weight: 500;">{odds}</div>
     </div>"""
 
         playbook_html = f"""
   <div style="border: 2px solid {accent}; padding: 1.1rem 1.3rem; border-radius: 4px; margin: 1.5rem 0; background: #FDFDFD;">
-    <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.8px;">Playbook</div>
+    <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.8px;">What to do</div>
     <div style="font-size: 1.5rem; color: {accent}; font-weight: 600; margin: 0.3rem 0 0.9rem;">{action}</div>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem 1.2rem; margin-bottom: 0.9rem;">
       <div>
-        <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Size</div>
+        <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">How much to buy</div>
         <div style="font-size: 0.95rem; color: #34495E; font-weight: 500;">{size}</div>
       </div>
       <div>
-        <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Confidence</div>
+        <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">How sure I am</div>
         <div style="font-size: 0.95rem; color: #34495E; font-weight: 500;">{confidence}</div>
       </div>
     </div>
@@ -750,12 +785,12 @@ def render_html(alert: dict, ctx: dict, recipient_name: str | None) -> str:
     {odds_row}
 
     <div style="margin-top: 0.9rem; padding-top: 0.75rem; border-top: 1px solid #ECF0F1;">
-      <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Why this size / action</div>
+      <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Why this recommendation</div>
       <div style="font-size: 0.9rem; color: #34495E; margin-top: 0.25rem;">{why}</div>
     </div>
 
     <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #ECF0F1;">
-      <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">What to watch next</div>
+      <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">What might happen next</div>
       <div style="font-size: 0.9rem; color: #34495E; margin-top: 0.25rem;">{next_step}</div>
     </div>
   </div>"""
@@ -774,7 +809,7 @@ def render_html(alert: dict, ctx: dict, recipient_name: str | None) -> str:
     <div style="text-transform: uppercase; font-size: 0.75rem; color: #7F8C8D; letter-spacing: 0.5px;">Gold Dip Alert · {ctx['date']}</div>
     <h1 style="margin: 0.3rem 0 0.6rem; font-size: 1.4rem; color: #1F4E79; font-weight: 500;">{alert['headline']}</h1>
     <div style="color: #34495E; font-size: 0.95rem;">
-      Spot ${ctx['price']:.0f} · 20-day high ${ctx['roll_20d_high']:.0f} · pullback {ctx['pullback_pct']:.2f}% · Q{ctx['quarter']}
+      Gold today: ${ctx['price']:.0f} · Recent 20-day peak: ${ctx['roll_20d_high']:.0f} · Down {abs(ctx['pullback_pct']):.1f}% from that peak
     </div>
   </div>
 
@@ -785,9 +820,10 @@ def render_html(alert: dict, ctx: dict, recipient_name: str | None) -> str:
   {playbook_html}
 
   <p style="color: #7F8C8D; font-size: 0.8rem; margin-top: 2rem; border-top: 1px solid #ECF0F1; padding-top: 0.8rem;">
-    This alert is generated from statistical analysis of 21 years of gold-futures history.
-    It's for informational use only — not personalized investment advice. Adapt to your own
-    mandate and risk budget before acting.
+    These recommendations come from studying how gold has behaved over the last 21 years.
+    Nothing here is personal financial advice — just a guide based on historical patterns.
+    Only spend money you can afford to hold for years, and never bet more than you're
+    comfortable losing.
   </p>
 </body></html>"""
 
@@ -996,7 +1032,11 @@ def main() -> int:
             print(f"\n=== SUBJECT: {a['subject']} ===")
             print(f"HEADLINE: {a['headline']}")
             print(f"DETAIL: {a['detail']}")
-            print(f"ACTION: {a['action']}")
+            print(f"ACTION: {a.get('playbook_action') or a.get('action', '')}")
+            if a.get('playbook_size'):
+                print(f"SIZE:   {a['playbook_size']}")
+            if a.get('playbook_odds'):
+                print(f"ODDS:   {a['playbook_odds']}")
         return 0
 
     # Send
