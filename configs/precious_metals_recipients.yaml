@@ -1,0 +1,17 @@
+# Precious Metals Basket Alert — Recipient List
+# ----------------------------------------------
+# Separate from the gold-only alert system. Fires only when BOTH gold and
+# silver are simultaneously in a dip beyond their respective thresholds.
+# Positioned as a coordinated "the whole precious-metals sector is on sale"
+# signal, not a stronger-than-gold-alone predictive signal.
+#
+# Optional per-recipient `tiers` filter (all fire when their conditions are met):
+#   standard  — gold -3% AND silver -6%   (~6x/year)
+#   strong    — gold -5% AND silver -10%  (~3x/year)
+#   major     — gold -10% AND silver -20% (~1x/year, rare crisis)
+# Omit `tiers` to receive all three.
+
+recipients:
+  - name: Eeshan Bhanap
+    email: eeshan1012@gmail.com
+    # tiers: [standard, strong, major]   # default = all
