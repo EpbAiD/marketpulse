@@ -34,7 +34,77 @@
 # Live exchange rate fetched from Yahoo Finance at alert time.
 
 recipients:
-  - name: Eeshan Bhanap
+  # Test entries — one per currency to preview email formatting in each.
+  # All point to the same inbox; name tag identifies which currency you're
+  # looking at. Remove the ones you don't want once you've compared them.
+  - name: Eeshan (USD)
     email: eeshan1012@gmail.com
-    # currency: INR   # default = USD
-    # tiers: [seasonal, deadline, opportunistic, major, predicted]   # default = all
+    currency: USD
+
+  - name: Eeshan (EUR)
+    email: eeshan1012@gmail.com
+    currency: EUR
+
+  - name: Eeshan (GBP)
+    email: eeshan1012@gmail.com
+    currency: GBP
+
+  - name: Eeshan (INR)
+    email: eeshan1012@gmail.com
+    currency: INR
+
+  - name: Eeshan (JPY)
+    email: eeshan1012@gmail.com
+    currency: JPY
+
+  - name: Eeshan (AUD)
+    email: eeshan1012@gmail.com
+    currency: AUD
+
+  - name: Eeshan (CAD)
+    email: eeshan1012@gmail.com
+    currency: CAD
+
+  - name: Eeshan (CHF)
+    email: eeshan1012@gmail.com
+    currency: CHF
+
+  - name: Eeshan (CNY)
+    email: eeshan1012@gmail.com
+    currency: CNY
+
+  - name: Eeshan (AED)
+    email: eeshan1012@gmail.com
+    currency: AED
+
+  - name: Eeshan (SAR)
+    email: eeshan1012@gmail.com
+    currency: SAR
+
+  - name: Eeshan (SGD)
+    email: eeshan1012@gmail.com
+    currency: SGD
+
+  - name: Eeshan (HKD)
+    email: eeshan1012@gmail.com
+    currency: HKD
+
+  - name: Eeshan (NZD)
+    email: eeshan1012@gmail.com
+    currency: NZD
+
+  - name: Eeshan (ZAR)
+    email: eeshan1012@gmail.com
+    currency: ZAR
+
+  - name: Eeshan (BRL)
+    email: eeshan1012@gmail.com
+    currency: BRL
+
+  - name: Eeshan (MXN)
+    email: eeshan1012@gmail.com
+    currency: MXN
+
+  - name: Eeshan (TRY)
+    email: eeshan1012@gmail.com
+    currency: TRY
