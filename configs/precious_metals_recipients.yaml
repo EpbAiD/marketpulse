@@ -1,91 +1,36 @@
 # Precious Metals Basket Alert — Recipient List
 # ----------------------------------------------
-# Separate from the gold-only alert system. Fires only when BOTH gold and
-# silver are simultaneously in a dip beyond their respective thresholds.
-# Positioned as a coordinated "the whole precious-metals sector is on sale"
-# signal, not a stronger-than-gold-alone predictive signal.
+# Fires only when BOTH gold and silver drop at the same time.
 #
-# Optional per-recipient `tiers` filter (all fire when their conditions are met):
-#   standard  — gold -3% AND silver -6%   (~6x/year)
-#   strong    — gold -5% AND silver -10%  (~3x/year)
-#   major     — gold -10% AND silver -20% (~1x/year, rare crisis)
-# Omit `tiers` to receive all three.
+# Currency options (two mutually-exclusive modes):
+#   currency:   INR              # single currency — body prices localized
+#   currencies: [USD, EUR, INR]  # multiple — ONE email with a comparison table
 #
-# Optional per-recipient `currency` (default USD). Supported:
+# Supported codes:
 #   USD EUR GBP INR JPY AUD CAD CHF CNY AED SAR SGD HKD NZD ZAR BRL MXN TRY
-# Live exchange rate fetched from Yahoo Finance at alert time.
+#
+# Optional `tiers` filter: [standard, strong, major]. Omit to receive all.
 
 recipients:
-  # Test entries — one per currency to preview basket-email formatting.
-  # All point to the same inbox; name tag identifies the currency.
-  - name: Eeshan (USD)
+  # Owner — one email with a table showing prices in every currency
+  - name: Eeshan Bhanap
     email: eeshan1012@gmail.com
-    currency: USD
-
-  - name: Eeshan (EUR)
-    email: eeshan1012@gmail.com
-    currency: EUR
-
-  - name: Eeshan (GBP)
-    email: eeshan1012@gmail.com
-    currency: GBP
-
-  - name: Eeshan (INR)
-    email: eeshan1012@gmail.com
-    currency: INR
-
-  - name: Eeshan (JPY)
-    email: eeshan1012@gmail.com
-    currency: JPY
-
-  - name: Eeshan (AUD)
-    email: eeshan1012@gmail.com
-    currency: AUD
-
-  - name: Eeshan (CAD)
-    email: eeshan1012@gmail.com
-    currency: CAD
-
-  - name: Eeshan (CHF)
-    email: eeshan1012@gmail.com
-    currency: CHF
-
-  - name: Eeshan (CNY)
-    email: eeshan1012@gmail.com
-    currency: CNY
-
-  - name: Eeshan (AED)
-    email: eeshan1012@gmail.com
-    currency: AED
-
-  - name: Eeshan (SAR)
-    email: eeshan1012@gmail.com
-    currency: SAR
-
-  - name: Eeshan (SGD)
-    email: eeshan1012@gmail.com
-    currency: SGD
-
-  - name: Eeshan (HKD)
-    email: eeshan1012@gmail.com
-    currency: HKD
-
-  - name: Eeshan (NZD)
-    email: eeshan1012@gmail.com
-    currency: NZD
-
-  - name: Eeshan (ZAR)
-    email: eeshan1012@gmail.com
-    currency: ZAR
-
-  - name: Eeshan (BRL)
-    email: eeshan1012@gmail.com
-    currency: BRL
-
-  - name: Eeshan (MXN)
-    email: eeshan1012@gmail.com
-    currency: MXN
-
-  - name: Eeshan (TRY)
-    email: eeshan1012@gmail.com
-    currency: TRY
+    currencies:
+      - USD
+      - EUR
+      - GBP
+      - INR
+      - JPY
+      - AUD
+      - CAD
+      - CHF
+      - CNY
+      - AED
+      - SAR
+      - SGD
+      - HKD
+      - NZD
+      - ZAR
+      - BRL
+      - MXN
+      - TRY

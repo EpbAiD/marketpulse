@@ -47,7 +47,9 @@ import yfinance as yf
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR / "scripts"))
-from currency_utils import make_price_formatter, fx_footer_line  # noqa: E402
+from currency_utils import (  # noqa: E402
+    make_price_formatter, fx_footer_line, build_multi_currency_table_html,
+)
 
 RECIPIENTS_FILE = BASE_DIR / "configs" / "precious_metals_recipients.yaml"
 STATE_FILE = BASE_DIR / "outputs" / "alerts" / "pm_basket_state.json"
@@ -244,7 +246,8 @@ def _localize_prices(html: str, price_fmt, fx_line: str) -> str:
 
 def render_html(alert: dict, gold_ctx: dict, silver_ctx: dict,
                 recipient_name: str | None,
-                price_fmt=None, fx_line: str = "") -> str:
+                price_fmt=None, fx_line: str = "",
+                multi_currency_table: str = "") -> str:
     greeting = f"Hello {recipient_name}," if recipient_name else "Hello,"
     action = alert.get("playbook_action", "").upper()
     if "STAND DOWN" in action or "DO NOT" in action:
@@ -266,6 +269,8 @@ def render_html(alert: dict, gold_ctx: dict, silver_ctx: dict,
   <p>{greeting}</p>
 
   <p style="font-size: 0.95rem;">{alert['detail'].replace(chr(10) + chr(10), '</p><p style="font-size: 0.95rem;">')}</p>
+
+  {multi_currency_table}
 
   <div style="border: 2px solid {accent}; padding: 1.1rem 1.3rem; border-radius: 4px; margin: 1.5rem 0; background: #FDFDFD;">
     <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.8px;">What to do</div>
@@ -389,15 +394,30 @@ def _run_test_email() -> int:
         email = r.get("email")
         if not email:
             continue
-        currency = r.get("currency", "USD")
-        price_fmt, rate, _ = get_fx(currency)
-        fx_line = fx_footer_line(currency, rate)
+        currencies_list = r.get("currencies")
+        if currencies_list:
+            currencies_list = [c.upper() for c in currencies_list]
+            price_fmt = None
+            fx_line = ""
+            multi_table = build_multi_currency_table_html(
+                {"Gold": g_ctx_synth["price"],
+                 "Silver": s_ctx_synth["price"]},
+                currencies_list,
+            )
+            label = f"multi:{','.join(currencies_list)}"
+        else:
+            currency = r.get("currency", "USD")
+            price_fmt, rate, _ = get_fx(currency)
+            fx_line = fx_footer_line(currency, rate)
+            multi_table = ""
+            label = currency
         try:
             send_email(smtp_host, smtp_port, sender, password, email,
                        sample["subject"],
                        render_html(sample, g_ctx_synth, s_ctx_synth, r.get("name"),
-                                   price_fmt=price_fmt, fx_line=fx_line))
-            print(f"  sent basket test -> {email} ({currency})")
+                                   price_fmt=price_fmt, fx_line=fx_line,
+                                   multi_currency_table=multi_table))
+            print(f"  sent basket test -> {email} ({label})")
             sent += 1
         except Exception as e:
             print(f"  FAILED -> {email}: {type(e).__name__}: {e}")
@@ -473,9 +493,24 @@ def main() -> int:
         if not email:
             continue
         wanted = set(r.get("tiers") or ["standard", "strong", "major"])
-        currency = r.get("currency", "USD")
-        price_fmt, rate, _ = get_fx(currency)
-        fx_line = fx_footer_line(currency, rate)
+
+        currencies_list = r.get("currencies")
+        if currencies_list:
+            currencies_list = [c.upper() for c in currencies_list]
+            price_fmt = None
+            fx_line = ""
+            multi_table = build_multi_currency_table_html(
+                {"Gold": g_ctx["price"], "Silver": s_ctx["price"]},
+                currencies_list,
+            )
+            label = f"multi:{','.join(currencies_list)}"
+        else:
+            currency = r.get("currency", "USD")
+            price_fmt, rate, _ = get_fx(currency)
+            fx_line = fx_footer_line(currency, rate)
+            multi_table = ""
+            label = currency
+
         for a in alerts:
             if a["tier"] not in wanted:
                 continue
@@ -483,8 +518,9 @@ def main() -> int:
                 send_email(smtp_host, smtp_port, sender, password,
                            email, a["subject"],
                            render_html(a, g_ctx, s_ctx, r.get("name"),
-                                       price_fmt=price_fmt, fx_line=fx_line))
-                print(f"  sent [{a['tier']}] -> {email} ({currency})")
+                                       price_fmt=price_fmt, fx_line=fx_line,
+                                       multi_currency_table=multi_table))
+                print(f"  sent [{a['tier']}] -> {email} ({label})")
                 sent += 1
             except Exception as e:
                 print(f"  FAILED [{a['tier']}] -> {email}: {type(e).__name__}: {e}")

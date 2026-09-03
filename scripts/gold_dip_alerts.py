@@ -47,7 +47,9 @@ import yfinance as yf
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR / "scripts"))
-from currency_utils import make_price_formatter, fx_footer_line  # noqa: E402
+from currency_utils import (  # noqa: E402
+    make_price_formatter, fx_footer_line, build_multi_currency_table_html,
+)
 
 RECIPIENTS_FILE = BASE_DIR / "configs" / "gold_alert_recipients.yaml"
 STATE_FILE = BASE_DIR / "outputs" / "alerts" / "gold_alert_state.json"
@@ -752,7 +754,8 @@ def _localize_prices(html: str, price_fmt, fx_line: str) -> str:
 
 
 def render_html(alert: dict, ctx: dict, recipient_name: str | None,
-                price_fmt=None, fx_line: str = "") -> str:
+                price_fmt=None, fx_line: str = "",
+                multi_currency_table: str = "") -> str:
     greeting = f"Hello {recipient_name}," if recipient_name else "Hello,"
 
     # Build the prominent playbook box if the alert carries prescriptive fields
@@ -843,6 +846,8 @@ def render_html(alert: dict, ctx: dict, recipient_name: str | None,
   <p>{greeting}</p>
 
   <p style="font-size: 0.95rem;">{alert['detail'].replace(chr(10) + chr(10), '</p><p style="font-size: 0.95rem;">')}</p>
+
+  {multi_currency_table}
 
   {playbook_html}
 
@@ -989,17 +994,37 @@ def _run_test_email() -> int:
         email = r.get("email")
         if not email:
             continue
-        currency = r.get("currency", "USD")
-        price_fmt, rate, _ = get_fx(currency)
-        fx_line = fx_footer_line(currency, rate)
+
+        currencies_list = r.get("currencies")
+        if currencies_list:
+            currencies_list = [c.upper() for c in currencies_list]
+            price_fmt = None
+            fx_line = ""
+            label = f"multi:{','.join(currencies_list)}"
+        else:
+            currency = r.get("currency", "USD")
+            price_fmt, rate, _ = get_fx(currency)
+            fx_line = fx_footer_line(currency, rate)
+            currencies_list = None
+            label = currency
+
         for alert in alerts_to_send:
             ctx_for_alert = zero_ctx if alert["tier"] == "test" else ctx
+            if currencies_list:
+                multi_table = build_multi_currency_table_html(
+                    {"Gold today": ctx_for_alert["price"],
+                     "20-day peak": ctx_for_alert["roll_20d_high"]},
+                    currencies_list,
+                ) if ctx_for_alert["price"] > 0 else ""
+            else:
+                multi_table = ""
             try:
                 send_email(smtp_host, smtp_port, sender, password,
                            email, alert["subject"],
                            render_html(alert, ctx_for_alert, r.get("name"),
-                                       price_fmt=price_fmt, fx_line=fx_line))
-                print(f"  sent [{alert['tier']}] -> {email} ({currency})")
+                                       price_fmt=price_fmt, fx_line=fx_line,
+                                       multi_currency_table=multi_table))
+                print(f"  sent [{alert['tier']}] -> {email} ({label})")
                 sent += 1
             except Exception as e:
                 print(f"  FAILED [{alert['tier']}] -> {email}: {type(e).__name__}: {e}")
@@ -1106,17 +1131,36 @@ def main() -> int:
         name = r.get("name")
         wanted_tiers = set(r.get("tiers") or
                            ["seasonal", "deadline", "opportunistic", "major", "predicted"])
-        currency = r.get("currency", "USD")
-        price_fmt, rate, _ = get_fx(currency)
-        fx_line = fx_footer_line(currency, rate)
+
+        # Two modes: `currencies: [list]` shows all in one email as a
+        # comparison table; `currency: SINGLE` localizes the body.
+        currencies_list = r.get("currencies")
+        if currencies_list:
+            currencies_list = [c.upper() for c in currencies_list]
+            price_fmt = None   # body stays in USD; table shows all currencies
+            fx_line = ""
+            multi_table = build_multi_currency_table_html(
+                {"Gold today": ctx["price"], "20-day peak": ctx["roll_20d_high"]},
+                currencies_list,
+            )
+            label = f"multi:{','.join(currencies_list)}"
+        else:
+            currency = r.get("currency", "USD")
+            price_fmt, rate, _ = get_fx(currency)
+            fx_line = fx_footer_line(currency, rate)
+            multi_table = ""
+            label = currency
+
         for a in alerts:
             if a["tier"] not in wanted_tiers:
                 continue
             try:
                 send_email(smtp_host, smtp_port, sender, password,
                            email, a["subject"],
-                           render_html(a, ctx, name, price_fmt=price_fmt, fx_line=fx_line))
-                print(f"  sent [{a['tier']}] -> {email} ({currency})")
+                           render_html(a, ctx, name,
+                                       price_fmt=price_fmt, fx_line=fx_line,
+                                       multi_currency_table=multi_table))
+                print(f"  sent [{a['tier']}] -> {email} ({label})")
                 sent += 1
             except Exception as e:
                 print(f"  FAILED [{a['tier']}] -> {email}: {type(e).__name__}: {e}")

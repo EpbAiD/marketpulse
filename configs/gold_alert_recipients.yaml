@@ -1,110 +1,39 @@
 # Gold Dip Alert — Recipient List
 # ----------------------------------
 # Every entry below receives every alert this system fires.
-# To add someone: append another entry under `recipients:` — no code change
-# needed. Name is optional (used in the email greeting when present).
+# To add someone: append another entry under `recipients:`.
+#
+# Currency options (two mutually-exclusive modes):
+#   currency:   INR              # single currency — body prices localized
+#   currencies: [USD, EUR, INR]  # multiple — ONE email with a comparison table
+#
+# Supported currency codes:
+#   USD EUR GBP INR JPY AUD CAD CHF CNY AED SAR SGD HKD NZD ZAR BRL MXN TRY
 #
 # Optional per-recipient `tiers` filter:
-#   seasonal      — Jan-Feb -3% dip trigger (the primary "buy now" signal)
-#   deadline      — Feb 28 reminder if the seasonal alert never fired
-#   opportunistic — Mar-Dec -5% dip (out-of-season buying opportunity)
-#   major         — -10% dip any time (quarter-conditional strong/warning)
-#   predicted     — advance warning from MarketPulse forecast (1-5 days ahead)
-# Omitting `tiers` means the recipient gets all five.
-#
-# Optional per-recipient `currency` (default USD). Supported:
-#   USD  US Dollar
-#   EUR  Euro
-#   GBP  British Pound
-#   INR  Indian Rupee
-#   JPY  Japanese Yen
-#   AUD  Australian Dollar
-#   CAD  Canadian Dollar
-#   CHF  Swiss Franc
-#   CNY  Chinese Yuan
-#   AED  UAE Dirham
-#   SAR  Saudi Riyal
-#   SGD  Singapore Dollar
-#   HKD  Hong Kong Dollar
-#   NZD  New Zealand Dollar
-#   ZAR  South African Rand
-#   BRL  Brazilian Real
-#   MXN  Mexican Peso
-#   TRY  Turkish Lira
-# Live exchange rate fetched from Yahoo Finance at alert time.
+#   seasonal, deadline, opportunistic, major, predicted
+# Omit `tiers` to receive all five.
 
 recipients:
-  # Test entries — one per currency to preview email formatting in each.
-  # All point to the same inbox; name tag identifies which currency you're
-  # looking at. Remove the ones you don't want once you've compared them.
-  - name: Eeshan (USD)
+  # Owner — one email with a table showing prices in every currency
+  - name: Eeshan Bhanap
     email: eeshan1012@gmail.com
-    currency: USD
-
-  - name: Eeshan (EUR)
-    email: eeshan1012@gmail.com
-    currency: EUR
-
-  - name: Eeshan (GBP)
-    email: eeshan1012@gmail.com
-    currency: GBP
-
-  - name: Eeshan (INR)
-    email: eeshan1012@gmail.com
-    currency: INR
-
-  - name: Eeshan (JPY)
-    email: eeshan1012@gmail.com
-    currency: JPY
-
-  - name: Eeshan (AUD)
-    email: eeshan1012@gmail.com
-    currency: AUD
-
-  - name: Eeshan (CAD)
-    email: eeshan1012@gmail.com
-    currency: CAD
-
-  - name: Eeshan (CHF)
-    email: eeshan1012@gmail.com
-    currency: CHF
-
-  - name: Eeshan (CNY)
-    email: eeshan1012@gmail.com
-    currency: CNY
-
-  - name: Eeshan (AED)
-    email: eeshan1012@gmail.com
-    currency: AED
-
-  - name: Eeshan (SAR)
-    email: eeshan1012@gmail.com
-    currency: SAR
-
-  - name: Eeshan (SGD)
-    email: eeshan1012@gmail.com
-    currency: SGD
-
-  - name: Eeshan (HKD)
-    email: eeshan1012@gmail.com
-    currency: HKD
-
-  - name: Eeshan (NZD)
-    email: eeshan1012@gmail.com
-    currency: NZD
-
-  - name: Eeshan (ZAR)
-    email: eeshan1012@gmail.com
-    currency: ZAR
-
-  - name: Eeshan (BRL)
-    email: eeshan1012@gmail.com
-    currency: BRL
-
-  - name: Eeshan (MXN)
-    email: eeshan1012@gmail.com
-    currency: MXN
-
-  - name: Eeshan (TRY)
-    email: eeshan1012@gmail.com
-    currency: TRY
+    currencies:
+      - USD
+      - EUR
+      - GBP
+      - INR
+      - JPY
+      - AUD
+      - CAD
+      - CHF
+      - CNY
+      - AED
+      - SAR
+      - SGD
+      - HKD
+      - NZD
+      - ZAR
+      - BRL
+      - MXN
+      - TRY

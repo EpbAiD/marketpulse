@@ -105,6 +105,74 @@ def make_price_formatter(currency_code: str) -> tuple[Callable[[float], str], fl
     return _fmt, rate, symbol
 
 
+def build_multi_currency_table_html(usd_prices: dict[str, float],
+                                    currencies: list[str],
+                                    accent: str = "#1F4E79") -> str:
+    """Return an HTML table showing each USD price (labelled) converted
+    into each requested currency at today's live rate.
+
+    usd_prices: {label: usd_amount} — e.g. {"Gold today": 4481, "20-day peak": 4641}
+    currencies: list of currency codes to display as columns
+    """
+    if not currencies or not usd_prices:
+        return ""
+
+    # Fetch rates + symbols once per currency
+    rates: dict[str, tuple[float, str]] = {}
+    for c in currencies:
+        rate, sym = fetch_usd_rate(c)
+        rates[c] = (rate, sym)
+
+    def _format(usd: float, rate: float, sym: str, code: str) -> str:
+        local = usd * rate
+        if code in {"JPY", "INR", "TRY", "KRW", "IDR", "VND"} and local >= 1000:
+            return f"{sym}{local:,.0f}"
+        if local >= 1000:
+            return f"{sym}{local:,.0f}"
+        if local >= 10:
+            return f"{sym}{local:,.2f}"
+        return f"{sym}{local:.4f}"
+
+    # Build the table
+    head = "".join(
+        f'<th style="padding: 6px 10px; text-align: right; color: #7F8C8D; '
+        f'font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; '
+        f'font-weight: 500; border-bottom: 1px solid #ECF0F1;">{label}</th>'
+        for label in usd_prices
+    )
+    rows = ""
+    for code in currencies:
+        rate, sym = rates[code]
+        row_cells = "".join(
+            f'<td style="padding: 6px 10px; text-align: right; color: #2C3E50; '
+            f'font-size: 0.9rem; font-weight: 500;">{_format(usd, rate, sym, code)}</td>'
+            for usd in usd_prices.values()
+        )
+        rows += (
+            f'<tr>'
+            f'<td style="padding: 6px 10px; color: #34495E; font-size: 0.85rem; '
+            f'font-weight: 500;">{code}</td>'
+            f'{row_cells}'
+            f'</tr>'
+        )
+
+    return f"""
+  <div style="border: 1px solid #ECF0F1; border-radius: 4px; margin: 1rem 0; overflow-x: auto;">
+    <div style="padding: 0.7rem 1rem; background: #F8F9FA; border-bottom: 1px solid #ECF0F1;">
+      <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Prices in all your currencies</div>
+    </div>
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+      <thead>
+        <tr>
+          <th style="padding: 6px 10px; text-align: left; color: #7F8C8D; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; border-bottom: 1px solid #ECF0F1;">Currency</th>
+          {head}
+        </tr>
+      </thead>
+      <tbody>{rows}</tbody>
+    </table>
+  </div>"""
+
+
 def fx_footer_line(currency_code: str, rate: float) -> str:
     """Human-readable FX-rate line to include in the email footer."""
     code = currency_code.upper()
