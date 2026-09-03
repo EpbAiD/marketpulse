@@ -2,17 +2,14 @@
 # ----------------------------------------------
 # Fires only when BOTH gold and silver drop at the same time.
 #
-# Currency options (two mutually-exclusive modes):
-#   currency:   INR              # single currency — body prices localized
-#   currencies: [USD, EUR, INR]  # multiple — ONE email with a comparison table
+# Currency options: currency: X  OR  currencies: [X, Y, Z]
+# Weight options:   weight_unit: X  OR  weight_units: [X, Y, Z]
+# Supported: same as gold_alert_recipients.yaml (see that file for full list).
 #
-# Supported codes:
-#   USD EUR GBP INR JPY AUD CAD CHF CNY AED SAR SGD HKD NZD ZAR BRL MXN TRY
-#
-# Optional `tiers` filter: [standard, strong, major]. Omit to receive all.
+# Optional `tiers` filter: [standard, strong, major].
 
 recipients:
-  # Owner — one email with a table showing prices in every currency
+  # Owner — one email showing every currency AND every weight unit
   - name: Eeshan Bhanap
     email: eeshan1012@gmail.com
     currencies:
@@ -34,3 +31,9 @@ recipients:
       - BRL
       - MXN
       - TRY
+    weight_units:
+      - troy_ounce
+      - gram
+      - 10_gram
+      - kilogram
+      - tola

@@ -26,6 +26,32 @@ import yfinance as yf
 # (EURUSD=X means 1 EUR = X USD), others are "LOCAL per USD" (INR=X means
 # 1 USD = X INR). This table encodes which convention each ticker uses so
 # we can always compute "amount of local currency for 1 USD".
+# Gold weight-unit conversions. Prices from GC=F (COMEX gold futures) are
+# quoted per troy ounce. Factor = multiplier applied to per-troy-ounce
+# price to get per-target-unit price.
+#
+#   1 troy ounce = 31.1035 grams
+#   1 tola       = 11.6638 grams (Indian traditional)
+#   1 kilogram   = 32.1507 troy ounces
+WEIGHT_UNITS = {
+    "troy_ounce": {"factor": 1.0,               "label": "per troy ounce", "short": "oz"},
+    "ounce":      {"factor": 1.0,               "label": "per troy ounce", "short": "oz"},
+    "gram":       {"factor": 1 / 31.1035,       "label": "per gram",       "short": "g"},
+    "10_gram":    {"factor": 10 / 31.1035,      "label": "per 10 grams",   "short": "10g"},
+    "kilogram":   {"factor": 1000 / 31.1035,    "label": "per kilogram",   "short": "kg"},
+    "kg":         {"factor": 1000 / 31.1035,    "label": "per kilogram",   "short": "kg"},
+    "tola":       {"factor": 11.6638 / 31.1035, "label": "per tola",       "short": "tola"},
+}
+
+
+def weight_factor(weight_unit: str) -> tuple[float, str, str]:
+    """Return (multiplier, label, short_symbol) for a weight unit code.
+    Defaults to troy_ounce for unknown codes."""
+    key = (weight_unit or "troy_ounce").lower()
+    cfg = WEIGHT_UNITS.get(key, WEIGHT_UNITS["troy_ounce"])
+    return cfg["factor"], cfg["label"], cfg["short"]
+
+
 SUPPORTED_CURRENCIES = {
     "USD": {"symbol": "$",   "yf_ticker": None, "invert": False, "name": "US Dollar"},
     "EUR": {"symbol": "€",   "yf_ticker": "EURUSD=X", "invert": True,  "name": "Euro"},
@@ -80,21 +106,22 @@ def fetch_usd_rate(currency_code: str) -> tuple[float, str]:
         return latest_rate, cfg["symbol"]
 
 
-def make_price_formatter(currency_code: str) -> tuple[Callable[[float], str], float, str]:
+def make_price_formatter(currency_code: str,
+                         weight_unit: str = "troy_ounce") -> tuple[Callable[[float], str], float, str]:
     """Return (format_fn, usd_to_local_rate, currency_symbol).
 
-    format_fn takes a USD price and returns a formatted string in the
-    recipient's currency. Rate + symbol are also returned so callers can
-    build a footer like "FX: 1 USD = 83.42 INR".
+    format_fn takes a per-troy-ounce USD price and returns a formatted
+    string in the recipient's currency AND the recipient's weight unit
+    (default: troy ounce, so no conversion).
     """
     rate, symbol = fetch_usd_rate(currency_code)
     code = currency_code.upper()
+    w_mult, _, _ = weight_factor(weight_unit)
 
-    def _fmt(usd_price: float) -> str:
-        local = usd_price * rate
+    def _fmt(usd_per_oz: float) -> str:
+        local = usd_per_oz * rate * w_mult
         # Choose decimals + grouping based on magnitude / currency
         if code in {"JPY", "INR", "TRY", "KRW", "IDR", "VND"} and local >= 1000:
-            # Currencies with typically-large denominators: no decimals + grouping
             return f"{symbol}{local:,.0f}"
         if local >= 1000:
             return f"{symbol}{local:,.0f}"
@@ -105,35 +132,25 @@ def make_price_formatter(currency_code: str) -> tuple[Callable[[float], str], fl
     return _fmt, rate, symbol
 
 
-def build_multi_currency_table_html(usd_prices: dict[str, float],
-                                    currencies: list[str],
-                                    accent: str = "#1F4E79") -> str:
-    """Return an HTML table showing each USD price (labelled) converted
-    into each requested currency at today's live rate.
+def _format_local(usd_per_oz: float, rate: float, sym: str, code: str,
+                  weight_multiplier: float) -> str:
+    local = usd_per_oz * rate * weight_multiplier
+    if code in {"JPY", "INR", "TRY", "KRW", "IDR", "VND"} and local >= 1000:
+        return f"{sym}{local:,.0f}"
+    if local >= 1000:
+        return f"{sym}{local:,.0f}"
+    if local >= 10:
+        return f"{sym}{local:,.2f}"
+    return f"{sym}{local:.4f}"
 
-    usd_prices: {label: usd_amount} — e.g. {"Gold today": 4481, "20-day peak": 4641}
-    currencies: list of currency codes to display as columns
-    """
-    if not currencies or not usd_prices:
-        return ""
 
-    # Fetch rates + symbols once per currency
-    rates: dict[str, tuple[float, str]] = {}
-    for c in currencies:
-        rate, sym = fetch_usd_rate(c)
-        rates[c] = (rate, sym)
-
-    def _format(usd: float, rate: float, sym: str, code: str) -> str:
-        local = usd * rate
-        if code in {"JPY", "INR", "TRY", "KRW", "IDR", "VND"} and local >= 1000:
-            return f"{sym}{local:,.0f}"
-        if local >= 1000:
-            return f"{sym}{local:,.0f}"
-        if local >= 10:
-            return f"{sym}{local:,.2f}"
-        return f"{sym}{local:.4f}"
-
-    # Build the table
+def _build_single_weight_table(usd_prices: dict[str, float],
+                               currencies: list[str],
+                               rates: dict[str, tuple[float, str]],
+                               weight_unit: str,
+                               accent: str) -> str:
+    """One table for one weight unit, showing currency rows × price-label columns."""
+    w_mult, w_label, _ = weight_factor(weight_unit)
     head = "".join(
         f'<th style="padding: 6px 10px; text-align: right; color: #7F8C8D; '
         f'font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; '
@@ -145,7 +162,8 @@ def build_multi_currency_table_html(usd_prices: dict[str, float],
         rate, sym = rates[code]
         row_cells = "".join(
             f'<td style="padding: 6px 10px; text-align: right; color: #2C3E50; '
-            f'font-size: 0.9rem; font-weight: 500;">{_format(usd, rate, sym, code)}</td>'
+            f'font-size: 0.9rem; font-weight: 500;">'
+            f'{_format_local(usd, rate, sym, code, w_mult)}</td>'
             for usd in usd_prices.values()
         )
         rows += (
@@ -155,11 +173,10 @@ def build_multi_currency_table_html(usd_prices: dict[str, float],
             f'{row_cells}'
             f'</tr>'
         )
-
     return f"""
   <div style="border: 1px solid #ECF0F1; border-radius: 4px; margin: 1rem 0; overflow-x: auto;">
     <div style="padding: 0.7rem 1rem; background: #F8F9FA; border-bottom: 1px solid #ECF0F1;">
-      <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Prices in all your currencies</div>
+      <div style="color: #7F8C8D; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Prices {w_label}</div>
     </div>
     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
       <thead>
@@ -171,6 +188,35 @@ def build_multi_currency_table_html(usd_prices: dict[str, float],
       <tbody>{rows}</tbody>
     </table>
   </div>"""
+
+
+def build_multi_currency_table_html(usd_prices: dict[str, float],
+                                    currencies: list[str],
+                                    weight_units: list[str] | None = None,
+                                    accent: str = "#1F4E79") -> str:
+    """Return HTML showing each USD price converted into each requested
+    currency AND each requested weight unit.
+
+    usd_prices:   {label: usd_per_troy_ounce} — e.g. {"Gold today": 4481}
+    currencies:   list of currency codes to show as rows
+    weight_units: list of weight units to show as separate tables; if None
+                  or empty, defaults to ["troy_ounce"] (one table)
+    """
+    if not currencies or not usd_prices:
+        return ""
+    if not weight_units:
+        weight_units = ["troy_ounce"]
+
+    # Fetch each currency rate + symbol once
+    rates: dict[str, tuple[float, str]] = {}
+    for c in currencies:
+        rates[c] = fetch_usd_rate(c)
+
+    # One table per weight unit
+    return "".join(
+        _build_single_weight_table(usd_prices, currencies, rates, wu, accent)
+        for wu in weight_units
+    )
 
 
 def fx_footer_line(currency_code: str, rate: float) -> str:

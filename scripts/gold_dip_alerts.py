@@ -996,17 +996,23 @@ def _run_test_email() -> int:
             continue
 
         currencies_list = r.get("currencies")
+        weight_units_list = r.get("weight_units")
+        weight_unit_single = r.get("weight_unit", "troy_ounce")
+
         if currencies_list:
             currencies_list = [c.upper() for c in currencies_list]
             price_fmt = None
             fx_line = ""
-            label = f"multi:{','.join(currencies_list)}"
+            wu_for_table = weight_units_list or [weight_unit_single]
+            label = f"multi:{','.join(currencies_list)} × {','.join(wu_for_table)}"
         else:
             currency = r.get("currency", "USD")
-            price_fmt, rate, _ = get_fx(currency)
+            price_fmt = make_price_formatter(currency, weight_unit_single)[0]
+            rate = make_price_formatter(currency)[1]
             fx_line = fx_footer_line(currency, rate)
             currencies_list = None
-            label = currency
+            wu_for_table = None
+            label = f"{currency} ({weight_unit_single})"
 
         for alert in alerts_to_send:
             ctx_for_alert = zero_ctx if alert["tier"] == "test" else ctx
@@ -1015,6 +1021,7 @@ def _run_test_email() -> int:
                     {"Gold today": ctx_for_alert["price"],
                      "20-day peak": ctx_for_alert["roll_20d_high"]},
                     currencies_list,
+                    weight_units=wu_for_table,
                 ) if ctx_for_alert["price"] > 0 else ""
             else:
                 multi_table = ""
@@ -1135,21 +1142,29 @@ def main() -> int:
         # Two modes: `currencies: [list]` shows all in one email as a
         # comparison table; `currency: SINGLE` localizes the body.
         currencies_list = r.get("currencies")
+        # Weight units: `weight_units: [list]` gives separate table per unit;
+        # `weight_unit: SINGLE` applies one unit throughout.
+        weight_units_list = r.get("weight_units")
+        weight_unit_single = r.get("weight_unit", "troy_ounce")
+
         if currencies_list:
             currencies_list = [c.upper() for c in currencies_list]
             price_fmt = None   # body stays in USD; table shows all currencies
             fx_line = ""
+            wu_for_table = weight_units_list or [weight_unit_single]
             multi_table = build_multi_currency_table_html(
                 {"Gold today": ctx["price"], "20-day peak": ctx["roll_20d_high"]},
                 currencies_list,
+                weight_units=wu_for_table,
             )
-            label = f"multi:{','.join(currencies_list)}"
+            label = f"multi:{','.join(currencies_list)} × {','.join(wu_for_table)}"
         else:
             currency = r.get("currency", "USD")
-            price_fmt, rate, _ = get_fx(currency)
+            price_fmt = make_price_formatter(currency, weight_unit_single)[0]
+            rate = make_price_formatter(currency)[1]  # rate without weight conv
             fx_line = fx_footer_line(currency, rate)
             multi_table = ""
-            label = currency
+            label = f"{currency} ({weight_unit_single})"
 
         for a in alerts:
             if a["tier"] not in wanted_tiers:

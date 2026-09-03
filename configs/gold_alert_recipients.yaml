@@ -3,19 +3,29 @@
 # Every entry below receives every alert this system fires.
 # To add someone: append another entry under `recipients:`.
 #
-# Currency options (two mutually-exclusive modes):
+# Currency options (mutually exclusive):
 #   currency:   INR              # single currency — body prices localized
-#   currencies: [USD, EUR, INR]  # multiple — ONE email with a comparison table
+#   currencies: [USD, EUR, INR]  # multi — ONE email with a comparison table
 #
 # Supported currency codes:
 #   USD EUR GBP INR JPY AUD CAD CHF CNY AED SAR SGD HKD NZD ZAR BRL MXN TRY
 #
-# Optional per-recipient `tiers` filter:
-#   seasonal, deadline, opportunistic, major, predicted
+# Weight-unit options (mutually exclusive):
+#   weight_unit:  10_gram                        # single unit
+#   weight_units: [troy_ounce, gram, 10_gram]    # multi (separate table per unit)
+#
+# Supported weight codes:
+#   troy_ounce  (default; gold futures market standard, ~31.1g)
+#   gram        (per 1 gram)
+#   10_gram     (per 10 grams — Indian retail standard)
+#   kilogram    (per 1 kg)
+#   tola        (per tola — Indian traditional, ~11.66g)
+#
+# Optional `tiers` filter: [seasonal, deadline, opportunistic, major, predicted]
 # Omit `tiers` to receive all five.
 
 recipients:
-  # Owner — one email with a table showing prices in every currency
+  # Owner — one email showing every currency AND every weight unit
   - name: Eeshan Bhanap
     email: eeshan1012@gmail.com
     currencies:
@@ -37,3 +47,9 @@ recipients:
       - BRL
       - MXN
       - TRY
+    weight_units:
+      - troy_ounce
+      - gram
+      - 10_gram
+      - kilogram
+      - tola

@@ -395,22 +395,27 @@ def _run_test_email() -> int:
         if not email:
             continue
         currencies_list = r.get("currencies")
+        weight_units_list = r.get("weight_units")
+        weight_unit_single = r.get("weight_unit", "troy_ounce")
         if currencies_list:
             currencies_list = [c.upper() for c in currencies_list]
             price_fmt = None
             fx_line = ""
+            wu_for_table = weight_units_list or [weight_unit_single]
             multi_table = build_multi_currency_table_html(
                 {"Gold": g_ctx_synth["price"],
                  "Silver": s_ctx_synth["price"]},
                 currencies_list,
+                weight_units=wu_for_table,
             )
-            label = f"multi:{','.join(currencies_list)}"
+            label = f"multi:{','.join(currencies_list)} × {','.join(wu_for_table)}"
         else:
             currency = r.get("currency", "USD")
-            price_fmt, rate, _ = get_fx(currency)
+            price_fmt = make_price_formatter(currency, weight_unit_single)[0]
+            rate = make_price_formatter(currency)[1]
             fx_line = fx_footer_line(currency, rate)
             multi_table = ""
-            label = currency
+            label = f"{currency} ({weight_unit_single})"
         try:
             send_email(smtp_host, smtp_port, sender, password, email,
                        sample["subject"],
@@ -495,21 +500,26 @@ def main() -> int:
         wanted = set(r.get("tiers") or ["standard", "strong", "major"])
 
         currencies_list = r.get("currencies")
+        weight_units_list = r.get("weight_units")
+        weight_unit_single = r.get("weight_unit", "troy_ounce")
         if currencies_list:
             currencies_list = [c.upper() for c in currencies_list]
             price_fmt = None
             fx_line = ""
+            wu_for_table = weight_units_list or [weight_unit_single]
             multi_table = build_multi_currency_table_html(
                 {"Gold": g_ctx["price"], "Silver": s_ctx["price"]},
                 currencies_list,
+                weight_units=wu_for_table,
             )
-            label = f"multi:{','.join(currencies_list)}"
+            label = f"multi:{','.join(currencies_list)} × {','.join(wu_for_table)}"
         else:
             currency = r.get("currency", "USD")
-            price_fmt, rate, _ = get_fx(currency)
+            price_fmt = make_price_formatter(currency, weight_unit_single)[0]
+            rate = make_price_formatter(currency)[1]
             fx_line = fx_footer_line(currency, rate)
             multi_table = ""
-            label = currency
+            label = f"{currency} ({weight_unit_single})"
 
         for a in alerts:
             if a["tier"] not in wanted:
