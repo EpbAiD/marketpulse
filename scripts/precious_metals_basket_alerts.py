@@ -46,6 +46,9 @@ import yfinance as yf
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(BASE_DIR / "scripts"))
+from currency_utils import make_price_formatter, fx_footer_line  # noqa: E402
+
 RECIPIENTS_FILE = BASE_DIR / "configs" / "precious_metals_recipients.yaml"
 STATE_FILE = BASE_DIR / "outputs" / "alerts" / "pm_basket_state.json"
 
@@ -220,8 +223,28 @@ def evaluate_basket(gold_ctx: dict, silver_ctx: dict, state: dict) -> list[dict]
 # Email
 # --------------------------------------------------------------------------
 
+def _localize_prices(html: str, price_fmt, fx_line: str) -> str:
+    """Substitute $NNN price mentions with local currency; add FX footer note."""
+    import re
+    def _sub(m):
+        raw = m.group(1).replace(",", "")
+        try:
+            usd = float(raw)
+        except ValueError:
+            return m.group(0)
+        return price_fmt(usd)
+    out = re.sub(r"\$([\d]{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)", _sub, html)
+    if fx_line:
+        out = out.replace(
+            "Nothing here is personal financial advice",
+            f"{fx_line}<br>Nothing here is personal financial advice",
+        )
+    return out
+
+
 def render_html(alert: dict, gold_ctx: dict, silver_ctx: dict,
-                recipient_name: str | None) -> str:
+                recipient_name: str | None,
+                price_fmt=None, fx_line: str = "") -> str:
     greeting = f"Hello {recipient_name}," if recipient_name else "Hello,"
     action = alert.get("playbook_action", "").upper()
     if "STAND DOWN" in action or "DO NOT" in action:
@@ -231,7 +254,7 @@ def render_html(alert: dict, gold_ctx: dict, silver_ctx: dict,
     else:
         accent = "#E67E22"
 
-    return f"""<!doctype html><html><body style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 640px; margin: 0 auto; color: #2C3E50; line-height: 1.55;">
+    html = f"""<!doctype html><html><body style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 640px; margin: 0 auto; color: #2C3E50; line-height: 1.55;">
   <div style="border-left: 4px solid #1F4E79; padding: 1.25rem 1.5rem; background: #F8F9FA;">
     <div style="text-transform: uppercase; font-size: 0.75rem; color: #7F8C8D; letter-spacing: 0.5px;">Gold + Silver Alert · {gold_ctx['date']}</div>
     <h1 style="margin: 0.3rem 0 0.6rem; font-size: 1.4rem; color: #1F4E79; font-weight: 500;">{alert['headline']}</h1>
@@ -281,6 +304,10 @@ def render_html(alert: dict, gold_ctx: dict, silver_ctx: dict,
     financial advice — only spend money you can afford to hold for years.
   </p>
 </body></html>"""
+
+    if price_fmt is not None:
+        html = _localize_prices(html, price_fmt, fx_line)
+    return html
 
 
 def send_email(smtp_host, smtp_port, sender, password,
@@ -350,16 +377,27 @@ def _run_test_email() -> int:
 
     smtp_host = os.environ.get("GMAIL_SMTP_HOST", "smtp.gmail.com")
     smtp_port = int(os.environ.get("GMAIL_SMTP_PORT", "465"))
+    fx_cache: dict[str, tuple] = {}
+    def get_fx(code: str):
+        code = (code or "USD").upper()
+        if code not in fx_cache:
+            fx_cache[code] = make_price_formatter(code)
+        return fx_cache[code]
+
     sent, failed = 0, 0
     for r in recipients:
         email = r.get("email")
         if not email:
             continue
+        currency = r.get("currency", "USD")
+        price_fmt, rate, _ = get_fx(currency)
+        fx_line = fx_footer_line(currency, rate)
         try:
             send_email(smtp_host, smtp_port, sender, password, email,
                        sample["subject"],
-                       render_html(sample, g_ctx_synth, s_ctx_synth, r.get("name")))
-            print(f"  sent basket test -> {email}")
+                       render_html(sample, g_ctx_synth, s_ctx_synth, r.get("name"),
+                                   price_fmt=price_fmt, fx_line=fx_line))
+            print(f"  sent basket test -> {email} ({currency})")
             sent += 1
         except Exception as e:
             print(f"  FAILED -> {email}: {type(e).__name__}: {e}")
@@ -422,20 +460,31 @@ def main() -> int:
 
     smtp_host = os.environ.get("GMAIL_SMTP_HOST", "smtp.gmail.com")
     smtp_port = int(os.environ.get("GMAIL_SMTP_PORT", "465"))
+    fx_cache: dict[str, tuple] = {}
+    def get_fx(code: str):
+        code = (code or "USD").upper()
+        if code not in fx_cache:
+            fx_cache[code] = make_price_formatter(code)
+        return fx_cache[code]
+
     sent = 0
     for r in recipients:
         email = r.get("email")
         if not email:
             continue
         wanted = set(r.get("tiers") or ["standard", "strong", "major"])
+        currency = r.get("currency", "USD")
+        price_fmt, rate, _ = get_fx(currency)
+        fx_line = fx_footer_line(currency, rate)
         for a in alerts:
             if a["tier"] not in wanted:
                 continue
             try:
                 send_email(smtp_host, smtp_port, sender, password,
                            email, a["subject"],
-                           render_html(a, g_ctx, s_ctx, r.get("name")))
-                print(f"  sent [{a['tier']}] -> {email}")
+                           render_html(a, g_ctx, s_ctx, r.get("name"),
+                                       price_fmt=price_fmt, fx_line=fx_line))
+                print(f"  sent [{a['tier']}] -> {email} ({currency})")
                 sent += 1
             except Exception as e:
                 print(f"  FAILED [{a['tier']}] -> {email}: {type(e).__name__}: {e}")

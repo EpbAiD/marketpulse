@@ -11,8 +11,30 @@
 #   major         — -10% dip any time (quarter-conditional strong/warning)
 #   predicted     — advance warning from MarketPulse forecast (1-5 days ahead)
 # Omitting `tiers` means the recipient gets all five.
+#
+# Optional per-recipient `currency` (default USD). Supported:
+#   USD  US Dollar
+#   EUR  Euro
+#   GBP  British Pound
+#   INR  Indian Rupee
+#   JPY  Japanese Yen
+#   AUD  Australian Dollar
+#   CAD  Canadian Dollar
+#   CHF  Swiss Franc
+#   CNY  Chinese Yuan
+#   AED  UAE Dirham
+#   SAR  Saudi Riyal
+#   SGD  Singapore Dollar
+#   HKD  Hong Kong Dollar
+#   NZD  New Zealand Dollar
+#   ZAR  South African Rand
+#   BRL  Brazilian Real
+#   MXN  Mexican Peso
+#   TRY  Turkish Lira
+# Live exchange rate fetched from Yahoo Finance at alert time.
 
 recipients:
   - name: Eeshan Bhanap
     email: eeshan1012@gmail.com
+    # currency: INR   # default = USD
     # tiers: [seasonal, deadline, opportunistic, major, predicted]   # default = all

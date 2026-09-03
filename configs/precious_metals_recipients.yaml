@@ -10,8 +10,13 @@
 #   strong    — gold -5% AND silver -10%  (~3x/year)
 #   major     — gold -10% AND silver -20% (~1x/year, rare crisis)
 # Omit `tiers` to receive all three.
+#
+# Optional per-recipient `currency` (default USD). Supported:
+#   USD EUR GBP INR JPY AUD CAD CHF CNY AED SAR SGD HKD NZD ZAR BRL MXN TRY
+# Live exchange rate fetched from Yahoo Finance at alert time.
 
 recipients:
   - name: Eeshan Bhanap
     email: eeshan1012@gmail.com
-    # tiers: [standard, strong, major]   # default = all
+    # currency: INR                     # default = USD
+    # tiers: [standard, strong, major]  # default = all
