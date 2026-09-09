@@ -37,3 +37,7 @@ recipients:
       - 10_gram
       - kilogram
       - tola
+    # Optional yearly gold-buying target. Converts the suggested percentage
+    # into an actual weight/money range in the alert email. See
+    # configs/gold_alert_recipients.yaml for accepted formats.
+    annual_gold_target: 50g

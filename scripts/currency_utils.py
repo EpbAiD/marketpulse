@@ -52,6 +52,216 @@ def weight_factor(weight_unit: str) -> tuple[float, str, str]:
     return cfg["factor"], cfg["label"], cfg["short"]
 
 
+# Grams per unit — inverse of the WEIGHT_UNITS.factor above, used to convert
+# a weight target expressed in any unit into a common gram base.
+_GRAMS_PER_UNIT = {
+    "gram": 1.0, "g": 1.0,
+    "10_gram": 10.0, "10g": 10.0,
+    "kilogram": 1000.0, "kg": 1000.0,
+    "tola": 11.6638,
+    "troy_ounce": 31.1035, "ounce": 31.1035, "oz": 31.1035,
+}
+
+_CURRENCY_SIGNS = {"$": "USD", "€": "EUR", "£": "GBP", "¥": "JPY", "₹": "INR",
+                   "₩": "KRW", "₺": "TRY", "R$": "BRL"}
+
+
+def parse_gold_target(target: str | None) -> dict | None:
+    """Parse a user-facing annual gold target into a normalized dict.
+
+    Accepts formats like:
+      "50g"           → {"kind":"weight", "grams": 50.0, "unit":"g"}
+      "50_gram"       → {"kind":"weight", "grams": 50.0, "unit":"gram"}
+      "5_tola"        → {"kind":"weight", "grams": 58.319, "unit":"tola"}
+      "1_troy_ounce"  → {"kind":"weight", "grams": 31.1035, "unit":"troy_ounce"}
+      "10 10_gram"    → same as "100_gram" (multiplier notation)
+      "$5000"         → {"kind":"money", "currency":"USD", "amount":5000}
+      "5000_USD"      → same
+      "₹500000"       → {"kind":"money", "currency":"INR", "amount":500000}
+    Returns None if unparseable or None input.
+    """
+    if not target:
+        return None
+    s = str(target).strip()
+    if not s:
+        return None
+
+    # Money form: currency-symbol prefix or _CURRENCY suffix
+    for sym, code in _CURRENCY_SIGNS.items():
+        if s.startswith(sym):
+            try:
+                amt = float(s[len(sym):].replace(",", "").replace("_", ""))
+                return {"kind": "money", "currency": code, "amount": amt,
+                        "display": f"{sym}{amt:,.0f}"}
+            except ValueError:
+                return None
+    parts = s.replace("-", "_").split("_")
+    # ISO currency code suffix, e.g. "5000_USD" / "500000_INR"
+    if len(parts) >= 2 and parts[-1].upper() in ("USD","EUR","GBP","JPY","INR","AUD","CAD",
+                                                  "CHF","CNY","AED","SAR","SGD","HKD","NZD",
+                                                  "ZAR","BRL","MXN","TRY"):
+        try:
+            amt = float(parts[0].replace(",", ""))
+            code = parts[-1].upper()
+            return {"kind": "money", "currency": code, "amount": amt,
+                    "display": f"{amt:,.0f} {code}"}
+        except ValueError:
+            pass
+
+    # Weight form
+    if not parts[0][0:1].isdigit() and not parts[0][0:1] == ".":
+        # Something like "gram" alone — invalid without a number
+        return None
+    try:
+        # Handle simple trailing-letter forms like "50g", "100kg"
+        head = parts[0]
+        num_str, unit_tail = "", ""
+        for ch in head:
+            if ch.isdigit() or ch in ".,":
+                num_str += ch
+            else:
+                unit_tail += ch
+        n = float(num_str.replace(",", ""))
+        # Compose unit — from tail letters (e.g. "g", "kg") or from remaining parts
+        if unit_tail:
+            unit_key = unit_tail.lower()
+        elif len(parts) >= 2:
+            unit_key = "_".join(parts[1:]).lower()
+        else:
+            unit_key = "gram"
+        grams_per = _GRAMS_PER_UNIT.get(unit_key)
+        if grams_per is None:
+            # Try singular form
+            grams_per = _GRAMS_PER_UNIT.get(unit_key.rstrip("s"))
+        if grams_per is None:
+            return None
+        return {"kind": "weight", "grams": n * grams_per, "unit": unit_key,
+                "display": f"{n:g} {unit_key}"}
+    except (ValueError, IndexError):
+        return None
+
+
+def _format_weight(grams: float, unit: str) -> str:
+    """Human-friendly weight rendering in the requested unit."""
+    per = _GRAMS_PER_UNIT.get(unit.lower())
+    if per is None:
+        per = 1.0
+        unit = "g"
+    qty = grams / per
+    if unit in ("g", "gram"):
+        return f"{qty:.1f} g"
+    if unit in ("10_gram", "10g"):
+        # 10_gram is really a price-quoting convention; show quantity as plain grams
+        return f"{grams:.1f} g"
+    if unit in ("tola",):
+        return f"{qty:.2f} tola"
+    if unit in ("kg", "kilogram"):
+        return f"{qty:.3f} kg"
+    if unit in ("oz", "troy_ounce", "ounce"):
+        return f"{qty:.2f} oz"
+    return f"{qty:.2f} {unit}"
+
+
+def format_suggested_amount(target: dict | None, pct_min: int, pct_max: int,
+                            price_usd_per_oz: float | None,
+                            preferred_display_unit="gram") -> str:
+    """Build the 'suggested amount' line shown to the reader.
+
+    `preferred_display_unit` may be a single unit string OR a list of units.
+    When a list is passed AND the target is a weight target, the range is
+    rendered in every unit (useful for the admin who wants to see all forms
+    side-by-side while testing).
+
+    Falls back to percentage wording if `target` is None (nothing configured).
+    """
+    if pct_max == 0:
+        return "Suggested amount: none — this is a heads-up only, not a buy signal"
+
+    # Normalize display unit(s) to a list
+    if isinstance(preferred_display_unit, (list, tuple)):
+        units = list(preferred_display_unit) or ["gram"]
+    else:
+        units = [preferred_display_unit or "gram"]
+    is_multi = len(units) > 1
+    primary_unit = units[0]
+
+    if target is None:
+        if pct_min == pct_max:
+            return (f"Suggested amount: up to <b>{pct_max}% of your yearly gold budget</b>. "
+                    f"You choose — anywhere from 0 to {pct_max}%.")
+        return (f"Suggested amount: <b>at least {pct_min}%, at most {pct_max}% of your yearly "
+                f"gold budget</b>. You choose where in that range you're comfortable — this "
+                f"is a suggestion, never a threshold.")
+
+    if target["kind"] == "weight":
+        g_min = target["grams"] * pct_min / 100
+        g_max = target["grams"] * pct_max / 100
+        w_min = _format_weight(g_min, primary_unit)
+        w_max = _format_weight(g_max, primary_unit)
+        target_disp = _format_weight(target["grams"], primary_unit)
+        head = (f"Suggested amount: up to <b>{w_max}</b>"
+                if pct_min == pct_max else
+                f"Suggested amount: <b>at least {w_min}, at most {w_max}</b>")
+        head += f" (out of your {target_disp}/year target)."
+        if is_multi:
+            # Dedupe: skip the primary unit and skip units that render identically
+            seen = {(w_min, w_max)}
+            rows = []
+            for u in units[1:]:
+                pair = (_format_weight(g_min, u), _format_weight(g_max, u))
+                if pair in seen:
+                    continue
+                seen.add(pair)
+                rows.append(f"<li>{pair[0]} – {pair[1]}</li>")
+            if rows:
+                head += (
+                    "<br><span style='font-size:0.85em;color:#5C4200;'>Same range in your other weight units:</span>"
+                    f"<ul style='margin:0.2rem 0 0.2rem 1.1rem;padding:0;font-size:0.9em;'>{''.join(rows)}</ul>"
+                )
+        head += (" Pick anywhere in that range you're comfortable — this is "
+                 "a suggestion, never a threshold.")
+        return head
+
+    # Money target
+    if target["kind"] == "money":
+        amt_min = target["amount"] * pct_min / 100
+        amt_max = target["amount"] * pct_max / 100
+        code = target["currency"]
+        m_min = f"{amt_min:,.0f} {code}"
+        m_max = f"{amt_max:,.0f} {code}"
+        target_disp = f"{target['amount']:,.0f} {code}/year"
+        weight_note = ""
+        if price_usd_per_oz and code == "USD":
+            g_min = amt_min / price_usd_per_oz * 31.1035
+            g_max = amt_max / price_usd_per_oz * 31.1035
+            if is_multi:
+                seen = set()
+                weight_rows = []
+                for u in units:
+                    pair = (_format_weight(g_min, u), _format_weight(g_max, u))
+                    if pair in seen:
+                        continue
+                    seen.add(pair)
+                    weight_rows.append(f"<li>{pair[0]} – {pair[1]}</li>")
+                weight_note = (
+                    "<br><span style='font-size:0.85em;color:#5C4200;'>At today's price, that range is roughly:</span>"
+                    f"<ul style='margin:0.2rem 0 0.2rem 1.1rem;padding:0;font-size:0.9em;'>{''.join(weight_rows)}</ul>"
+                )
+            else:
+                weight_note = (f" — at today's price, that's roughly "
+                               f"{_format_weight(g_min, primary_unit)} to "
+                               f"{_format_weight(g_max, primary_unit)}")
+        head = (f"Suggested amount: up to <b>{m_max}</b>"
+                if pct_min == pct_max else
+                f"Suggested amount: <b>at least {m_min}, at most {m_max}</b>")
+        head += f" (out of your {target_disp} budget){weight_note}"
+        head += (" Pick anywhere in that range you're comfortable — this is "
+                 "a suggestion, never a threshold.")
+        return head
+
+    return f"Suggested amount: {pct_min}%-{pct_max}% of your yearly budget"
+
+
 SUPPORTED_CURRENCIES = {
     "USD": {"symbol": "$",   "yf_ticker": None, "invert": False, "name": "US Dollar"},
     "EUR": {"symbol": "€",   "yf_ticker": "EURUSD=X", "invert": True,  "name": "Euro"},

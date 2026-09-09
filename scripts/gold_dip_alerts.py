@@ -49,6 +49,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR / "scripts"))
 from currency_utils import (  # noqa: E402
     make_price_formatter, fx_footer_line, build_multi_currency_table_html,
+    parse_gold_target, format_suggested_amount,
+)
+from shubh_calendar import (  # noqa: E402
+    is_shubh_day, describe_shubh_day, upcoming_shubh_days, calendar_coverage,
+    format_muhurta_line, muhurta_window_for,
 )
 
 RECIPIENTS_FILE = BASE_DIR / "configs" / "gold_alert_recipients.yaml"
@@ -723,11 +728,209 @@ def evaluate_tiers(ctx: dict, year_st: dict,
                 ),
             })
 
+    # Attach quarter + baseline suggested percentage of the user's yearly
+    # gold budget. Numbers below are grounded in the 22-year backtest —
+    # see docs/BACKTEST_FINDINGS.md. They are SUGGESTIONS, not gates: the
+    # alert fires whenever the price threshold is met regardless of size.
+    q = ctx["quarter"]
+    for a in alerts:
+        a["quarter"] = q
+        a["suggested_pct_of_annual_budget"] = _base_suggested_pct(a["tier"], q)
+
+    # Cultural boost — if today is a shubh diva AND any price-based tier
+    # already fired, upgrade those alerts (bigger size, subject prefix,
+    # detail lead). Shubh-only (no dip) never fires on its own: the whole
+    # point is that price is the primary signal; the shubh diva just
+    # makes an existing dip a "golden day".
+    _apply_cultural_boost(alerts, ctx["date"])
+
+    # Conviction label — derived from tier + quarter historical performance
+    # (and cultural_boost). NOT from size — size is a separate suggestion
+    # the reader can adjust freely. Also attach the min/max suggested band.
+    for a in alerts:
+        a["conviction"] = _conviction_label(
+            a.get("cultural_boost", False),
+            a["tier"],
+            a["quarter"],
+        )
+        lo, hi = _suggested_range(a["suggested_pct_of_annual_budget"])
+        a["suggested_pct_min"] = lo
+        a["suggested_pct_max"] = hi
     return alerts
 
 
-# --------------------------------------------------------------------------
-# Email
+# Baseline suggested percentages by tier + quarter (of the user's yearly
+# gold budget). Grounded in 22-year backtest hit rates:
+#   Q1 seasonal (66% hit, 5% avg gain) → 50% deploy
+#   Q2 dips (46% hit — worse than random) → very small
+#   Q3 dips (middling) → moderate
+#   Q4 dips (100% hit for -5%, strong seasonal demand) → large
+#   Q1/Q4 major dips (100% hit rate historically) → maximum
+#   Q2 major dips (2008, 2013 bear starts) → zero — do not catch this knife
+_BASELINE_PCT_BY_TIER: dict = {
+    "seasonal":      50,                             # Q1 -3% dip, strong single signal
+    "deadline":      100,                            # Feb 28 last-chance, deploy what's left
+    "opportunistic": {1: 45, 2: 5, 3: 25, 4: 55},    # quarter-conditional
+    "major":         {1: 75, 2: 0, 3: 20, 4: 100},   # -10% dip, quarter-conditional
+    "predicted":     0,                              # heads-up only — price hasn't dropped yet
+}
+
+
+def _base_suggested_pct(tier: str, quarter: int) -> int:
+    conf = _BASELINE_PCT_BY_TIER.get(tier, 0)
+    if isinstance(conf, dict):
+        return int(conf.get(quarter, 0))
+    return int(conf)
+
+
+def _boosted_suggested_pct(tier: str, quarter: int) -> int:
+    """Cultural-boost adjustment applied on top of baseline.
+
+    Important: if the baseline is 0 (e.g. Q2 major dip — 2008/2013 bear
+    starts), a golden day does NOT override the stand-down. The historical
+    warning is that unambiguous — a shubh diva does not turn a knife-catch
+    into a good buy.
+    """
+    base = _base_suggested_pct(tier, quarter)
+    if base == 0:
+        return 0  # preserve the stand-down
+    if tier in ("seasonal", "deadline"):
+        return 100  # golden + seasonal/deadline → full budget
+    # opportunistic + major: +15 pts, capped at 100
+    return min(100, base + 15)
+
+
+# Conviction is driven by SIGNAL QUALITY (tier + quarter historical performance),
+# not by numerical size. Size is a separate suggestion the reader can act on
+# freely — the alert never says "you must buy X"; only "this is the signal
+# strength; here is the range we'd suggest if you decide to buy."
+_CONVICTION_BY_TIER_QUARTER: dict = {
+    ("seasonal", 1):      "STRONG BUY",
+    ("seasonal", 2):      "STRONG BUY",
+    ("deadline", 1):      "STRONG BUY",
+    ("deadline", 2):      "STRONG BUY",
+    ("opportunistic", 1): "STRONG BUY",
+    ("opportunistic", 2): "OPTIONAL — small allocation",
+    ("opportunistic", 3): "CONSIDER BUYING",
+    ("opportunistic", 4): "STRONG BUY",
+    ("major", 1):         "STRONG BUY",
+    ("major", 2):         "STAND DOWN",
+    ("major", 3):         "CONSIDER BUYING",
+    ("major", 4):         "STRONG BUY",
+    ("predicted", 1):     "HEADS UP ONLY",
+    ("predicted", 2):     "HEADS UP ONLY",
+    ("predicted", 3):     "HEADS UP ONLY",
+    ("predicted", 4):     "HEADS UP ONLY",
+}
+
+
+def _conviction_label(cultural_boost: bool, tier: str, quarter: int) -> str:
+    base = _CONVICTION_BY_TIER_QUARTER.get((tier, quarter), "CONSIDER BUYING")
+    # Preserved regardless of cultural boost — the historical warning is that clear.
+    if base in ("STAND DOWN", "HEADS UP ONLY"):
+        return base
+    if cultural_boost:
+        return "DEFINITELY BUY"
+    return base
+
+
+def _suggested_range(midpoint: int) -> tuple[int, int]:
+    """Convert a single-point size suggestion into a suggested range so
+    the reader picks their own comfort level. A ±15pt spread around the
+    historical midpoint, clamped to [0, 100]. Zero stays zero (flat)."""
+    if midpoint == 0:
+        return (0, 0)
+    return (max(0, midpoint - 15), min(100, midpoint + 15))
+
+
+def _apply_cultural_boost(alerts: list[dict], today_iso: str) -> None:
+    """Mutates each alert in-place to attach a cultural-boost bump when
+    today is a shubh diva. The rules (per user's design):
+
+      - price-only dip fires normally
+      - shubh-only day (no dip) does NOT fire
+      - price + shubh: fire the price alert, boost size + subject/headline
+
+    Size-boost mapping:
+      seasonal      → size line prefixed with "GOLDEN DAY — buy the full
+                       amount you planned for this year (not half)."
+      opportunistic → prefixed with "GOLDEN DAY — buy 25% more than usual
+                       for this tier."
+      major         → subject changes to "gold: golden day + big drop"
+      deadline      → "GOLDEN DAY plus deadline — do not wait."
+      predicted     → no boost (predicted-drop hasn't happened yet)
+    """
+    if not is_shubh_day(today_iso):
+        return
+    label = describe_shubh_day(today_iso) or "shubh diva"
+    muhurta_line = format_muhurta_line(today_iso)  # None if all events are full-day
+    for a in alerts:
+        tier = a.get("tier")
+        if tier == "predicted":
+            # Don't boost a forecast — price hasn't dropped yet. Just tag it.
+            a["cultural_note"] = (
+                f"Today is {label}. If the drop the model expects actually "
+                f"happens, that would land on a shubh diva — worth watching, "
+                f"but no size change until the price is real."
+            )
+            continue
+        a["cultural_boost"] = True
+        a["cultural_label"] = label
+        a["cultural_muhurta_line"] = muhurta_line  # None if full-day
+        # Bump the numerical suggestion to the golden-day level for this tier
+        a["suggested_pct_of_annual_budget"] = _boosted_suggested_pct(
+            a["tier"], a.get("quarter", 1))
+        # Subject prefix so the inbox itself signals the alignment
+        a["subject"] = "gold: GOLDEN DAY — " + a["subject"].replace("gold: ", "", 1)
+        # Prepend a golden-day sentence to the detail, including the muhurta
+        # window if today is a partial-day event (Pushya etc.)
+        window_sentence = ""
+        if muhurta_line:
+            window_sentence = (
+                f" Note: today's auspicious window is not the full day — "
+                f"the traditional muhurta is {muhurta_line}. If your buy is "
+                f"during that window it lines up with the tradition; outside "
+                f"the window the day is still shubh in the broader sense."
+            )
+        a["detail"] = (
+            f"GOLDEN DAY: today is {label}, an auspicious day in the Hindu "
+            f"calendar traditionally used for gold purchases. Price has also "
+            f"dropped enough to trigger a buy alert on its own — so both signals "
+            f"line up today, which historically happens about 16 days a year."
+            f"{window_sentence}\n\n"
+            + a["detail"]
+        )
+        # Bump the size wording per tier
+        if tier == "seasonal":
+            a["playbook_size"] = (
+                "The full amount you planned to spend on gold this year — "
+                "the golden-day + seasonal-dip combination is the strongest "
+                "signal this system fires."
+            )
+        elif tier == "deadline":
+            a["playbook_size"] = (
+                "All of what you planned to spend this year, and act today — "
+                "golden day + deadline day is the last thing you want to skip."
+            )
+        elif tier == "opportunistic":
+            # Add ~25% to whatever the quarter-specific size said
+            existing = a.get("playbook_size", "")
+            a["playbook_size"] = (
+                f"About 25% more than the usual size for this quarter — "
+                f"golden-day boost. (Base guidance: {existing})"
+            )
+        elif tier == "major":
+            existing = a.get("playbook_size", "")
+            a["playbook_size"] = (
+                f"GOLDEN DAY on top of a major dip — this is rare. "
+                f"Base guidance: {existing}"
+            )
+        # Add explicit "why" addendum
+        a["playbook_why"] = (a.get("playbook_why", "") + "\n\n"
+            f"Cultural bonus: today is {label}. Gold prices don't care about "
+            f"the Hindu calendar, but you probably do — and today the price "
+            f"signal and the cultural signal happen to agree. In 22 years of "
+            f"data this exact overlap occurred on 347 days (~16/year).")
 # --------------------------------------------------------------------------
 
 def _localize_prices(html: str, price_fmt, fx_line: str) -> str:
@@ -755,7 +958,9 @@ def _localize_prices(html: str, price_fmt, fx_line: str) -> str:
 
 def render_html(alert: dict, ctx: dict, recipient_name: str | None,
                 price_fmt=None, fx_line: str = "",
-                multi_currency_table: str = "") -> str:
+                multi_currency_table: str = "",
+                gold_target: dict | None = None,
+                target_display_unit: str = "gram") -> str:
     greeting = f"Hello {recipient_name}," if recipient_name else "Hello,"
 
     # Build the prominent playbook box if the alert carries prescriptive fields
@@ -834,14 +1039,78 @@ def render_html(alert: dict, ctx: dict, recipient_name: str | None,
     <div style="font-size: 0.95rem; color: #34495E;">{legacy_action}</div>
   </div>"""
 
+    # Golden-day header when both signals aligned
+    is_golden = alert.get("cultural_boost")
+    header_border = "#C9A24A" if is_golden else "#1F4E79"
+    header_bg = "#FDF7E3" if is_golden else "#F8F9FA"
+    header_title = "Gold Dip Alert · Golden Day" if is_golden else "Gold Dip Alert"
+    header_h_color = "#8A6D1A" if is_golden else "#1F4E79"
+
+    # Conviction badge — the single most important thing the reader sees
+    conviction = alert.get("conviction") or ""
+    conv_colors = {
+        "DEFINITELY BUY":    ("#C9A24A", "#5B4200"),   # bright gold
+        "STRONG BUY":        ("#1F8A5F", "#0B3E2A"),   # green
+        "CONSIDER BUYING":   ("#D68910", "#5C3E0A"),   # amber
+        "OPTIONAL — small allocation": ("#F0C24A", "#5C4600"),
+        "HEADS UP ONLY":     ("#7F8C8D", "#2C3E50"),   # grey
+        "STAND DOWN":        ("#C0392B", "#5A1E15"),   # red — do not buy
+    }
+    bg_col, fg_col = conv_colors.get(conviction, ("#7F8C8D", "#2C3E50"))
+    lo = alert.get("suggested_pct_min", 0)
+    hi = alert.get("suggested_pct_max", 0)
+    if conviction == "STAND DOWN":
+        pct_line = ("Suggested amount: <b>zero</b> — historically this pattern "
+                    "has been a bear-market start, not a buying opportunity. Do not buy.")
+    elif conviction == "HEADS UP ONLY":
+        pct_line = ("Suggested amount: none for now — this is a heads-up that a drop "
+                    "might happen. Wait for a real alert with actual pricing.")
+    else:
+        pct_line = format_suggested_amount(
+            gold_target, lo, hi,
+            price_usd_per_oz=ctx.get("price"),
+            preferred_display_unit=target_display_unit,
+        )
+    conviction_badge = f"""
+  <div style="margin: 1.1rem 0 0.4rem; padding: 0.75rem 1rem; background: {bg_col}; color: white; border-radius: 4px;">
+    <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px; opacity: 0.85;">Conviction</div>
+    <div style="font-size: 1.35rem; font-weight: 600; margin-top: 0.1rem;">{conviction}</div>
+    <div style="font-size: 0.9rem; margin-top: 0.35rem; opacity: 0.95;">{pct_line}</div>
+  </div>"""
+    golden_badge = ""
+    if is_golden:
+        muhurta_row = ""
+        m_line = alert.get("cultural_muhurta_line")
+        if m_line:
+            muhurta_row = (
+                f'<div style="margin-top: 0.35rem; font-size: 0.82rem; '
+                f'color: #6E5410;"><strong>Auspicious window today:</strong> {m_line}</div>'
+            )
+        golden_badge = (
+            f'<div style="display: inline-block; margin-top: 0.4rem; padding: '
+            f'0.25rem 0.6rem; background: #C9A24A; color: white; font-size: 0.72rem; '
+            f'text-transform: uppercase; letter-spacing: 0.6px; border-radius: 3px;">'
+            f'{alert.get("cultural_label", "shubh diva")} + price dip</div>'
+            f'{muhurta_row}'
+        )
+    cultural_note_block = ""
+    note = alert.get("cultural_note")
+    if note:
+        cultural_note_block = f"""
+  <div style="padding: 0.7rem 0.9rem; margin: 1rem 0; background: #FDF7E3; border-left: 3px solid #C9A24A; border-radius: 2px; font-size: 0.9rem; color: #6E5410;">
+    <strong>Cultural note.</strong> {note}
+  </div>"""
+
     html = f"""<!doctype html><html><body style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 640px; margin: 0 auto; color: #2C3E50; line-height: 1.55;">
-  <div style="border-left: 4px solid #1F4E79; padding: 1.25rem 1.5rem; background: #F8F9FA;">
-    <div style="text-transform: uppercase; font-size: 0.75rem; color: #7F8C8D; letter-spacing: 0.5px;">Gold Dip Alert · {ctx['date']}</div>
-    <h1 style="margin: 0.3rem 0 0.6rem; font-size: 1.4rem; color: #1F4E79; font-weight: 500;">{alert['headline']}</h1>
+  <div style="border-left: 4px solid {header_border}; padding: 1.25rem 1.5rem; background: {header_bg};">
+    <div style="text-transform: uppercase; font-size: 0.75rem; color: #7F8C8D; letter-spacing: 0.5px;">{header_title} · {ctx['date']}</div>
+    <h1 style="margin: 0.3rem 0 0.6rem; font-size: 1.4rem; color: {header_h_color}; font-weight: 500;">{alert['headline']}</h1>
     <div style="color: #34495E; font-size: 0.95rem;">
       Gold today: ${ctx['price']:.0f} · Recent 20-day peak: ${ctx['roll_20d_high']:.0f} · Down {abs(ctx['pullback_pct']):.1f}% from that peak
     </div>
-  </div>
+    {golden_badge}
+  </div>{cultural_note_block}
+  {conviction_badge}
 
   <p>{greeting}</p>
 
@@ -998,6 +1267,11 @@ def _run_test_email() -> int:
         currencies_list = r.get("currencies")
         weight_units_list = r.get("weight_units")
         weight_unit_single = r.get("weight_unit", "troy_ounce")
+        gold_target = parse_gold_target(r.get("annual_gold_target"))
+        target_display_unit = (
+            (weight_units_list[0] if weight_units_list else None)
+            or weight_unit_single or "gram"
+        )
 
         if currencies_list:
             currencies_list = [c.upper() for c in currencies_list]
@@ -1030,7 +1304,9 @@ def _run_test_email() -> int:
                            email, alert["subject"],
                            render_html(alert, ctx_for_alert, r.get("name"),
                                        price_fmt=price_fmt, fx_line=fx_line,
-                                       multi_currency_table=multi_table))
+                                       multi_currency_table=multi_table,
+                                       gold_target=gold_target,
+                                       target_display_unit=target_display_unit))
                 print(f"  sent [{alert['tier']}] -> {email} ({label})")
                 sent += 1
             except Exception as e:
@@ -1069,6 +1345,24 @@ def main() -> int:
     print(f"Current gold: ${ctx['price']:.2f} on {ctx['date']} "
           f"(pullback {ctx['pullback_pct']:.2f}% from 20d high ${ctx['roll_20d_high']:.0f}) · Q{ctx['quarter']}")
 
+    # Shubh calendar status — flag runtime if coverage is running low so
+    # the owner refreshes configs/shubh_calendar.json before it lapses
+    cov_start, cov_end = calendar_coverage()
+    today_iso = ctx["date"]
+    if cov_end:
+        days_left = (datetime.fromisoformat(cov_end).date()
+                     - datetime.fromisoformat(today_iso).date()).days
+        shubh_today = describe_shubh_day(today_iso)
+        shubh_msg = f"shubh today: {shubh_today}" if shubh_today else "shubh today: no"
+        print(f"Shubh calendar: covers {cov_start} → {cov_end} "
+              f"({days_left} days forward) · {shubh_msg}")
+        if days_left < 30:
+            print(f"WARNING: shubh calendar has only {days_left} days of "
+                  f"forward coverage. Refresh configs/shubh_calendar.json soon — "
+                  f"see scripts/refresh_shubh_calendar.py for how.")
+    else:
+        print("Shubh calendar: not loaded (cultural boost inactive)")
+
     # Optional MarketPulse forecast for Tier 5 (predictive)
     forecast = load_gold_forecast()
     if forecast:
@@ -1106,6 +1400,13 @@ def main() -> int:
             print(f"\n=== SUBJECT: {a['subject']} ===")
             print(f"HEADLINE: {a['headline']}")
             print(f"DETAIL: {a['detail']}")
+            lo, hi = a.get('suggested_pct_min', 0), a.get('suggested_pct_max', 0)
+            if lo == hi:
+                pct_str = f"suggested up to {hi}% of yearly budget"
+            else:
+                pct_str = f"suggested {lo}–{hi}% of yearly budget (you choose)"
+            print(f"CONVICTION: {a.get('conviction','?'):<28} | {pct_str}"
+                  + (" | GOLDEN DAY" if a.get('cultural_boost') else ""))
             print(f"ACTION: {a.get('playbook_action') or a.get('action', '')}")
             if a.get('playbook_size'):
                 print(f"SIZE:   {a['playbook_size']}")
@@ -1147,6 +1448,16 @@ def main() -> int:
         weight_units_list = r.get("weight_units")
         weight_unit_single = r.get("weight_unit", "troy_ounce")
 
+        # Optional annual gold target — converts pct% suggestions into actual
+        # weight or money for this specific person. Accepts "50g", "5_tola",
+        # "1_troy_ounce", "$5000", "500000_INR", etc.
+        gold_target = parse_gold_target(r.get("annual_gold_target"))
+        # Display unit(s) for the weight range — pass the FULL list so all
+        # units the recipient asked for appear side-by-side (admin/test mode).
+        # Falls back to the single `weight_unit`, then to grams.
+        target_display_unit = (weight_units_list
+                               or [weight_unit_single or "gram"])
+
         if currencies_list:
             currencies_list = [c.upper() for c in currencies_list]
             price_fmt = None   # body stays in USD; table shows all currencies
@@ -1174,7 +1485,9 @@ def main() -> int:
                            email, a["subject"],
                            render_html(a, ctx, name,
                                        price_fmt=price_fmt, fx_line=fx_line,
-                                       multi_currency_table=multi_table))
+                                       multi_currency_table=multi_table,
+                                       gold_target=gold_target,
+                                       target_display_unit=target_display_unit))
                 print(f"  sent [{a['tier']}] -> {email} ({label})")
                 sent += 1
             except Exception as e:

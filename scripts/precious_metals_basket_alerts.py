@@ -49,6 +49,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR / "scripts"))
 from currency_utils import (  # noqa: E402
     make_price_formatter, fx_footer_line, build_multi_currency_table_html,
+    parse_gold_target, format_suggested_amount,
+)
+from shubh_calendar import (  # noqa: E402
+    is_shubh_day, describe_shubh_day, format_muhurta_line,
 )
 
 RECIPIENTS_FILE = BASE_DIR / "configs" / "precious_metals_recipients.yaml"
@@ -218,6 +222,40 @@ def evaluate_basket(gold_ctx: dict, silver_ctx: dict, state: dict) -> list[dict]
                 "caught a good entry."
             ),
         })
+
+    # Cultural boost — same additive rule as gold_dip_alerts.
+    # Shubh-only never fires; shubh + basket dip boosts existing alerts.
+    if is_shubh_day(date):
+        label = describe_shubh_day(date) or "shubh diva"
+        muhurta_line = format_muhurta_line(date)
+        for a in alerts:
+            a["cultural_boost"] = True
+            a["cultural_label"] = label
+            a["cultural_muhurta_line"] = muhurta_line
+            a["subject"] = "GOLDEN DAY — " + a["subject"]
+            window_sentence = ""
+            if muhurta_line:
+                window_sentence = (
+                    f" Auspicious window today: {muhurta_line}. Buy inside it "
+                    f"if you want the exact traditional muhurta; outside it "
+                    f"the day is still shubh in the broader sense."
+                )
+            a["detail"] = (
+                f"GOLDEN DAY: today is {label} (auspicious in the Hindu "
+                f"calendar for precious metals). Gold AND silver have both "
+                f"dropped, so cultural signal + price signal + basket "
+                f"coordination all line up — a rare combination."
+                f"{window_sentence}\n\n"
+                + a["detail"]
+            )
+            a["playbook_size"] = (
+                f"About 25% more than the base size for this tier. "
+                f"Base: {a['playbook_size']}"
+            )
+            a["playbook_why"] = (a.get("playbook_why", "") + "\n\n"
+                f"Cultural bonus: today is {label}. Historical overlap of "
+                f"shubh diva + coordinated gold/silver dip is roughly "
+                f"5-8 days per year — much rarer than the gold-only overlap.")
     return alerts
 
 

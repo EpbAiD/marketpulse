@@ -12,7 +12,9 @@
 #
 # Weight-unit options (mutually exclusive):
 #   weight_unit:  10_gram                        # single unit
-#   weight_units: [troy_ounce, gram, 10_gram]    # multi (separate table per unit)
+#   weight_units: [troy_ounce, gram, 10_gram]    # multi — separate price table per
+#                                                  unit AND the suggested-amount line
+#                                                  renders in every unit side-by-side.
 #
 # Supported weight codes:
 #   troy_ounce  (default; gold futures market standard, ~31.1g)
@@ -23,6 +25,20 @@
 #
 # Optional `tiers` filter: [seasonal, deadline, opportunistic, major, predicted]
 # Omit `tiers` to receive all five.
+#
+# Optional `annual_gold_target`: your yearly gold-buying target. Converts the
+# suggested percentage into an actual weight or money range in the email.
+# Accepts any of:
+#   50g            (grams)
+#   100_gram       (grams, longer spelling)
+#   5_tola         (Indian tola — ~11.66 g each)
+#   1_troy_ounce   (~31.1 g)
+#   2_kg           (kilograms)
+#   $5000          (USD budget — email also shows equivalent weight at today's price)
+#   ₹500000        (INR budget)
+#   50000_INR      (currency-code suffix form)
+# If omitted, the email falls back to percentage wording ("35% – 65% of your yearly budget").
+# The suggestion is always a RANGE — you pick where in it you're comfortable.
 
 recipients:
   # Owner — one email showing every currency AND every weight unit
@@ -53,3 +69,7 @@ recipients:
       - 10_gram
       - kilogram
       - tola
+    # Placeholder — change this to whatever yearly gold-buying weight or
+    # budget makes sense for you. Any format above works. Leave empty or
+    # remove this line to fall back to percentage wording.
+    annual_gold_target: 50g

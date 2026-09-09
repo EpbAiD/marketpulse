@@ -1,0 +1,8174 @@
+{
+ "generated_at": "2026-09-08",
+ "coverage": {
+  "start": "2005-01-06",
+  "end": "2026-09-10"
+ },
+ "source": "Aggregated from 22 years of Panchang data (drik-panchang, mypanchang, gold-industry sources) via 4 parallel research agents",
+ "event_types": [
+  "amavasya",
+  "ekadashi",
+  "festival",
+  "purnima",
+  "pushya"
+ ],
+ "n_events": 1511,
+ "events": [
+  {
+   "date": "2005-01-06",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2005-01-07",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2005-01-09",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2005-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2005-01-21",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2005-01-25",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2005-02-05",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2005-02-08",
+   "type": "amavasya",
+   "month": 2
+  },
+  {
+   "date": "2005-02-12",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2005-02-19",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2005-02-24",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2005-03-07",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2005-03-08",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2005-03-21",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2005-03-25",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2005-04-05",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2005-04-09",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2005-04-13",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2005-04-17",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2005-04-20",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2005-04-24",
+   "type": "purnima",
+   "month": 4
+  },
+  {
+   "date": "2005-05-04",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2005-05-11",
+   "type": "festival",
+   "month": 5
+  },
+  {
+   "date": "2005-05-20",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2005-05-23",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2005-06-02",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2005-06-18",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2005-06-22",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2005-07-02",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2005-07-08",
+   "type": "festival",
+   "month": 7
+  },
+  {
+   "date": "2005-07-18",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2005-07-21",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2005-07-31",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2005-08-16",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2005-08-19",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2005-08-26",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2005-08-30",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2005-09-07",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2005-09-14",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2005-09-15",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2005-09-18",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2005-09-28",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2005-10-03",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2005-10-12",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2005-10-13",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2005-10-17",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2005-10-28",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2005-10-30",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2005-11-01",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2005-11-02",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2005-11-03",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2005-11-12",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2005-11-15",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2005-11-27",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2005-12-11",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2005-12-15",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2005-12-27",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2006-01-10",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2006-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2006-01-26",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2006-01-29",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2006-02-02",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2006-02-08",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2006-02-13",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2006-02-24",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2006-02-26",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2006-03-10",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2006-03-14",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2006-03-15",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2006-03-26",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2006-03-29",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2006-04-06",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2006-04-09",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2006-04-13",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2006-04-24",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2006-04-30",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2006-05-09",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2006-05-12",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2006-05-23",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2006-06-07",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2006-06-11",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2006-06-21",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2006-07-07",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2006-07-11",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2006-07-21",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2006-08-05",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2006-08-08",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2006-08-15",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2006-08-19",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2006-08-27",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2006-09-04",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2006-09-06",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2006-09-07",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2006-09-18",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2006-09-23",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2006-10-02",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2006-10-03",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2006-10-06",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2006-10-09",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2006-10-17",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2006-10-19",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2006-10-21",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2006-10-22",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2006-10-23",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2006-11-02",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2006-11-05",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2006-11-16",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2006-12-01",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2006-12-04",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2006-12-16",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2006-12-30",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2007-01-03",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2007-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2007-01-15",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2007-01-18",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2007-01-23",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2007-01-28",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2007-02-02",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2007-02-14",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2007-02-15",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2007-02-27",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2007-03-03",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2007-03-04",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2007-03-15",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2007-03-19",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2007-03-26",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2007-03-29",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2007-04-02",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2007-04-14",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2007-04-19",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2007-04-28",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2007-05-01",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2007-05-13",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2007-05-27",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2007-05-31",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2007-06-11",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2007-06-26",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2007-06-30",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2007-07-11",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2007-07-16",
+   "type": "festival",
+   "month": 7
+  },
+  {
+   "date": "2007-07-26",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2007-07-29",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2007-08-09",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2007-08-17",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2007-08-24",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2007-08-26",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2007-08-27",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2007-09-03",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2007-09-07",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2007-09-15",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2007-09-23",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2007-09-26",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2007-10-06",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2007-10-11",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2007-10-21",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2007-10-22",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2007-10-25",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2007-10-28",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2007-11-05",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2007-11-07",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2007-11-09",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2007-11-10",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2007-11-11",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2007-11-15",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2007-11-21",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2007-11-24",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2007-12-05",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2007-12-19",
+   "type": "festival",
+   "month": 12
+  },
+  {
+   "date": "2007-12-20",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2007-12-23",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2008-01-04",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2008-01-15",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2008-01-19",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2008-01-22",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2008-02-03",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2008-02-06",
+   "type": "amavasya",
+   "month": 2
+  },
+  {
+   "date": "2008-02-11",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2008-02-17",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2008-02-21",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2008-03-03",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2008-03-05",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2008-03-17",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2008-03-20",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2008-03-21",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2008-04-02",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2008-04-06",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2008-04-13",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2008-04-16",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2008-04-20",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2008-05-02",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2008-05-07",
+   "type": "festival",
+   "month": 5
+  },
+  {
+   "date": "2008-05-15",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2008-05-19",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2008-05-31",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2008-06-03",
+   "type": "festival",
+   "month": 6
+  },
+  {
+   "date": "2008-06-14",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2008-06-18",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2008-06-29",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2008-07-04",
+   "type": "festival",
+   "month": 7
+  },
+  {
+   "date": "2008-07-14",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2008-07-17",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2008-07-29",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2008-08-12",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2008-08-16",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2008-08-23",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2008-08-27",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2008-09-03",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2008-09-11",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2008-09-12",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2008-09-15",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2008-09-25",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2008-09-29",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2008-10-07",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2008-10-09",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2008-10-11",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2008-10-14",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2008-10-24",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2008-10-26",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2008-10-28",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2008-10-30",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2008-11-03",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2008-11-09",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2008-11-12",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2008-11-23",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2008-12-09",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2008-12-11",
+   "type": "festival",
+   "month": 12
+  },
+  {
+   "date": "2008-12-23",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2009-01-07",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2009-01-10",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2009-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2009-01-21",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2009-01-26",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2009-01-30",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2009-02-06",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2009-02-09",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2009-02-20",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2009-02-22",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2009-03-07",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2009-03-10",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2009-03-11",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2009-03-22",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2009-03-27",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2009-04-03",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2009-04-05",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2009-04-09",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2009-04-13",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2009-04-21",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2009-04-27",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2009-05-05",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2009-05-08",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2009-05-20",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2009-06-03",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2009-06-07",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2009-06-19",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2009-07-03",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2009-07-06",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2009-07-18",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2009-08-01",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2009-08-05",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2009-08-13",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2009-08-17",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2009-08-23",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2009-08-31",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2009-09-02",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2009-09-04",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2009-09-15",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2009-09-19",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2009-09-28",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2009-09-30",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2009-10-03",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2009-10-07",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2009-10-14",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2009-10-15",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2009-10-17",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2009-10-18",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2009-10-19",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2009-10-29",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2009-11-02",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2009-11-12",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2009-11-21",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2009-11-28",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2009-12-01",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2009-12-12",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2009-12-28",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2009-12-31",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2010-01-10",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2010-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2010-01-15",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2010-01-20",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2010-01-26",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2010-01-30",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2010-02-09",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2010-02-11",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2010-02-25",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2010-02-27",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2010-02-28",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2010-03-11",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2010-03-16",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2010-03-24",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2010-03-26",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2010-03-29",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2010-03-30",
+   "type": "purnima",
+   "month": 3
+  },
+  {
+   "date": "2010-04-10",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2010-04-13",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2010-04-14",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2010-04-28",
+   "type": "purnima",
+   "month": 4
+  },
+  {
+   "date": "2010-05-10",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2010-05-16",
+   "type": "festival",
+   "month": 5
+  },
+  {
+   "date": "2010-05-27",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2010-06-08",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2010-06-22",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2010-06-26",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2010-07-08",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2010-07-12",
+   "type": "festival",
+   "month": 7
+  },
+  {
+   "date": "2010-07-21",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2010-07-25",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2010-08-06",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2010-08-20",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2010-08-23",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2010-08-24",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2010-09-01",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2010-09-05",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2010-09-11",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2010-09-19",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2010-09-23",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2010-10-04",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2010-10-08",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2010-10-16",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2010-10-18",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2010-10-22",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2010-10-26",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2010-11-02",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2010-11-03",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2010-11-05",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2010-11-07",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2010-11-17",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2010-11-21",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2010-12-02",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2010-12-17",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2010-12-20",
+   "type": "festival",
+   "month": 12
+  },
+  {
+   "date": "2010-12-31",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2011-01-03",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2011-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2011-01-16",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2011-01-19",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2011-01-20",
+   "type": "pushya",
+   "month": 1,
+   "start_ist": "00:00",
+   "end_ist": "21:18",
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2011-01-29",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2011-02-02",
+   "type": "amavasya",
+   "month": 2
+  },
+  {
+   "date": "2011-02-08",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2011-02-14",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2011-02-17",
+   "type": "pushya",
+   "month": 2,
+   "start_ist": "00:00",
+   "end_ist": "08:14",
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2011-02-18",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2011-02-28",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2011-03-03",
+   "type": "amavasya",
+   "month": 3
+  },
+  {
+   "date": "2011-03-16",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2011-03-16",
+   "type": "pushya",
+   "month": 3,
+   "start_ist": "00:00",
+   "end_ist": "18:59"
+  },
+  {
+   "date": "2011-03-19",
+   "type": "purnima",
+   "month": 3
+  },
+  {
+   "date": "2011-03-30",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2011-04-02",
+   "type": "amavasya",
+   "month": 4
+  },
+  {
+   "date": "2011-04-04",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2011-04-12",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2011-04-12",
+   "type": "pushya",
+   "month": 4,
+   "start_ist": "00:00",
+   "end_ist": "03:42",
+   "spans_midnight": true
+  },
+  {
+   "date": "2011-04-14",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2011-04-14",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2011-04-18",
+   "type": "purnima",
+   "month": 4
+  },
+  {
+   "date": "2011-04-28",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2011-05-02",
+   "type": "amavasya",
+   "month": 5
+  },
+  {
+   "date": "2011-05-06",
+   "type": "festival",
+   "month": 5
+  },
+  {
+   "date": "2011-05-10",
+   "type": "pushya",
+   "month": 5,
+   "start_ist": "00:00",
+   "end_ist": "10:04"
+  },
+  {
+   "date": "2011-05-14",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2011-05-17",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2011-05-28",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2011-06-01",
+   "type": "amavasya",
+   "month": 6
+  },
+  {
+   "date": "2011-06-06",
+   "type": "pushya",
+   "month": 6,
+   "start_ist": "00:00",
+   "end_ist": "15:28"
+  },
+  {
+   "date": "2011-06-12",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2011-06-15",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2011-06-27",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2011-06-30",
+   "type": "amavasya",
+   "month": 6
+  },
+  {
+   "date": "2011-07-03",
+   "type": "pushya",
+   "month": 7,
+   "start_ist": "00:00",
+   "end_ist": "21:45",
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2011-07-11",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2011-07-15",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2011-07-26",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2011-07-29",
+   "type": "amavasya",
+   "month": 7
+  },
+  {
+   "date": "2011-07-31",
+   "type": "pushya",
+   "month": 7,
+   "start_ist": "00:00",
+   "end_ist": "05:58",
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2011-08-09",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2011-08-13",
+   "type": "purnima",
+   "month": 8
+  },
+  {
+   "date": "2011-08-25",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2011-08-27",
+   "type": "pushya",
+   "month": 8,
+   "start_ist": "00:00",
+   "end_ist": "15:50"
+  },
+  {
+   "date": "2011-08-28",
+   "type": "amavasya",
+   "month": 8
+  },
+  {
+   "date": "2011-09-08",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2011-09-10",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2011-09-12",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2011-09-23",
+   "type": "pushya",
+   "month": 9,
+   "start_ist": "00:00",
+   "end_ist": "02:00",
+   "spans_midnight": true
+  },
+  {
+   "date": "2011-09-24",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2011-09-26",
+   "type": "amavasya",
+   "month": 9
+  },
+  {
+   "date": "2011-09-28",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2011-10-06",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2011-10-07",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2011-10-11",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2011-10-20",
+   "type": "pushya",
+   "month": 10,
+   "start_ist": "10:47",
+   "end_ist": "04:52",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2011-10-23",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2011-10-24",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2011-10-26",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2011-11-06",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2011-11-10",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2011-11-17",
+   "type": "pushya",
+   "month": 11,
+   "start_ist": "00:00",
+   "end_ist": "17:24",
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2011-11-21",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2011-11-24",
+   "type": "amavasya",
+   "month": 11
+  },
+  {
+   "date": "2011-11-29",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2011-12-06",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2011-12-10",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2011-12-14",
+   "type": "pushya",
+   "month": 12,
+   "start_ist": "00:00",
+   "end_ist": "22:52"
+  },
+  {
+   "date": "2011-12-21",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2011-12-24",
+   "type": "amavasya",
+   "month": 12
+  },
+  {
+   "date": "2012-01-05",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2012-01-09",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2012-01-10",
+   "type": "pushya",
+   "month": 1,
+   "start_ist": "00:00",
+   "end_ist": "05:15",
+   "spans_midnight": true
+  },
+  {
+   "date": "2012-01-15",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2012-01-19",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2012-01-22",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2012-01-28",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2012-02-03",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2012-02-06",
+   "type": "pushya",
+   "month": 2,
+   "start_ist": "14:11",
+   "end_ist": "13:48",
+   "spans_midnight": true
+  },
+  {
+   "date": "2012-02-07",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2012-02-18",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2012-02-21",
+   "type": "amavasya",
+   "month": 2
+  },
+  {
+   "date": "2012-03-04",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2012-03-05",
+   "type": "pushya",
+   "month": 3,
+   "start_ist": "00:00",
+   "end_ist": "23:49"
+  },
+  {
+   "date": "2012-03-08",
+   "type": "purnima",
+   "month": 3
+  },
+  {
+   "date": "2012-03-18",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2012-03-22",
+   "type": "amavasya",
+   "month": 3
+  },
+  {
+   "date": "2012-03-23",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2012-04-01",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2012-04-02",
+   "type": "pushya",
+   "month": 4,
+   "start_ist": "00:00",
+   "end_ist": "09:35"
+  },
+  {
+   "date": "2012-04-03",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2012-04-06",
+   "type": "purnima",
+   "month": 4
+  },
+  {
+   "date": "2012-04-13",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2012-04-17",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2012-04-20",
+   "type": "amavasya",
+   "month": 4
+  },
+  {
+   "date": "2012-04-24",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2012-04-29",
+   "type": "pushya",
+   "month": 4,
+   "start_ist": "00:00",
+   "end_ist": "17:42",
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2012-05-02",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2012-05-06",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2012-05-16",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2012-05-20",
+   "type": "amavasya",
+   "month": 5
+  },
+  {
+   "date": "2012-05-26",
+   "type": "pushya",
+   "month": 5,
+   "start_ist": "00:00",
+   "end_ist": "12:00"
+  },
+  {
+   "date": "2012-06-01",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2012-06-04",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2012-06-15",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2012-06-19",
+   "type": "amavasya",
+   "month": 6
+  },
+  {
+   "date": "2012-06-22",
+   "type": "pushya",
+   "month": 6,
+   "start_ist": "00:00",
+   "end_ist": "05:30",
+   "spans_midnight": true
+  },
+  {
+   "date": "2012-06-30",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2012-07-03",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2012-07-14",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2012-07-18",
+   "type": "amavasya",
+   "month": 7
+  },
+  {
+   "date": "2012-07-20",
+   "type": "pushya",
+   "month": 7,
+   "start_ist": "00:00",
+   "end_ist": "11:40"
+  },
+  {
+   "date": "2012-07-29",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2012-08-02",
+   "type": "purnima",
+   "month": 8
+  },
+  {
+   "date": "2012-08-13",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2012-08-17",
+   "type": "amavasya",
+   "month": 8
+  },
+  {
+   "date": "2012-08-29",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2012-08-31",
+   "type": "purnima",
+   "month": 8
+  },
+  {
+   "date": "2012-09-11",
+   "type": "pushya",
+   "month": 9,
+   "start_ist": "03:33",
+   "end_ist": "04:23",
+   "spans_midnight": true
+  },
+  {
+   "date": "2012-09-12",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2012-09-15",
+   "type": "amavasya",
+   "month": 9
+  },
+  {
+   "date": "2012-09-26",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2012-09-30",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2012-10-09",
+   "type": "pushya",
+   "month": 10,
+   "start_ist": "12:22",
+   "end_ist": "01:08",
+   "spans_midnight": true
+  },
+  {
+   "date": "2012-10-11",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2012-10-15",
+   "type": "amavasya",
+   "month": 10
+  },
+  {
+   "date": "2012-10-16",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2012-10-24",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2012-10-25",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2012-10-29",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2012-11-05",
+   "type": "pushya",
+   "month": 11,
+   "start_ist": "20:00",
+   "end_ist": "21:54",
+   "spans_midnight": true
+  },
+  {
+   "date": "2012-11-10",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2012-11-11",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2012-11-13",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2012-11-24",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2012-11-27",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2012-11-28",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2012-12-03",
+   "type": "pushya",
+   "month": 12,
+   "start_ist": "00:00",
+   "end_ist": "04:26",
+   "spans_midnight": true
+  },
+  {
+   "date": "2012-12-10",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2012-12-12",
+   "type": "amavasya",
+   "month": 12
+  },
+  {
+   "date": "2012-12-23",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2012-12-28",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2012-12-31",
+   "type": "pushya",
+   "month": 12,
+   "start_ist": "00:00",
+   "end_ist": "10:08"
+  },
+  {
+   "date": "2013-01-08",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2013-01-11",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2013-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2013-01-22",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2013-01-26",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2013-01-27",
+   "type": "pushya",
+   "month": 1,
+   "start_ist": "00:00",
+   "end_ist": "16:29",
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2013-02-06",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2013-02-09",
+   "type": "amavasya",
+   "month": 2
+  },
+  {
+   "date": "2013-02-15",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2013-02-21",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2013-02-23",
+   "type": "pushya",
+   "month": 2,
+   "start_ist": "00:00",
+   "end_ist": "00:16",
+   "spans_midnight": true
+  },
+  {
+   "date": "2013-02-25",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2013-03-08",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2013-03-11",
+   "type": "amavasya",
+   "month": 3
+  },
+  {
+   "date": "2013-03-22",
+   "type": "pushya",
+   "month": 3,
+   "start_ist": "07:12",
+   "end_ist": "09:04",
+   "spans_midnight": true
+  },
+  {
+   "date": "2013-03-23",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2013-03-26",
+   "type": "purnima",
+   "month": 3
+  },
+  {
+   "date": "2013-04-06",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2013-04-09",
+   "type": "amavasya",
+   "month": 4
+  },
+  {
+   "date": "2013-04-11",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2013-04-14",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2013-04-18",
+   "type": "pushya",
+   "month": 4,
+   "start_ist": "15:31",
+   "end_ist": "17:47",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2013-04-19",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2013-04-22",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2013-04-25",
+   "type": "purnima",
+   "month": 4
+  },
+  {
+   "date": "2013-05-05",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2013-05-09",
+   "type": "amavasya",
+   "month": 5
+  },
+  {
+   "date": "2013-05-13",
+   "type": "festival",
+   "month": 5
+  },
+  {
+   "date": "2013-05-16",
+   "type": "pushya",
+   "month": 5,
+   "start_ist": "00:00",
+   "end_ist": "01:29",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2013-05-21",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2013-05-24",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2013-06-04",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2013-06-08",
+   "type": "amavasya",
+   "month": 6
+  },
+  {
+   "date": "2013-06-13",
+   "type": "pushya",
+   "month": 6,
+   "start_ist": "00:00",
+   "end_ist": "07:55",
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2013-06-20",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2013-06-23",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2013-07-03",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2013-07-07",
+   "type": "amavasya",
+   "month": 7
+  },
+  {
+   "date": "2013-07-10",
+   "type": "pushya",
+   "month": 7,
+   "start_ist": "00:00",
+   "end_ist": "13:41"
+  },
+  {
+   "date": "2013-07-19",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2013-07-22",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2013-08-02",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2013-08-06",
+   "type": "amavasya",
+   "month": 8
+  },
+  {
+   "date": "2013-08-06",
+   "type": "pushya",
+   "month": 8,
+   "start_ist": "00:00",
+   "end_ist": "19:44"
+  },
+  {
+   "date": "2013-08-17",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2013-08-20",
+   "type": "purnima",
+   "month": 8
+  },
+  {
+   "date": "2013-09-01",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2013-09-02",
+   "type": "pushya",
+   "month": 9,
+   "start_ist": "00:00",
+   "end_ist": "02:45",
+   "spans_midnight": true
+  },
+  {
+   "date": "2013-09-05",
+   "type": "amavasya",
+   "month": 9
+  },
+  {
+   "date": "2013-09-15",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2013-09-16",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2013-09-19",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2013-09-29",
+   "type": "pushya",
+   "month": 9,
+   "start_ist": "08:13",
+   "end_ist": "10:47",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2013-09-30",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2013-10-04",
+   "type": "amavasya",
+   "month": 10
+  },
+  {
+   "date": "2013-10-05",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2013-10-13",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2013-10-14",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2013-10-15",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2013-10-18",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2013-10-27",
+   "type": "pushya",
+   "month": 10,
+   "start_ist": "00:00",
+   "end_ist": "19:13",
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2013-10-30",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2013-11-01",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2013-11-03",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2013-11-13",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2013-11-17",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2013-11-23",
+   "type": "pushya",
+   "month": 11,
+   "start_ist": "00:00",
+   "end_ist": "03:07",
+   "spans_midnight": true
+  },
+  {
+   "date": "2013-11-29",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2013-12-02",
+   "type": "amavasya",
+   "month": 12
+  },
+  {
+   "date": "2013-12-13",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2013-12-16",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2013-12-21",
+   "type": "pushya",
+   "month": 12,
+   "start_ist": "00:00",
+   "end_ist": "10:00"
+  },
+  {
+   "date": "2013-12-28",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2013-12-31",
+   "type": "amavasya",
+   "month": 12
+  },
+  {
+   "date": "2014-01-11",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2014-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2014-01-15",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2014-01-16",
+   "type": "pushya",
+   "month": 1,
+   "start_ist": "13:14",
+   "end_ist": "16:09",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2014-01-27",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2014-01-30",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2014-02-04",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2014-02-09",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2014-02-13",
+   "type": "pushya",
+   "month": 2,
+   "start_ist": "00:00",
+   "end_ist": "22:22",
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2014-02-14",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2014-02-25",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2014-02-28",
+   "type": "amavasya",
+   "month": 2
+  },
+  {
+   "date": "2014-03-13",
+   "type": "pushya",
+   "month": 3,
+   "start_ist": "00:00",
+   "end_ist": "05:17",
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2014-03-16",
+   "type": "purnima",
+   "month": 3
+  },
+  {
+   "date": "2014-03-26",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2014-03-30",
+   "type": "amavasya",
+   "month": 3
+  },
+  {
+   "date": "2014-03-31",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2014-04-08",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2014-04-09",
+   "type": "pushya",
+   "month": 4,
+   "start_ist": "00:00",
+   "end_ist": "13:00"
+  },
+  {
+   "date": "2014-04-10",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2014-04-14",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2014-04-15",
+   "type": "purnima",
+   "month": 4
+  },
+  {
+   "date": "2014-04-24",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2014-04-29",
+   "type": "amavasya",
+   "month": 4
+  },
+  {
+   "date": "2014-05-02",
+   "type": "festival",
+   "month": 5
+  },
+  {
+   "date": "2014-05-06",
+   "type": "pushya",
+   "month": 5,
+   "start_ist": "00:00",
+   "end_ist": "21:05"
+  },
+  {
+   "date": "2014-05-10",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2014-05-14",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2014-05-24",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2014-05-28",
+   "type": "amavasya",
+   "month": 5
+  },
+  {
+   "date": "2014-06-02",
+   "type": "pushya",
+   "month": 6,
+   "start_ist": "00:00",
+   "end_ist": "04:51",
+   "spans_midnight": true
+  },
+  {
+   "date": "2014-06-08",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2014-06-12",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2014-06-22",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2014-06-27",
+   "type": "amavasya",
+   "month": 6
+  },
+  {
+   "date": "2014-06-29",
+   "type": "pushya",
+   "month": 6,
+   "start_ist": "08:59",
+   "end_ist": "11:51",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2014-07-08",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2014-07-12",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2014-07-22",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2014-07-26",
+   "type": "amavasya",
+   "month": 7
+  },
+  {
+   "date": "2014-07-27",
+   "type": "pushya",
+   "month": 7,
+   "start_ist": "00:00",
+   "end_ist": "18:04",
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2014-08-06",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2014-08-10",
+   "type": "purnima",
+   "month": 8
+  },
+  {
+   "date": "2014-08-20",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2014-08-23",
+   "type": "pushya",
+   "month": 8,
+   "start_ist": "00:00",
+   "end_ist": "00:02",
+   "spans_midnight": true
+  },
+  {
+   "date": "2014-08-25",
+   "type": "amavasya",
+   "month": 8
+  },
+  {
+   "date": "2014-09-04",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2014-09-07",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2014-09-08",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2014-09-19",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2014-09-19",
+   "type": "pushya",
+   "month": 9,
+   "start_ist": "00:00",
+   "end_ist": "06:23",
+   "spans_midnight": true
+  },
+  {
+   "date": "2014-09-24",
+   "type": "amavasya",
+   "month": 9
+  },
+  {
+   "date": "2014-09-25",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2014-10-03",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2014-10-04",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2014-10-04",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2014-10-07",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2014-10-16",
+   "type": "pushya",
+   "month": 10,
+   "start_ist": "10:47",
+   "end_ist": "13:37",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2014-10-19",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2014-10-21",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2014-10-23",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2014-11-02",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2014-11-06",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2014-11-13",
+   "type": "pushya",
+   "month": 11,
+   "start_ist": "00:00",
+   "end_ist": "21:41",
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2014-11-17",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2014-11-22",
+   "type": "amavasya",
+   "month": 11
+  },
+  {
+   "date": "2014-12-01",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2014-12-05",
+   "type": "festival",
+   "month": 12
+  },
+  {
+   "date": "2014-12-06",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2014-12-10",
+   "type": "pushya",
+   "month": 12,
+   "start_ist": "00:00",
+   "end_ist": "06:01",
+   "spans_midnight": true
+  },
+  {
+   "date": "2014-12-21",
+   "type": "amavasya",
+   "month": 12
+  },
+  {
+   "date": "2014-12-31",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2015-01-01",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2015-01-04",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2015-01-06",
+   "type": "pushya",
+   "month": 1,
+   "start_ist": "11:27",
+   "end_ist": "13:47",
+   "spans_midnight": true
+  },
+  {
+   "date": "2015-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2015-01-17",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2015-01-20",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2015-01-24",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2015-01-30",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2015-02-02",
+   "type": "pushya",
+   "month": 2,
+   "start_ist": "18:03",
+   "end_ist": "20:32",
+   "spans_midnight": true
+  },
+  {
+   "date": "2015-02-03",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2015-02-15",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2015-02-18",
+   "type": "amavasya",
+   "month": 2
+  },
+  {
+   "date": "2015-03-01",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2015-03-01",
+   "type": "pushya",
+   "month": 3,
+   "start_ist": "23:55",
+   "end_ist": "02:34",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2015-03-05",
+   "type": "purnima",
+   "month": 3
+  },
+  {
+   "date": "2015-03-17",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2015-03-19",
+   "type": "amavasya",
+   "month": 3
+  },
+  {
+   "date": "2015-03-21",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2015-03-28",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2015-03-29",
+   "type": "pushya",
+   "month": 3,
+   "start_ist": "00:00",
+   "end_ist": "08:45",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2015-04-03",
+   "type": "purnima",
+   "month": 4
+  },
+  {
+   "date": "2015-04-14",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2015-04-15",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2015-04-18",
+   "type": "amavasya",
+   "month": 4
+  },
+  {
+   "date": "2015-04-21",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2015-04-26",
+   "type": "pushya",
+   "month": 4,
+   "start_ist": "00:00",
+   "end_ist": "15:54",
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2015-04-29",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2015-05-03",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2015-05-14",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2015-05-17",
+   "type": "amavasya",
+   "month": 5
+  },
+  {
+   "date": "2015-05-22",
+   "type": "pushya",
+   "month": 5,
+   "start_ist": "22:15",
+   "end_ist": "00:03",
+   "spans_midnight": true
+  },
+  {
+   "date": "2015-05-29",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2015-06-02",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2015-06-12",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2015-06-16",
+   "type": "amavasya",
+   "month": 6
+  },
+  {
+   "date": "2015-06-19",
+   "type": "pushya",
+   "month": 6,
+   "corrected_from": "2015-06-18",
+   "start_ist": "06:57",
+   "end_ist": "08:30",
+   "spans_midnight": true
+  },
+  {
+   "date": "2015-06-28",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2015-07-01",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2015-07-12",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2015-07-15",
+   "type": "amavasya",
+   "month": 7
+  },
+  {
+   "date": "2015-07-16",
+   "type": "pushya",
+   "month": 7,
+   "start_ist": "14:49",
+   "end_ist": "16:25",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2015-07-27",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2015-07-31",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2015-08-10",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2015-08-13",
+   "type": "pushya",
+   "month": 8,
+   "start_ist": "00:00",
+   "end_ist": "23:14",
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2015-08-14",
+   "type": "amavasya",
+   "month": 8
+  },
+  {
+   "date": "2015-08-26",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2015-08-28",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2015-08-29",
+   "type": "purnima",
+   "month": 8
+  },
+  {
+   "date": "2015-09-08",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2015-09-09",
+   "type": "pushya",
+   "month": 9,
+   "corrected_from": "2015-09-08",
+   "start_ist": "03:04",
+   "end_ist": "05:06",
+   "spans_midnight": true
+  },
+  {
+   "date": "2015-09-12",
+   "type": "amavasya",
+   "month": 9
+  },
+  {
+   "date": "2015-09-24",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2015-09-27",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2015-10-06",
+   "type": "pushya",
+   "month": 10,
+   "corrected_from": "2015-10-05",
+   "start_ist": "09:01",
+   "end_ist": "10:57",
+   "spans_midnight": true
+  },
+  {
+   "date": "2015-10-08",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2015-10-12",
+   "type": "amavasya",
+   "month": 10
+  },
+  {
+   "date": "2015-10-13",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2015-10-22",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2015-10-24",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2015-10-27",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2015-11-02",
+   "type": "pushya",
+   "month": 11,
+   "start_ist": "16:25",
+   "end_ist": "17:53",
+   "spans_midnight": true
+  },
+  {
+   "date": "2015-11-07",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2015-11-08",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2015-11-11",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2015-11-22",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2015-11-24",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2015-11-25",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2015-11-30",
+   "type": "pushya",
+   "month": 11,
+   "start_ist": "00:00",
+   "end_ist": "02:23",
+   "spans_midnight": true
+  },
+  {
+   "date": "2015-12-07",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2015-12-11",
+   "type": "amavasya",
+   "month": 12
+  },
+  {
+   "date": "2015-12-21",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2015-12-24",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2015-12-27",
+   "type": "pushya",
+   "month": 12,
+   "start_ist": "11:20",
+   "end_ist": "11:50",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2016-01-05",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2016-01-09",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2016-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2016-01-15",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2016-01-19",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2016-01-23",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2016-01-24",
+   "type": "pushya",
+   "month": 1,
+   "start_ist": "00:00",
+   "end_ist": "20:44",
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2016-02-04",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2016-02-07",
+   "type": "amavasya",
+   "month": 2
+  },
+  {
+   "date": "2016-02-12",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2016-02-18",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2016-02-21",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2016-03-04",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2016-03-07",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2016-03-08",
+   "type": "amavasya",
+   "month": 3
+  },
+  {
+   "date": "2016-03-18",
+   "type": "pushya",
+   "month": 3,
+   "corrected_from": "2016-03-17",
+   "start_ist": "08:33",
+   "end_ist": "09:48",
+   "spans_midnight": true
+  },
+  {
+   "date": "2016-03-18",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2016-03-22",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2016-03-23",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2016-04-03",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2016-04-06",
+   "type": "amavasya",
+   "month": 4
+  },
+  {
+   "date": "2016-04-07",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2016-04-13",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2016-04-14",
+   "type": "pushya",
+   "month": 4,
+   "start_ist": "14:36",
+   "end_ist": "15:37",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2016-04-15",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2016-04-17",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2016-04-21",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2016-05-02",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2016-05-06",
+   "type": "amavasya",
+   "month": 5
+  },
+  {
+   "date": "2016-05-08",
+   "type": "festival",
+   "month": 5
+  },
+  {
+   "date": "2016-05-12",
+   "type": "pushya",
+   "month": 5,
+   "start_ist": "00:00",
+   "end_ist": "22:45",
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2016-05-17",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2016-05-21",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2016-06-01",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2016-06-04",
+   "type": "amavasya",
+   "month": 6
+  },
+  {
+   "date": "2016-06-15",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2016-06-19",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2016-06-30",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2016-07-03",
+   "type": "amavasya",
+   "month": 7
+  },
+  {
+   "date": "2016-07-15",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2016-07-19",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2016-07-29",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2016-08-02",
+   "type": "amavasya",
+   "month": 8
+  },
+  {
+   "date": "2016-08-14",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2016-08-17",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2016-08-25",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2016-08-27",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2016-08-29",
+   "type": "pushya",
+   "month": 8,
+   "corrected_from": "2016-08-28",
+   "start_ist": "09:03",
+   "end_ist": "09:12",
+   "spans_midnight": true
+  },
+  {
+   "date": "2016-08-31",
+   "type": "amavasya",
+   "month": 8
+  },
+  {
+   "date": "2016-09-04",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2016-09-12",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2016-09-13",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2016-09-16",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2016-09-25",
+   "type": "pushya",
+   "month": 9,
+   "start_ist": "14:38",
+   "end_ist": "15:04",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2016-09-26",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2016-09-30",
+   "type": "amavasya",
+   "month": 9
+  },
+  {
+   "date": "2016-10-01",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2016-10-10",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2016-10-12",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2016-10-15",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2016-10-18",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2016-10-23",
+   "type": "pushya",
+   "month": 10,
+   "start_ist": "00:00",
+   "end_ist": "20:39",
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2016-10-25",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2016-10-27",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2016-10-29",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2016-10-31",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2016-11-01",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2016-11-05",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2016-11-10",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2016-11-13",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2016-11-24",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2016-11-28",
+   "type": "amavasya",
+   "month": 11
+  },
+  {
+   "date": "2016-12-09",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2016-12-12",
+   "type": "festival",
+   "month": 12
+  },
+  {
+   "date": "2016-12-13",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2016-12-16",
+   "type": "pushya",
+   "month": 12,
+   "start_ist": "14:26",
+   "end_ist": "13:09",
+   "spans_midnight": true
+  },
+  {
+   "date": "2016-12-24",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2016-12-28",
+   "type": "amavasya",
+   "month": 12
+  },
+  {
+   "date": "2017-01-08",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2017-01-11",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2017-01-13",
+   "type": "pushya",
+   "month": 1,
+   "corrected_from": "2017-01-12",
+   "start_ist": "01:19",
+   "end_ist": "23:49",
+   "spans_midnight": false
+  },
+  {
+   "date": "2017-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2017-01-23",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2017-01-27",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2017-02-01",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2017-02-06",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2017-02-09",
+   "type": "pushya",
+   "month": 2,
+   "start_ist": "10:49",
+   "end_ist": "09:40",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2017-02-10",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2017-02-22",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2017-02-24",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2017-02-25",
+   "type": "amavasya",
+   "month": 2
+  },
+  {
+   "date": "2017-03-08",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2017-03-09",
+   "type": "pushya",
+   "month": 3,
+   "start_ist": "00:00",
+   "end_ist": "17:13",
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2017-03-11",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2017-03-12",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2017-03-23",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2017-03-27",
+   "type": "amavasya",
+   "month": 3
+  },
+  {
+   "date": "2017-03-28",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2017-04-04",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2017-04-06",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2017-04-10",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2017-04-14",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2017-04-22",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2017-04-25",
+   "type": "amavasya",
+   "month": 4
+  },
+  {
+   "date": "2017-04-28",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2017-05-06",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2017-05-10",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2017-05-21",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2017-05-25",
+   "type": "festival",
+   "month": 5
+  },
+  {
+   "date": "2017-05-29",
+   "type": "pushya",
+   "month": 5,
+   "start_ist": "13:25",
+   "end_ist": "11:58",
+   "spans_midnight": true
+  },
+  {
+   "date": "2017-06-04",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2017-06-09",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2017-06-20",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2017-06-23",
+   "type": "amavasya",
+   "month": 6
+  },
+  {
+   "date": "2017-06-25",
+   "type": "pushya",
+   "month": 6,
+   "start_ist": "23:26",
+   "end_ist": "21:23",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2017-07-04",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2017-07-08",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2017-07-19",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2017-07-22",
+   "type": "amavasya",
+   "month": 7
+  },
+  {
+   "date": "2017-07-23",
+   "type": "pushya",
+   "month": 7,
+   "start_ist": "09:54",
+   "end_ist": "07:44",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2017-08-03",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2017-08-07",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2017-08-14",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2017-08-17",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2017-08-20",
+   "type": "pushya",
+   "month": 8,
+   "start_ist": "00:00",
+   "end_ist": "17:23",
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2017-08-24",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2017-09-01",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2017-09-04",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2017-09-05",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2017-09-15",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2017-09-19",
+   "type": "amavasya",
+   "month": 9
+  },
+  {
+   "date": "2017-09-20",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2017-09-30",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2017-10-01",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2017-10-05",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2017-10-08",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2017-10-13",
+   "type": "pushya",
+   "month": 10,
+   "corrected_from": "2017-10-12",
+   "start_ist": "07:46",
+   "end_ist": "06:53",
+   "spans_midnight": true
+  },
+  {
+   "date": "2017-10-15",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2017-10-16",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2017-10-18",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2017-10-20",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2017-10-21",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2017-10-25",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2017-10-31",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2017-11-03",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2017-11-09",
+   "type": "pushya",
+   "month": 11,
+   "start_ist": "13:39",
+   "end_ist": "12:26",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2017-11-13",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2017-11-17",
+   "type": "amavasya",
+   "month": 11
+  },
+  {
+   "date": "2017-11-23",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2017-11-29",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2017-12-02",
+   "type": "festival",
+   "month": 12
+  },
+  {
+   "date": "2017-12-03",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2017-12-07",
+   "type": "pushya",
+   "month": 12,
+   "start_ist": "00:00",
+   "end_ist": "19:55",
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2017-12-13",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2017-12-17",
+   "type": "amavasya",
+   "month": 12
+  },
+  {
+   "date": "2017-12-29",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2018-01-01",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2018-01-12",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2018-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2018-01-16",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2018-01-21",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2018-01-27",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2018-01-30",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2018-02-10",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2018-02-13",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2018-02-15",
+   "type": "amavasya",
+   "month": 2
+  },
+  {
+   "date": "2018-02-25",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2018-03-01",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2018-03-02",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2018-03-12",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2018-03-17",
+   "type": "amavasya",
+   "month": 3
+  },
+  {
+   "date": "2018-03-18",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2018-03-25",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2018-03-26",
+   "type": "pushya",
+   "month": 3,
+   "start_ist": "12:56",
+   "end_ist": "11:28",
+   "spans_midnight": true
+  },
+  {
+   "date": "2018-03-27",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2018-03-30",
+   "type": "purnima",
+   "month": 3
+  },
+  {
+   "date": "2018-03-31",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2018-04-11",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2018-04-14",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2018-04-15",
+   "type": "amavasya",
+   "month": 4
+  },
+  {
+   "date": "2018-04-18",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2018-04-22",
+   "type": "pushya",
+   "month": 4,
+   "start_ist": "18:19",
+   "end_ist": "17:04",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2018-04-25",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2018-04-29",
+   "type": "purnima",
+   "month": 4
+  },
+  {
+   "date": "2018-05-11",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2018-05-14",
+   "type": "festival",
+   "month": 5
+  },
+  {
+   "date": "2018-05-20",
+   "type": "pushya",
+   "month": 5,
+   "start_ist": "00:26",
+   "end_ist": "22:45",
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2018-05-25",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2018-05-28",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2018-06-09",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2018-06-13",
+   "type": "amavasya",
+   "month": 6
+  },
+  {
+   "date": "2018-06-23",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2018-06-27",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2018-07-09",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2018-07-12",
+   "type": "amavasya",
+   "month": 7
+  },
+  {
+   "date": "2018-07-23",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2018-07-27",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2018-08-07",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2018-08-10",
+   "type": "pushya",
+   "month": 8,
+   "corrected_from": "2018-08-09",
+   "start_ist": "05:44",
+   "end_ist": "02:54",
+   "spans_midnight": true
+  },
+  {
+   "date": "2018-08-10",
+   "type": "amavasya",
+   "month": 8
+  },
+  {
+   "date": "2018-08-21",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2018-08-25",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2018-09-02",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2018-09-05",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2018-09-06",
+   "type": "pushya",
+   "month": 9,
+   "start_ist": "15:15",
+   "end_ist": "12:57",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2018-09-09",
+   "type": "amavasya",
+   "month": 9
+  },
+  {
+   "date": "2018-09-12",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2018-09-20",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2018-09-24",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2018-10-04",
+   "type": "pushya",
+   "month": 10,
+   "start_ist": "00:00",
+   "end_ist": "20:50",
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2018-10-05",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2018-10-08",
+   "type": "amavasya",
+   "month": 10
+  },
+  {
+   "date": "2018-10-09",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2018-10-18",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2018-10-20",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2018-10-23",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2018-10-27",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2018-11-03",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2018-11-04",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2018-11-06",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2018-11-07",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2018-11-08",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2018-11-13",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2018-11-18",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2018-11-22",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2018-11-23",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2018-12-02",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2018-12-06",
+   "type": "amavasya",
+   "month": 12
+  },
+  {
+   "date": "2018-12-18",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2018-12-22",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2019-01-01",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2019-01-05",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2019-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2019-01-15",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2019-01-17",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2019-01-21",
+   "type": "pushya",
+   "month": 1,
+   "corrected_from": "2019-01-20",
+   "start_ist": "05:22",
+   "end_ist": "02:27",
+   "spans_midnight": true
+  },
+  {
+   "date": "2019-01-30",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2019-02-03",
+   "type": "amavasya",
+   "month": 2
+  },
+  {
+   "date": "2019-02-09",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2019-02-15",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2019-02-17",
+   "type": "pushya",
+   "month": 2,
+   "start_ist": "16:46",
+   "end_ist": "14:02",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2019-02-19",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2019-03-01",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2019-03-04",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2019-03-05",
+   "type": "amavasya",
+   "month": 3
+  },
+  {
+   "date": "2019-03-17",
+   "type": "pushya",
+   "month": 3,
+   "start_ist": "02:14",
+   "end_ist": "00:12",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2019-03-20",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2019-03-31",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2019-04-04",
+   "type": "amavasya",
+   "month": 4
+  },
+  {
+   "date": "2019-04-05",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2019-04-13",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2019-04-14",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2019-04-15",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2019-04-18",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2019-04-30",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2019-05-04",
+   "type": "amavasya",
+   "month": 5
+  },
+  {
+   "date": "2019-05-07",
+   "type": "festival",
+   "month": 5
+  },
+  {
+   "date": "2019-05-10",
+   "type": "pushya",
+   "month": 5,
+   "start_ist": "14:22",
+   "end_ist": "13:14",
+   "spans_midnight": true
+  },
+  {
+   "date": "2019-05-14",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2019-05-18",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2019-05-30",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2019-06-02",
+   "type": "festival",
+   "month": 6
+  },
+  {
+   "date": "2019-06-06",
+   "type": "pushya",
+   "month": 6,
+   "start_ist": "20:29",
+   "end_ist": "18:57",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2019-06-13",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2019-06-16",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2019-06-28",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2019-07-02",
+   "type": "amavasya",
+   "month": 7
+  },
+  {
+   "date": "2019-07-04",
+   "type": "pushya",
+   "month": 7,
+   "start_ist": "04:40",
+   "end_ist": "02:31",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2019-07-12",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2019-07-16",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2019-07-28",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2019-07-31",
+   "type": "amavasya",
+   "month": 7
+  },
+  {
+   "date": "2019-08-10",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2019-08-14",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2019-08-23",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2019-08-26",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2019-08-29",
+   "type": "amavasya",
+   "month": 8
+  },
+  {
+   "date": "2019-09-02",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2019-09-09",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2019-09-11",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2019-09-13",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2019-09-24",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2019-09-28",
+   "type": "amavasya",
+   "month": 9
+  },
+  {
+   "date": "2019-09-29",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2019-10-07",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2019-10-09",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2019-10-13",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2019-10-17",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2019-10-24",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2019-10-25",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2019-10-27",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2019-10-28",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2019-10-29",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2019-11-02",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2019-11-07",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2019-11-11",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2019-11-17",
+   "type": "pushya",
+   "month": 11,
+   "start_ist": "23:00",
+   "end_ist": "22:22",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2019-11-22",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2019-11-25",
+   "type": "amavasya",
+   "month": 11
+  },
+  {
+   "date": "2019-12-07",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2019-12-10",
+   "type": "festival",
+   "month": 12
+  },
+  {
+   "date": "2019-12-11",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2019-12-15",
+   "type": "pushya",
+   "month": 12,
+   "start_ist": "05:04",
+   "end_ist": "04:02",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2019-12-21",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2019-12-25",
+   "type": "amavasya",
+   "month": 12
+  },
+  {
+   "date": "2020-01-06",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2020-01-10",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2020-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2020-01-15",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2020-01-20",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2020-01-24",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2020-01-29",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2020-02-05",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2020-02-08",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2020-02-18",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2020-02-21",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2020-02-22",
+   "type": "amavasya",
+   "month": 2
+  },
+  {
+   "date": "2020-03-05",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2020-03-06",
+   "type": "pushya",
+   "month": 3,
+   "start_ist": "10:39",
+   "end_ist": "09:05",
+   "spans_midnight": true
+  },
+  {
+   "date": "2020-03-08",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2020-03-09",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2020-03-19",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2020-03-23",
+   "type": "amavasya",
+   "month": 3
+  },
+  {
+   "date": "2020-03-24",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2020-04-02",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2020-04-04",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2020-04-07",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2020-04-13",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2020-04-18",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2020-04-22",
+   "type": "amavasya",
+   "month": 4
+  },
+  {
+   "date": "2020-04-25",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2020-04-30",
+   "type": "pushya",
+   "month": 4,
+   "start_ist": "02:02",
+   "end_ist": "01:53",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2020-05-03",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2020-05-07",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2020-05-17",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2020-05-21",
+   "type": "festival",
+   "month": 5
+  },
+  {
+   "date": "2020-06-01",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2020-06-05",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2020-06-16",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2020-06-20",
+   "type": "amavasya",
+   "month": 6
+  },
+  {
+   "date": "2020-06-30",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2020-07-04",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2020-07-16",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2020-07-19",
+   "type": "amavasya",
+   "month": 7
+  },
+  {
+   "date": "2020-07-30",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2020-08-03",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2020-08-11",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2020-08-14",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2020-08-17",
+   "type": "pushya",
+   "month": 8,
+   "corrected_from": "2020-08-16",
+   "start_ist": "06:44",
+   "end_ist": "05:43",
+   "spans_midnight": true
+  },
+  {
+   "date": "2020-08-18",
+   "type": "amavasya",
+   "month": 8
+  },
+  {
+   "date": "2020-08-21",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2020-08-28",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2020-08-31",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2020-09-01",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2020-09-13",
+   "type": "pushya",
+   "month": 9,
+   "start_ist": "16:34",
+   "end_ist": "15:52",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2020-09-16",
+   "type": "amavasya",
+   "month": 9
+  },
+  {
+   "date": "2020-09-27",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2020-10-01",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2020-10-11",
+   "type": "pushya",
+   "month": 10,
+   "start_ist": "01:18",
+   "end_ist": "01:19",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2020-10-12",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2020-10-16",
+   "type": "amavasya",
+   "month": 10
+  },
+  {
+   "date": "2020-10-17",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2020-10-25",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2020-10-26",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2020-10-31",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2020-11-03",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2020-11-11",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2020-11-12",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2020-11-14",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2020-11-15",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2020-11-16",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2020-11-20",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2020-11-25",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2020-11-29",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2020-12-04",
+   "type": "pushya",
+   "month": 12,
+   "start_ist": "13:39",
+   "end_ist": "14:28",
+   "spans_midnight": true
+  },
+  {
+   "date": "2020-12-10",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2020-12-13",
+   "type": "amavasya",
+   "month": 12
+  },
+  {
+   "date": "2020-12-25",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2020-12-29",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2020-12-31",
+   "type": "pushya",
+   "month": 12,
+   "start_ist": "19:49",
+   "end_ist": "20:15",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2021-01-08",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2021-01-12",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2021-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2021-01-24",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2021-01-27",
+   "type": "pushya",
+   "month": 1,
+   "start_ist": "03:49",
+   "end_ist": "03:51",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2021-01-28",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2021-02-07",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2021-02-10",
+   "type": "amavasya",
+   "month": 2
+  },
+  {
+   "date": "2021-02-16",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2021-02-23",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2021-02-24",
+   "type": "pushya",
+   "month": 2,
+   "start_ist": "13:17",
+   "end_ist": "01:23",
+   "spans_midnight": true
+  },
+  {
+   "date": "2021-02-26",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2021-03-08",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2021-03-12",
+   "type": "amavasya",
+   "month": 3
+  },
+  {
+   "date": "2021-03-23",
+   "type": "pushya",
+   "month": 3,
+   "start_ist": "22:46",
+   "end_ist": "04:57",
+   "spans_midnight": true
+  },
+  {
+   "date": "2021-03-24",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2021-03-28",
+   "type": "purnima",
+   "month": 3
+  },
+  {
+   "date": "2021-04-07",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2021-04-11",
+   "type": "amavasya",
+   "month": 4
+  },
+  {
+   "date": "2021-04-13",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2021-04-14",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2021-04-19",
+   "type": "pushya",
+   "month": 4,
+   "start_ist": "06:53",
+   "end_ist": "07:59",
+   "spans_midnight": true
+  },
+  {
+   "date": "2021-04-21",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2021-04-23",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2021-04-26",
+   "type": "purnima",
+   "month": 4
+  },
+  {
+   "date": "2021-05-06",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2021-05-10",
+   "type": "amavasya",
+   "month": 5
+  },
+  {
+   "date": "2021-05-15",
+   "type": "festival",
+   "month": 5
+  },
+  {
+   "date": "2021-05-17",
+   "type": "pushya",
+   "month": 5,
+   "start_ist": "13:22",
+   "end_ist": "14:55",
+   "spans_midnight": true
+  },
+  {
+   "date": "2021-05-22",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2021-05-26",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2021-06-05",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2021-06-09",
+   "type": "amavasya",
+   "month": 6
+  },
+  {
+   "date": "2021-06-13",
+   "type": "pushya",
+   "month": 6,
+   "start_ist": "19:01",
+   "end_ist": "01:27",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2021-06-20",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2021-06-24",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2021-07-05",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2021-07-09",
+   "type": "amavasya",
+   "month": 7
+  },
+  {
+   "date": "2021-07-10",
+   "type": "pushya",
+   "month": 7,
+   "start_ist": "01:02",
+   "end_ist": "02:22",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2021-07-20",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2021-07-23",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2021-08-03",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2021-08-06",
+   "type": "pushya",
+   "month": 8,
+   "start_ist": "08:15",
+   "end_ist": "09:19",
+   "spans_midnight": true
+  },
+  {
+   "date": "2021-08-07",
+   "type": "amavasya",
+   "month": 8
+  },
+  {
+   "date": "2021-08-18",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2021-08-21",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2021-08-22",
+   "type": "purnima",
+   "month": 8
+  },
+  {
+   "date": "2021-09-02",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2021-09-03",
+   "type": "pushya",
+   "month": 9,
+   "start_ist": "16:42",
+   "end_ist": "17:45",
+   "spans_midnight": true
+  },
+  {
+   "date": "2021-09-06",
+   "type": "amavasya",
+   "month": 9
+  },
+  {
+   "date": "2021-09-16",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2021-09-20",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2021-09-30",
+   "type": "pushya",
+   "month": 9,
+   "start_ist": "01:33",
+   "end_ist": "02:58",
+   "spans_midnight": true
+  },
+  {
+   "date": "2021-10-02",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2021-10-05",
+   "type": "amavasya",
+   "month": 10
+  },
+  {
+   "date": "2021-10-07",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2021-10-15",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2021-10-16",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2021-10-20",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2021-10-28",
+   "type": "pushya",
+   "month": 10,
+   "start_ist": "09:42",
+   "end_ist": "11:39",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2021-10-31",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2021-11-02",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2021-11-04",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2021-11-14",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2021-11-18",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2021-11-24",
+   "type": "pushya",
+   "month": 11,
+   "start_ist": "16:29",
+   "end_ist": "18:49",
+   "spans_midnight": true
+  },
+  {
+   "date": "2021-11-30",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2021-12-03",
+   "type": "amavasya",
+   "month": 12
+  },
+  {
+   "date": "2021-12-14",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2021-12-18",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2021-12-19",
+   "type": "festival",
+   "month": 12
+  },
+  {
+   "date": "2021-12-21",
+   "type": "pushya",
+   "month": 12,
+   "start_ist": "22:25",
+   "end_ist": "05:02",
+   "spans_midnight": true
+  },
+  {
+   "date": "2021-12-29",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2022-01-02",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2022-01-13",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2022-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2022-01-17",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2022-01-17",
+   "type": "pushya",
+   "month": 1,
+   "start_ist": "04:37",
+   "end_ist": "06:42",
+   "spans_midnight": true
+  },
+  {
+   "date": "2022-01-28",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2022-01-31",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2022-02-05",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2022-02-11",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2022-02-14",
+   "type": "pushya",
+   "month": 2,
+   "start_ist": "11:53",
+   "end_ist": "00:55",
+   "spans_midnight": true
+  },
+  {
+   "date": "2022-02-15",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2022-02-26",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2022-03-01",
+   "type": "amavasya",
+   "month": 3
+  },
+  {
+   "date": "2022-03-13",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2022-03-13",
+   "type": "pushya",
+   "month": 3,
+   "start_ist": "20:06",
+   "end_ist": "02:40",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2022-03-17",
+   "type": "purnima",
+   "month": 3
+  },
+  {
+   "date": "2022-03-27",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2022-03-31",
+   "type": "amavasya",
+   "month": 3
+  },
+  {
+   "date": "2022-04-02",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2022-04-09",
+   "type": "pushya",
+   "month": 4,
+   "start_ist": "04:31",
+   "end_ist": "06:51",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2022-04-10",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2022-04-12",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2022-04-14",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2022-04-16",
+   "type": "purnima",
+   "month": 4
+  },
+  {
+   "date": "2022-04-26",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2022-04-30",
+   "type": "amavasya",
+   "month": 4
+  },
+  {
+   "date": "2022-05-03",
+   "type": "festival",
+   "month": 5
+  },
+  {
+   "date": "2022-05-07",
+   "type": "pushya",
+   "month": 5,
+   "start_ist": "12:18",
+   "end_ist": "01:41",
+   "spans_midnight": true
+  },
+  {
+   "date": "2022-05-12",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2022-05-15",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2022-05-25",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2022-05-29",
+   "type": "amavasya",
+   "month": 5
+  },
+  {
+   "date": "2022-06-03",
+   "type": "pushya",
+   "month": 6,
+   "start_ist": "19:05",
+   "end_ist": "21:55",
+   "spans_midnight": true
+  },
+  {
+   "date": "2022-06-10",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2022-06-13",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2022-06-24",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2022-06-28",
+   "type": "amavasya",
+   "month": 6
+  },
+  {
+   "date": "2022-06-30",
+   "type": "pushya",
+   "month": 6,
+   "start_ist": "01:07",
+   "end_ist": "03:56",
+   "spans_midnight": true
+  },
+  {
+   "date": "2022-07-09",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2022-07-13",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2022-07-23",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2022-07-27",
+   "type": "amavasya",
+   "month": 7
+  },
+  {
+   "date": "2022-07-27",
+   "type": "pushya",
+   "month": 7,
+   "start_ist": "07:05",
+   "end_ist": "09:47",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2022-08-08",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2022-08-11",
+   "type": "purnima",
+   "month": 8
+  },
+  {
+   "date": "2022-08-22",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2022-08-24",
+   "type": "pushya",
+   "month": 8,
+   "start_ist": "13:39",
+   "end_ist": "16:16",
+   "spans_midnight": true
+  },
+  {
+   "date": "2022-08-26",
+   "type": "amavasya",
+   "month": 8
+  },
+  {
+   "date": "2022-09-06",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2022-09-08",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2022-09-09",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2022-09-20",
+   "type": "pushya",
+   "month": 9,
+   "start_ist": "21:07",
+   "end_ist": "23:47",
+   "spans_midnight": true
+  },
+  {
+   "date": "2022-09-21",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2022-09-25",
+   "type": "amavasya",
+   "month": 9
+  },
+  {
+   "date": "2022-09-26",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2022-10-05",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2022-10-05",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2022-10-09",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2022-10-17",
+   "type": "pushya",
+   "month": 10,
+   "start_ist": "05:13",
+   "end_ist": "08:02",
+   "spans_midnight": true
+  },
+  {
+   "date": "2022-10-21",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2022-10-22",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2022-10-24",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2022-11-03",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2022-11-07",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2022-11-14",
+   "type": "pushya",
+   "month": 11,
+   "start_ist": "13:15",
+   "end_ist": "16:13",
+   "spans_midnight": true
+  },
+  {
+   "date": "2022-11-19",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2022-11-23",
+   "type": "amavasya",
+   "month": 11
+  },
+  {
+   "date": "2022-12-03",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2022-12-06",
+   "type": "festival",
+   "month": 12
+  },
+  {
+   "date": "2022-12-07",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2022-12-11",
+   "type": "pushya",
+   "month": 12,
+   "start_ist": "20:36",
+   "end_ist": "23:36",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2022-12-19",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2022-12-22",
+   "type": "amavasya",
+   "month": 12
+  },
+  {
+   "date": "2023-01-02",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2023-01-06",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2023-01-07",
+   "type": "pushya",
+   "month": 1,
+   "start_ist": "13:38",
+   "end_ist": "16:35",
+   "spans_midnight": true
+  },
+  {
+   "date": "2023-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2023-01-17",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2023-01-21",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2023-01-26",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2023-01-31",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2023-02-03",
+   "type": "pushya",
+   "month": 2,
+   "start_ist": "19:46",
+   "end_ist": "22:43",
+   "spans_midnight": true
+  },
+  {
+   "date": "2023-02-04",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2023-02-16",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2023-02-19",
+   "type": "amavasya",
+   "month": 2
+  },
+  {
+   "date": "2023-03-02",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2023-03-03",
+   "type": "pushya",
+   "month": 3,
+   "start_ist": "02:13",
+   "end_ist": "05:11",
+   "spans_midnight": true
+  },
+  {
+   "date": "2023-03-06",
+   "type": "purnima",
+   "month": 3
+  },
+  {
+   "date": "2023-03-17",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2023-03-21",
+   "type": "amavasya",
+   "month": 3
+  },
+  {
+   "date": "2023-03-22",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2023-03-30",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2023-03-30",
+   "type": "pushya",
+   "month": 3,
+   "start_ist": "22:59",
+   "end_ist": "01:56",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2023-04-01",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2023-04-05",
+   "type": "purnima",
+   "month": 4
+  },
+  {
+   "date": "2023-04-14",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2023-04-15",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2023-04-19",
+   "type": "amavasya",
+   "month": 4
+  },
+  {
+   "date": "2023-04-22",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2023-04-26",
+   "type": "pushya",
+   "month": 4,
+   "start_ist": "07:01",
+   "end_ist": "09:52",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2023-05-01",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2023-05-04",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2023-05-15",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2023-05-19",
+   "type": "amavasya",
+   "month": 5
+  },
+  {
+   "date": "2023-05-24",
+   "type": "pushya",
+   "month": 5,
+   "start_ist": "15:08",
+   "end_ist": "17:54",
+   "spans_midnight": true
+  },
+  {
+   "date": "2023-05-30",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2023-06-03",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2023-06-13",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2023-06-17",
+   "type": "amavasya",
+   "month": 6
+  },
+  {
+   "date": "2023-06-20",
+   "type": "pushya",
+   "month": 6,
+   "start_ist": "22:35",
+   "end_ist": "01:20",
+   "spans_midnight": true
+  },
+  {
+   "date": "2023-06-29",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2023-07-02",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2023-07-13",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2023-07-17",
+   "type": "amavasya",
+   "month": 7
+  },
+  {
+   "date": "2023-07-17",
+   "type": "pushya",
+   "month": 7,
+   "start_ist": "05:09",
+   "end_ist": "07:55",
+   "spans_midnight": true
+  },
+  {
+   "date": "2023-07-28",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2023-08-01",
+   "type": "purnima",
+   "month": 8
+  },
+  {
+   "date": "2023-08-11",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2023-08-14",
+   "type": "pushya",
+   "month": 8,
+   "start_ist": "11:07",
+   "end_ist": "13:57",
+   "spans_midnight": true
+  },
+  {
+   "date": "2023-08-16",
+   "type": "amavasya",
+   "month": 8
+  },
+  {
+   "date": "2023-08-27",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2023-08-29",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2023-08-30",
+   "type": "purnima",
+   "month": 8
+  },
+  {
+   "date": "2023-09-10",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2023-09-10",
+   "type": "pushya",
+   "month": 9,
+   "start_ist": "17:06",
+   "end_ist": "20:00",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2023-09-14",
+   "type": "amavasya",
+   "month": 9
+  },
+  {
+   "date": "2023-09-25",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2023-09-28",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2023-10-07",
+   "type": "pushya",
+   "month": 10,
+   "start_ist": "23:55",
+   "end_ist": "02:43",
+   "spans_midnight": true
+  },
+  {
+   "date": "2023-10-09",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2023-10-14",
+   "type": "amavasya",
+   "month": 10
+  },
+  {
+   "date": "2023-10-15",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2023-10-24",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2023-10-24",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2023-10-28",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2023-11-03",
+   "type": "pushya",
+   "month": 11,
+   "start_ist": "07:57",
+   "end_ist": "10:28",
+   "spans_midnight": true
+  },
+  {
+   "date": "2023-11-08",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2023-11-10",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2023-11-12",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2023-11-23",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2023-11-26",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2023-11-26",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2023-12-01",
+   "type": "pushya",
+   "month": 12,
+   "start_ist": "16:40",
+   "end_ist": "18:54",
+   "spans_midnight": true
+  },
+  {
+   "date": "2023-12-08",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2023-12-12",
+   "type": "amavasya",
+   "month": 12
+  },
+  {
+   "date": "2023-12-22",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2023-12-23",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2023-12-26",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2023-12-28",
+   "type": "pushya",
+   "month": 12,
+   "start_ist": "01:04",
+   "end_ist": "03:09",
+   "spans_midnight": true
+  },
+  {
+   "date": "2024-01-07",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2024-01-10",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2024-01-14",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2024-01-15",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2024-01-21",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2024-01-24",
+   "type": "pushya",
+   "month": 1,
+   "start_ist": "08:16",
+   "end_ist": "10:28",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2024-01-25",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2024-02-05",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2024-02-09",
+   "type": "amavasya",
+   "month": 2
+  },
+  {
+   "date": "2024-02-14",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2024-02-19",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2024-02-21",
+   "type": "pushya",
+   "month": 2,
+   "start_ist": "14:17",
+   "end_ist": "16:43",
+   "spans_midnight": true
+  },
+  {
+   "date": "2024-02-23",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2024-03-06",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2024-03-09",
+   "type": "amavasya",
+   "month": 3
+  },
+  {
+   "date": "2024-03-19",
+   "type": "pushya",
+   "month": 3,
+   "start_ist": "20:10",
+   "end_ist": "22:38",
+   "spans_midnight": true
+  },
+  {
+   "date": "2024-03-20",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2024-03-24",
+   "type": "purnima",
+   "month": 3
+  },
+  {
+   "date": "2024-04-04",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2024-04-07",
+   "type": "amavasya",
+   "month": 4
+  },
+  {
+   "date": "2024-04-09",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2024-04-13",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2024-04-15",
+   "type": "pushya",
+   "month": 4,
+   "start_ist": "03:05",
+   "end_ist": "05:16",
+   "spans_midnight": true
+  },
+  {
+   "date": "2024-04-17",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2024-04-19",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2024-04-23",
+   "type": "purnima",
+   "month": 4
+  },
+  {
+   "date": "2024-05-04",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2024-05-07",
+   "type": "amavasya",
+   "month": 5
+  },
+  {
+   "date": "2024-05-10",
+   "type": "festival",
+   "month": 5
+  },
+  {
+   "date": "2024-05-13",
+   "type": "pushya",
+   "month": 5,
+   "start_ist": "11:23",
+   "end_ist": "13:05",
+   "spans_midnight": true
+  },
+  {
+   "date": "2024-05-18",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2024-05-23",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2024-06-02",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2024-06-05",
+   "type": "amavasya",
+   "month": 6
+  },
+  {
+   "date": "2024-06-09",
+   "type": "pushya",
+   "month": 6,
+   "start_ist": "20:20",
+   "end_ist": "21:39",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2024-06-17",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2024-06-21",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2024-07-01",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2024-07-05",
+   "type": "amavasya",
+   "month": 7
+  },
+  {
+   "date": "2024-07-06",
+   "type": "pushya",
+   "month": 7,
+   "start_ist": "04:48",
+   "end_ist": "06:02",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2024-07-17",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2024-07-21",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2024-07-30",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2024-08-03",
+   "type": "amavasya",
+   "month": 8
+  },
+  {
+   "date": "2024-08-03",
+   "type": "pushya",
+   "month": 8,
+   "start_ist": "11:59",
+   "end_ist": "13:26",
+   "spans_midnight": true
+  },
+  {
+   "date": "2024-08-15",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2024-08-19",
+   "type": "purnima",
+   "month": 8
+  },
+  {
+   "date": "2024-08-29",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2024-08-30",
+   "type": "pushya",
+   "month": 8,
+   "start_ist": "17:55",
+   "end_ist": "19:39",
+   "spans_midnight": true
+  },
+  {
+   "date": "2024-09-02",
+   "type": "amavasya",
+   "month": 9
+  },
+  {
+   "date": "2024-09-14",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2024-09-15",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2024-09-17",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2024-09-26",
+   "type": "pushya",
+   "month": 9,
+   "start_ist": "23:34",
+   "end_ist": "01:20",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2024-09-27",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2024-10-01",
+   "type": "amavasya",
+   "month": 10
+  },
+  {
+   "date": "2024-10-03",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2024-10-12",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2024-10-13",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2024-10-17",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2024-10-23",
+   "type": "pushya",
+   "month": 10,
+   "start_ist": "06:15",
+   "end_ist": "07:40",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2024-10-24",
+   "type": "pushya",
+   "month": 10,
+   "start_ist": "06:15",
+   "end_ist": "07:40",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2024-10-27",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2024-10-29",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2024-10-31",
+   "type": "amavasya",
+   "month": 10
+  },
+  {
+   "date": "2024-11-01",
+   "type": "festival",
+   "month": 11
+  },
+  {
+   "date": "2024-11-11",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2024-11-15",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2024-11-20",
+   "type": "pushya",
+   "month": 11,
+   "start_ist": "14:50",
+   "end_ist": "15:35",
+   "spans_midnight": true
+  },
+  {
+   "date": "2024-11-26",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2024-11-30",
+   "type": "amavasya",
+   "month": 11
+  },
+  {
+   "date": "2024-12-11",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2024-12-13",
+   "type": "festival",
+   "month": 12
+  },
+  {
+   "date": "2024-12-14",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2024-12-17",
+   "type": "pushya",
+   "month": 12,
+   "start_ist": "00:44",
+   "end_ist": "00:58",
+   "spans_midnight": true
+  },
+  {
+   "date": "2024-12-26",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2024-12-30",
+   "type": "amavasya",
+   "month": 12
+  },
+  {
+   "date": "2025-01-09",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2025-01-13",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2025-01-13",
+   "type": "pushya",
+   "month": 1,
+   "start_ist": "10:17",
+   "end_ist": "10:28",
+   "spans_midnight": true
+  },
+  {
+   "date": "2025-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2025-01-25",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2025-01-29",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2025-02-02",
+   "type": "festival",
+   "month": 2
+  },
+  {
+   "date": "2025-02-08",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2025-02-10",
+   "type": "pushya",
+   "month": 2,
+   "start_ist": "18:00",
+   "end_ist": "18:34",
+   "spans_midnight": true
+  },
+  {
+   "date": "2025-02-11",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2025-02-23",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2025-02-27",
+   "type": "amavasya",
+   "month": 2
+  },
+  {
+   "date": "2025-03-09",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2025-03-09",
+   "type": "pushya",
+   "month": 3,
+   "start_ist": "23:55",
+   "end_ist": "00:51",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2025-03-13",
+   "type": "purnima",
+   "month": 3
+  },
+  {
+   "date": "2025-03-25",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2025-03-28",
+   "type": "amavasya",
+   "month": 3
+  },
+  {
+   "date": "2025-03-30",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2025-04-05",
+   "type": "pushya",
+   "month": 4,
+   "start_ist": "05:32",
+   "end_ist": "06:24",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2025-04-06",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2025-04-08",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2025-04-12",
+   "type": "purnima",
+   "month": 4
+  },
+  {
+   "date": "2025-04-13",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2025-04-23",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2025-04-27",
+   "type": "amavasya",
+   "month": 4
+  },
+  {
+   "date": "2025-04-30",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2025-05-03",
+   "type": "pushya",
+   "month": 5,
+   "start_ist": "12:34",
+   "end_ist": "12:53",
+   "spans_midnight": true
+  },
+  {
+   "date": "2025-05-07",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2025-05-11",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2025-05-23",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2025-05-26",
+   "type": "amavasya",
+   "month": 5
+  },
+  {
+   "date": "2025-05-30",
+   "type": "pushya",
+   "month": 5,
+   "start_ist": "21:29",
+   "end_ist": "21:07",
+   "spans_midnight": true
+  },
+  {
+   "date": "2025-06-06",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2025-06-10",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2025-06-21",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2025-06-25",
+   "type": "amavasya",
+   "month": 6
+  },
+  {
+   "date": "2025-06-26",
+   "type": "pushya",
+   "month": 6,
+   "start_ist": "07:21",
+   "end_ist": "06:35",
+   "spans_midnight": true
+  },
+  {
+   "date": "2025-07-06",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2025-07-10",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2025-07-20",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2025-07-24",
+   "type": "amavasya",
+   "month": 7
+  },
+  {
+   "date": "2025-07-24",
+   "type": "pushya",
+   "month": 7,
+   "start_ist": "16:43",
+   "end_ist": "16:00",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2025-08-04",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2025-08-08",
+   "type": "purnima",
+   "month": 8
+  },
+  {
+   "date": "2025-08-18",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2025-08-20",
+   "type": "pushya",
+   "month": 8,
+   "start_ist": "00:27",
+   "end_ist": "00:08",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2025-08-22",
+   "type": "amavasya",
+   "month": 8
+  },
+  {
+   "date": "2025-09-03",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2025-09-05",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2025-09-07",
+   "type": "purnima",
+   "month": 9
+  },
+  {
+   "date": "2025-09-16",
+   "type": "pushya",
+   "month": 9,
+   "start_ist": "06:26",
+   "end_ist": "06:32",
+   "spans_midnight": true
+  },
+  {
+   "date": "2025-09-17",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2025-09-21",
+   "type": "amavasya",
+   "month": 9
+  },
+  {
+   "date": "2025-09-22",
+   "type": "festival",
+   "month": 9
+  },
+  {
+   "date": "2025-10-02",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2025-10-03",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2025-10-06",
+   "type": "purnima",
+   "month": 10
+  },
+  {
+   "date": "2025-10-14",
+   "type": "pushya",
+   "month": 10,
+   "start_ist": "11:54",
+   "end_ist": "12:00",
+   "spans_midnight": true
+  },
+  {
+   "date": "2025-10-16",
+   "type": "ekadashi",
+   "month": 10
+  },
+  {
+   "date": "2025-10-18",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2025-10-20",
+   "type": "festival",
+   "month": 10
+  },
+  {
+   "date": "2025-11-01",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2025-11-04",
+   "type": "purnima",
+   "month": 11
+  },
+  {
+   "date": "2025-11-10",
+   "type": "pushya",
+   "month": 11,
+   "start_ist": "18:48",
+   "end_ist": "18:18",
+   "spans_midnight": true
+  },
+  {
+   "date": "2025-11-15",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2025-11-19",
+   "type": "amavasya",
+   "month": 11
+  },
+  {
+   "date": "2025-11-30",
+   "type": "ekadashi",
+   "month": 11
+  },
+  {
+   "date": "2025-12-04",
+   "type": "festival",
+   "month": 12
+  },
+  {
+   "date": "2025-12-04",
+   "type": "purnima",
+   "month": 12
+  },
+  {
+   "date": "2025-12-07",
+   "type": "pushya",
+   "month": 12,
+   "start_ist": "04:11",
+   "end_ist": "02:52",
+   "spans_midnight": true
+  },
+  {
+   "date": "2025-12-15",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2025-12-19",
+   "type": "amavasya",
+   "month": 12
+  },
+  {
+   "date": "2025-12-30",
+   "type": "ekadashi",
+   "month": 12
+  },
+  {
+   "date": "2026-01-02",
+   "type": "purnima",
+   "month": 1
+  },
+  {
+   "date": "2026-01-04",
+   "type": "pushya",
+   "month": 1,
+   "start_ist": "15:12",
+   "end_ist": "13:25",
+   "spans_midnight": true,
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2026-01-13",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2026-01-14",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2026-01-18",
+   "type": "amavasya",
+   "month": 1
+  },
+  {
+   "date": "2026-01-23",
+   "type": "festival",
+   "month": 1
+  },
+  {
+   "date": "2026-01-28",
+   "type": "ekadashi",
+   "month": 1
+  },
+  {
+   "date": "2026-01-31",
+   "type": "pushya",
+   "month": 1,
+   "start_ist": "01:35",
+   "end_ist": "23:58",
+   "yoga": "ravi_pushya"
+  },
+  {
+   "date": "2026-02-01",
+   "type": "purnima",
+   "month": 2
+  },
+  {
+   "date": "2026-02-12",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2026-02-17",
+   "type": "amavasya",
+   "month": 2
+  },
+  {
+   "date": "2026-02-27",
+   "type": "ekadashi",
+   "month": 2
+  },
+  {
+   "date": "2026-02-27",
+   "type": "pushya",
+   "month": 2,
+   "name": "Pushya Nakshatra",
+   "start_ist": "10:20",
+   "end_ist": "16:45"
+  },
+  {
+   "date": "2026-03-02",
+   "type": "purnima",
+   "month": 3
+  },
+  {
+   "date": "2026-03-14",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2026-03-18",
+   "type": "amavasya",
+   "month": 3
+  },
+  {
+   "date": "2026-03-19",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2026-03-26",
+   "type": "festival",
+   "month": 3
+  },
+  {
+   "date": "2026-03-27",
+   "type": "pushya",
+   "month": 3,
+   "start_ist": "15:26",
+   "end_ist": "14:50",
+   "spans_midnight": true
+  },
+  {
+   "date": "2026-03-28",
+   "type": "ekadashi",
+   "month": 3
+  },
+  {
+   "date": "2026-04-01",
+   "type": "purnima",
+   "month": 4
+  },
+  {
+   "date": "2026-04-13",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2026-04-14",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2026-04-17",
+   "type": "amavasya",
+   "month": 4
+  },
+  {
+   "date": "2026-04-19",
+   "type": "festival",
+   "month": 4
+  },
+  {
+   "date": "2026-04-23",
+   "type": "pushya",
+   "month": 4,
+   "start_ist": "20:58",
+   "end_ist": "20:14",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2026-04-27",
+   "type": "ekadashi",
+   "month": 4
+  },
+  {
+   "date": "2026-04-30",
+   "type": "purnima",
+   "month": 4
+  },
+  {
+   "date": "2026-05-12",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2026-05-16",
+   "type": "amavasya",
+   "month": 5
+  },
+  {
+   "date": "2026-05-20",
+   "type": "pushya",
+   "month": 5,
+   "start_ist": "04:13",
+   "end_ist": "02:50",
+   "spans_midnight": true,
+   "yoga": "guru_pushya"
+  },
+  {
+   "date": "2026-05-26",
+   "type": "ekadashi",
+   "month": 5
+  },
+  {
+   "date": "2026-05-30",
+   "type": "purnima",
+   "month": 5
+  },
+  {
+   "date": "2026-06-11",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2026-06-14",
+   "type": "amavasya",
+   "month": 6
+  },
+  {
+   "date": "2026-06-17",
+   "type": "pushya",
+   "month": 6,
+   "start_ist": "13:38",
+   "end_ist": "11:33",
+   "spans_midnight": true
+  },
+  {
+   "date": "2026-06-25",
+   "type": "ekadashi",
+   "month": 6
+  },
+  {
+   "date": "2026-06-29",
+   "type": "purnima",
+   "month": 6
+  },
+  {
+   "date": "2026-07-10",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2026-07-13",
+   "type": "amavasya",
+   "month": 7
+  },
+  {
+   "date": "2026-07-14",
+   "type": "pushya",
+   "month": 7,
+   "start_ist": "00:11",
+   "end_ist": "21:46"
+  },
+  {
+   "date": "2026-07-24",
+   "type": "ekadashi",
+   "month": 7
+  },
+  {
+   "date": "2026-07-28",
+   "type": "purnima",
+   "month": 7
+  },
+  {
+   "date": "2026-08-08",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2026-08-11",
+   "type": "pushya",
+   "month": 8,
+   "start_ist": "10:11",
+   "end_ist": "08:00",
+   "spans_midnight": true
+  },
+  {
+   "date": "2026-08-12",
+   "type": "amavasya",
+   "month": 8
+  },
+  {
+   "date": "2026-08-23",
+   "type": "ekadashi",
+   "month": 8
+  },
+  {
+   "date": "2026-08-26",
+   "type": "festival",
+   "month": 8
+  },
+  {
+   "date": "2026-08-27",
+   "type": "purnima",
+   "month": 8
+  },
+  {
+   "date": "2026-09-06",
+   "type": "ekadashi",
+   "month": 9
+  },
+  {
+   "date": "2026-09-07",
+   "type": "pushya",
+   "month": 9,
+   "start_ist": "18:15",
+   "end_ist": "16:40",
+   "spans_midnight": true
+  },
+  {
+   "date": "2026-09-10",
+   "type": "amavasya",
+   "month": 9
+  }
+ ],
+ "schema_notes": {
+  "muhurta": "Events with start_ist/end_ist are partial-day; events without these fields are treated as full-day auspicious. Times are IST wall-clock; the loader converts to ET at runtime."
+ },
+ "muhurta_backfill": {
+  "populated_events": 171,
+  "missing_dates": 0,
+  "source": "drikpanchang + mypanchang + prokerala via research agents"
+ }
+}
