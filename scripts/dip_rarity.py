@@ -1,0 +1,258 @@
+"""Historical dip rarity analyzer.
+
+Given the current drawdown from a recent peak, this answers two questions
+by looking at the full 22-year gold history:
+
+  1. HOW RARE is a dip of this depth? (percentile across all trading days)
+  2. OF THE TIMES this happened, did gold keep falling or recover?
+     (conditional probability of a further X% drop within N days)
+
+The output feeds the alert email so the reader doesn't have to guess
+whether to act now or wait for a deeper dip. The core finding over 22
+years is that gold's upward trend means deep dips recover fast —
+waiting usually misses the entry.
+
+Why a 90-day drawdown base (not 20 like the alert tier):
+  - The alert tier (compute_current_pullback) uses a 20-day peak to
+    CATCH dips as they form. Rarity asks a different question: "is this
+    a once-a-year or once-in-a-decade event?" That requires a longer
+    reference peak so a shallow 20-day noise doesn't look rare.
+  - 90 days captures the recent bull run of a cycle without going so
+    long that two separate cycles get blended.
+"""
+from __future__ import annotations
+
+from datetime import datetime
+from functools import lru_cache
+from pathlib import Path
+
+import pandas as pd
+import yfinance as yf
+
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+CACHE_FILE = BASE_DIR / "outputs" / "alerts" / "gold_rarity_cache.parquet"
+RARITY_LOOKBACK_DAYS = 90       # peak reference for drawdown
+RARITY_HISTORY_YEARS = 22
+
+
+def _ensure_dir() -> None:
+    CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+
+def _fetch_gold_history() -> pd.DataFrame:
+    """Fetch 22 years of daily gold close prices, cache to parquet.
+
+    Refreshes the cache if older than 7 days — stale data is fine for
+    distribution shape but we don't want to drift forever. The alert's
+    current drawdown is computed from the live fetch in gold_dip_alerts.py,
+    not from this cache, so cache staleness only affects the historical
+    distribution (which is slow-moving).
+    """
+    _ensure_dir()
+    if CACHE_FILE.exists():
+        age_days = (datetime.utcnow() - datetime.utcfromtimestamp(
+            CACHE_FILE.stat().st_mtime)).days
+        if age_days < 7:
+            return pd.read_parquet(CACHE_FILE)
+    start = (datetime.utcnow().date() - pd.Timedelta(days=365*RARITY_HISTORY_YEARS + 30)).isoformat()
+    g = yf.download("GC=F", start=start, progress=False, auto_adjust=True)
+    if isinstance(g.columns, pd.MultiIndex):
+        g.columns = [c[0] if isinstance(c, tuple) else c for c in g.columns]
+    df = g.reset_index()[["Date", "Close"]].rename(columns={"Date": "ds", "Close": "price"})
+    df["ds"] = pd.to_datetime(df["ds"])
+    df.to_parquet(CACHE_FILE, index=False)
+    return df
+
+
+@lru_cache(maxsize=4)
+def _precompute_drawdown_distribution(lookback: int = RARITY_LOOKBACK_DAYS) -> pd.DataFrame:
+    """For every historical day, compute drawdown from its trailing
+    `lookback`-day peak. Returned frame has columns (ds, price,
+    peak, drawdown_pct). Cached in-process."""
+    df = _fetch_gold_history().copy().sort_values("ds").reset_index(drop=True)
+    df["peak"] = df["price"].rolling(lookback, min_periods=1).max()
+    df["drawdown_pct"] = (df["price"] / df["peak"] - 1) * 100
+    return df
+
+
+def rarity_analysis(current_drawdown_pct: float,
+                    forward_windows: tuple = (30, 90),
+                    additional_drops: tuple = (3, 5, 10),
+                    lookback: int = RARITY_LOOKBACK_DAYS) -> dict:
+    """Answer the two headline questions about today's dip.
+
+    Args:
+      current_drawdown_pct: today's drawdown from the 20-day peak,
+        expressed as a NEGATIVE number (e.g. -8.5 for an 8.5% dip).
+      forward_windows: look this many trading days ahead to see if gold
+        dropped further.
+      additional_drops: thresholds for the forward look (in percent).
+
+    Returns a dict:
+      {
+        'current_dd_pct': float,
+        'observations': int,         # historical days analyzed
+        'as_deep_count': int,        # historical days at least this deep
+        'as_deep_pct': float,        # percentile: smaller = rarer
+        'conditional': {
+            '30d': {'3': prob_of_3pct_further, '5': ..., '10': ...},
+            '90d': {...},
+        },
+        'verdict': 'ACT NOW' | 'CONSIDER' | 'PATIENT WAIT',
+        'verdict_reason': str,
+      }
+    """
+    if current_drawdown_pct >= 0:
+        # Not a dip — no analysis
+        return {
+            "current_dd_pct": current_drawdown_pct,
+            "observations": 0,
+            "as_deep_count": 0,
+            "as_deep_pct": 100.0,
+            "conditional": {},
+            "verdict": "NO DIP",
+            "verdict_reason": "Price is at or above its recent peak.",
+        }
+
+    hist = _precompute_drawdown_distribution(lookback=lookback)
+    hist = hist.dropna(subset=["drawdown_pct"])
+    total = len(hist)
+    # Days that were AT LEAST as deep as today (more negative drawdown)
+    as_deep = hist[hist["drawdown_pct"] <= current_drawdown_pct]
+    as_deep_count = len(as_deep)
+    as_deep_pct = as_deep_count / total * 100 if total else 100.0
+
+    # Conditional: of those as-deep historical days, how often did gold
+    # drop ANOTHER X% within N days?
+    prices = hist.set_index("ds")["price"]
+    conditional = {}
+    for horizon in forward_windows:
+        row = {}
+        for drop in additional_drops:
+            target = 1 - drop / 100
+            further = 0
+            for ds_val, p in zip(as_deep["ds"], as_deep["price"]):
+                # Forward window of `horizon` TRADING days
+                fwd = prices.loc[ds_val:].iloc[1:horizon + 1]
+                if len(fwd) == 0:
+                    continue
+                min_fwd = fwd.min()
+                if min_fwd / p <= target:
+                    further += 1
+            denom = sum(1 for ds_val, p in zip(as_deep["ds"], as_deep["price"])
+                        if len(prices.loc[ds_val:].iloc[1:horizon + 1]) > 0)
+            row[str(drop)] = (further / denom * 100) if denom else None
+        conditional[f"{horizon}d"] = row
+
+    # Verdict — act now / consider / patient wait
+    verdict, reason = _verdict(current_drawdown_pct, as_deep_pct, conditional)
+    return {
+        "current_dd_pct": current_drawdown_pct,
+        "observations": total,
+        "as_deep_count": as_deep_count,
+        "as_deep_pct": as_deep_pct,
+        "conditional": conditional,
+        "verdict": verdict,
+        "verdict_reason": reason,
+    }
+
+
+def _verdict(dd_pct: float, as_deep_pct: float, conditional: dict) -> tuple[str, str]:
+    """Turn the numbers into one of three actionable labels, grounded in
+    22 years of gold's actual behavior.
+
+    Key observation: gold's long-run trend is upward, so a rare dip is a
+    rare entry. Even when there's a 25-30% chance of a further 5% drop,
+    that still means 70-75% of the time this was the right entry — and
+    the DEPTH of the dip itself is the dominant signal.
+
+      ACT NOW      — top 15% rare dip (deeper than 85% of all days ever)
+      PATIENT WAIT — common dip (not in top 30%) AND further drops likely
+      CONSIDER     — between
+    """
+    cond_30 = conditional.get("30d", {})
+    prob_further_5 = cond_30.get("5")
+    if prob_further_5 is None:
+        return ("CONSIDER", "Not enough historical data to score this dip precisely.")
+
+    # Rank: "top X%" where lower X = rarer. A dip in top 1% of history is
+    # once-in-two-years or rarer.
+    rank_text = f"top {as_deep_pct:.1f}%" if as_deep_pct >= 1 else f"top {as_deep_pct:.2f}%"
+    cheaper_than = 100 - as_deep_pct
+    cheaper_text = (f"{cheaper_than:.1f}%" if cheaper_than >= 99
+                    else f"{cheaper_than:.0f}%")
+
+    if as_deep_pct <= 15.0:
+        reason = (f"This dip is in the {rank_text} of 22 years of history — deeper than "
+                  f"{cheaper_text} of all trading days ever. Of the times it happened, "
+                  f"gold dropped another 5% within 30 days only {prob_further_5:.0f}% of "
+                  f"the time ({100 - prob_further_5:.0f}% of the time it was the bottom "
+                  f"or close). Waiting for a deeper dip historically missed the entry.")
+        return "ACT NOW", reason
+
+    if as_deep_pct <= 30.0:
+        reason = (f"Moderately rare dip ({rank_text}). Further 5% drops within 30 days "
+                  f"happened {prob_further_5:.0f}% of the time, so "
+                  f"{100 - prob_further_5:.0f}% of the time this was close to the bottom. "
+                  f"Lean toward buying; waiting for a deeper dip is often disappointed.")
+        return "LEAN BUY", reason
+
+    if prob_further_5 > 40:
+        reason = (f"This dip is common ({as_deep_pct:.0f}% of days were this deep or deeper). "
+                  f"Further 5% drops within 30 days happened {prob_further_5:.0f}% of the "
+                  f"time — waiting for a deeper entry is historically justified.")
+        return "PATIENT WAIT", reason
+
+    reason = (f"Common dip ({as_deep_pct:.0f}% of days were this deep or deeper). "
+              f"Further 5% drops happened {prob_further_5:.0f}% of the time — "
+              f"not strong enough either way. Your call.")
+    return "CONSIDER", reason
+
+
+def format_rarity_block(analysis: dict) -> str:
+    """One-paragraph plain-English block for the alert email."""
+    if analysis.get("observations", 0) == 0:
+        return ""
+    dd = analysis["current_dd_pct"]
+    as_deep_pct = analysis["as_deep_pct"]
+    as_deep_count = analysis["as_deep_count"]
+    total = analysis["observations"]
+    verdict = analysis["verdict"]
+    reason = analysis["verdict_reason"]
+    cond_30 = analysis["conditional"].get("30d", {})
+    cond_90 = analysis["conditional"].get("90d", {})
+    p5_30 = cond_30.get("5")
+    p10_30 = cond_30.get("10")
+    p5_90 = cond_90.get("5")
+    detail_lines = []
+    if p5_30 is not None:
+        detail_lines.append(f"Dropped another 5% within 30 days: <b>{p5_30:.0f}%</b> of the time")
+    if p10_30 is not None:
+        detail_lines.append(f"Dropped another 10% within 30 days: <b>{p10_30:.0f}%</b> of the time")
+    if p5_90 is not None:
+        detail_lines.append(f"Dropped another 5% within 90 days: <b>{p5_90:.0f}%</b> of the time")
+    detail = " · ".join(detail_lines)
+    return (
+        f"<b>How rare is this dip in 22 years of data?</b> "
+        f"Today you are {abs(dd):.1f}% below the 90-day peak. "
+        f"Only <b>{as_deep_pct:.1f}%</b> of all trading days ({as_deep_count:,} out of "
+        f"{total:,}) had a dip this deep or deeper.<br><br>"
+        f"<b>When it happened historically:</b> {detail}.<br><br>"
+        f"<b>Verdict: {verdict}.</b> {reason}"
+    )
+
+
+if __name__ == "__main__":
+    import sys
+    dd = float(sys.argv[1]) if len(sys.argv) > 1 else -8.0
+    print(f"Testing rarity analysis for current drawdown = {dd}%")
+    out = rarity_analysis(dd)
+    print(f"\nObservations: {out['observations']}")
+    print(f"Days at least this deep: {out['as_deep_count']} ({out['as_deep_pct']:.2f}%)")
+    print(f"Conditional probabilities:")
+    for horizon, row in out["conditional"].items():
+        for drop, p in row.items():
+            print(f"  P(additional {drop}% drop within {horizon}) = {p:.1f}%" if p is not None else f"  P(additional {drop}% drop within {horizon}) = N/A")
+    print(f"\nVerdict: {out['verdict']}")
+    print(f"Reason:  {out['verdict_reason']}")

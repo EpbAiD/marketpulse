@@ -55,6 +55,7 @@ from shubh_calendar import (  # noqa: E402
     is_shubh_day, describe_shubh_day, upcoming_shubh_days, calendar_coverage,
     format_muhurta_line, muhurta_window_for,
 )
+from dip_rarity import rarity_analysis, format_rarity_block  # noqa: E402
 
 RECIPIENTS_FILE = BASE_DIR / "configs" / "gold_alert_recipients.yaml"
 STATE_FILE = BASE_DIR / "outputs" / "alerts" / "gold_alert_state.json"
@@ -264,17 +265,26 @@ def confidence_interval(raw_forecast: float, horizon_days: int,
 
 
 def compute_current_pullback(df: pd.DataFrame) -> dict:
-    """Return today's close, 20d high, and pullback pct."""
+    """Return today's close, 20d high, pullback pct, and the deeper 90d
+    drawdown used by the historical rarity analyzer."""
     if len(df) < 20:
         raise ValueError(f"Need at least 20 trading days, got {len(df)}")
     latest = df.iloc[-1]
     roll_20d_high = df["price"].tail(20).max()
     pullback = (latest["price"] / roll_20d_high - 1) * 100
+    # 90-day drawdown — a longer reference peak that captures the full
+    # recent move, not just the last three weeks of noise. Used for the
+    # "how rare is this dip in 22 years?" question.
+    window_90 = df["price"].tail(90)
+    roll_90d_high = float(window_90.max()) if len(window_90) else float(roll_20d_high)
+    dd_90 = (float(latest["price"]) / roll_90d_high - 1) * 100
     return {
         "date": latest["ds"].date().isoformat(),
         "price": float(latest["price"]),
         "roll_20d_high": float(roll_20d_high),
         "pullback_pct": float(pullback),
+        "roll_90d_high": roll_90d_high,
+        "drawdown_90d_pct": float(dd_90),
         "quarter": (latest["ds"].month - 1) // 3 + 1,
         "month": int(latest["ds"].month),
     }
@@ -756,6 +766,20 @@ def evaluate_tiers(ctx: dict, year_st: dict,
         lo, hi = _suggested_range(a["suggested_pct_of_annual_budget"])
         a["suggested_pct_min"] = lo
         a["suggested_pct_max"] = hi
+
+    # Historical rarity — compute once per run (same for every alert that
+    # fires today). Based on 90-day drawdown vs 22 years of history.
+    dd_90 = ctx.get("drawdown_90d_pct")
+    if dd_90 is not None and dd_90 < 0:
+        try:
+            rarity = rarity_analysis(dd_90)
+            for a in alerts:
+                if a["tier"] == "predicted":
+                    continue  # rarity doesn't apply to a hypothetical drop
+                a["dip_rarity"] = rarity
+        except Exception as e:
+            # Non-fatal — alert still fires without the rarity block
+            print(f"  WARN: rarity analysis failed: {type(e).__name__}: {e}")
     return alerts
 
 
@@ -1077,6 +1101,27 @@ def render_html(alert: dict, ctx: dict, recipient_name: str | None,
     <div style="font-size: 1.35rem; font-weight: 600; margin-top: 0.1rem;">{conviction}</div>
     <div style="font-size: 0.9rem; margin-top: 0.35rem; opacity: 0.95;">{pct_line}</div>
   </div>"""
+
+    # Historical rarity block — "Is this dip genuinely rare, or will it get
+    # deeper if I wait?" Answered against 22 years of gold history.
+    rarity_block = ""
+    rarity = alert.get("dip_rarity")
+    if rarity and rarity.get("observations", 0) > 0:
+        verdict = rarity["verdict"]
+        verdict_colors = {
+            "ACT NOW":      ("#1F8A5F", "#F0F9F4"),
+            "LEAN BUY":     ("#4A90E2", "#EAF4FB"),
+            "CONSIDER":     ("#D68910", "#FDF4E3"),
+            "PATIENT WAIT": ("#7F8C8D", "#F4F5F5"),
+        }
+        accent, bg = verdict_colors.get(verdict, ("#7F8C8D", "#F4F5F5"))
+        rarity_text = format_rarity_block(rarity)
+        rarity_block = f"""
+  <div style="margin: 0.9rem 0; padding: 0.9rem 1rem; background: {bg}; border-left: 3px solid {accent}; border-radius: 3px;">
+    <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px; color: #7F8C8D; margin-bottom: 0.4rem;">Historical rarity &middot; 22 years of gold</div>
+    <div style="font-size: 0.9rem; color: #2C3E50; line-height: 1.55;">{rarity_text}</div>
+  </div>"""
+
     golden_badge = ""
     if is_golden:
         muhurta_row = ""
@@ -1111,6 +1156,7 @@ def render_html(alert: dict, ctx: dict, recipient_name: str | None,
     {golden_badge}
   </div>{cultural_note_block}
   {conviction_badge}
+  {rarity_block}
 
   <p>{greeting}</p>
 
@@ -1407,6 +1453,14 @@ def main() -> int:
                 pct_str = f"suggested {lo}–{hi}% of yearly budget (you choose)"
             print(f"CONVICTION: {a.get('conviction','?'):<28} | {pct_str}"
                   + (" | GOLDEN DAY" if a.get('cultural_boost') else ""))
+            r = a.get('dip_rarity') or {}
+            if r.get('observations', 0) > 0:
+                print(f"RARITY:     {r['verdict']:<28} | 90d dip {r['current_dd_pct']:+.1f}% "
+                      f"= top {r['as_deep_pct']:.1f}% of 22yr history "
+                      f"({r['as_deep_count']}/{r['observations']} days)")
+                p5_30 = r['conditional'].get('30d', {}).get('5')
+                if p5_30 is not None:
+                    print(f"            further 5% drop in 30d historically: {p5_30:.0f}%")
             print(f"ACTION: {a.get('playbook_action') or a.get('action', '')}")
             if a.get('playbook_size'):
                 print(f"SIZE:   {a['playbook_size']}")
