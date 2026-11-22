@@ -9059,3 +9059,32 @@ This file tracks daily regime forecasts from the MarketPulse system.
 | 2026-12-02 | Bull Market | 0.546 |
 
 ---
+
+## 2026-11-22 19:11:58
+
+**Source:** BigQuery
+
+**Forecast Period:** 2026-11-16 to 2026-12-02
+
+**Total Days:** 10
+
+### Regime Distribution
+
+- **Bull Market**: 10 days (100.0%) - Avg confidence: 0.581
+
+### Daily Predictions
+
+| Date | Regime | Confidence |
+|------|--------|------------|
+| 2026-11-16 | Bull Market | 0.630 |
+| 2026-11-17 | Bull Market | 0.642 |
+| 2026-11-20 | Bull Market | 0.598 |
+| 2026-11-23 | Bull Market | 0.628 |
+| 2026-11-24 | Bull Market | 0.688 |
+| 2026-11-25 | Bull Market | 0.508 |
+| 2026-11-27 | Bull Market | 0.514 |
+| 2026-11-30 | Bull Market | 0.522 |
+| 2026-12-01 | Bull Market | 0.532 |
+| 2026-12-02 | Bull Market | 0.546 |
+
+---
