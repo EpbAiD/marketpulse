@@ -55,7 +55,10 @@ from shubh_calendar import (  # noqa: E402
     is_shubh_day, describe_shubh_day, upcoming_shubh_days, calendar_coverage,
     format_muhurta_line, muhurta_window_for,
 )
-from dip_rarity import rarity_analysis, format_rarity_block  # noqa: E402
+from dip_rarity import (  # noqa: E402
+    rarity_analysis, format_rarity_block,
+    local_bottom_analysis, format_local_bottom_block,
+)
 
 RECIPIENTS_FILE = BASE_DIR / "configs" / "gold_alert_recipients.yaml"
 STATE_FILE = BASE_DIR / "outputs" / "alerts" / "gold_alert_state.json"
@@ -73,6 +76,13 @@ MAJOR_DIP_PCT = 10.0
 # on consecutive down days.
 OPPORTUNISTIC_MIN_GAP_DAYS = 30
 MAJOR_MIN_GAP_DAYS = 30
+
+# ---------------- Local-bottom tier (Tier 6) ----------------
+# Catches the TURN, not the depth. Fires when today is a 20-day low (or
+# yesterday was and today bounced). Only fires STANDALONE when no dip
+# tier fired — otherwise it enriches the dip alert instead of duplicating
+# as its own email. Cooldown prevents spam during long slow declines.
+LOCAL_BOTTOM_MIN_GAP_DAYS = 14
 
 # ---------------- Predictive tier (Tier 5) ----------------
 # Uses MarketPulse's gold price forecast (if available locally) to predict
@@ -266,7 +276,9 @@ def confidence_interval(raw_forecast: float, horizon_days: int,
 
 def compute_current_pullback(df: pd.DataFrame) -> dict:
     """Return today's close, 20d high, pullback pct, and the deeper 90d
-    drawdown used by the historical rarity analyzer."""
+    drawdown used by the historical rarity analyzer. Also runs a
+    local-bottom detector so the alert can tell "yesterday was the floor"
+    from "we're still falling"."""
     if len(df) < 20:
         raise ValueError(f"Need at least 20 trading days, got {len(df)}")
     latest = df.iloc[-1]
@@ -278,6 +290,11 @@ def compute_current_pullback(df: pd.DataFrame) -> dict:
     window_90 = df["price"].tail(90)
     roll_90d_high = float(window_90.max()) if len(window_90) else float(roll_20d_high)
     dd_90 = (float(latest["price"]) / roll_90d_high - 1) * 100
+    try:
+        local_bottom = local_bottom_analysis(df)
+    except Exception as e:
+        print(f"  WARN: local-bottom detection failed: {type(e).__name__}: {e}")
+        local_bottom = None
     return {
         "date": latest["ds"].date().isoformat(),
         "price": float(latest["price"]),
@@ -287,6 +304,7 @@ def compute_current_pullback(df: pd.DataFrame) -> dict:
         "drawdown_90d_pct": float(dd_90),
         "quarter": (latest["ds"].month - 1) // 3 + 1,
         "month": int(latest["ds"].month),
+        "local_bottom": local_bottom,
     }
 
 
@@ -317,9 +335,11 @@ def year_state(state: dict, year: int) -> dict:
             "last_opportunistic_date": None,
             "last_major_date": None,
             "last_predicted_date": None,
+            "last_local_bottom_date": None,
         }
     # Backfill new keys on old state files so upgrades don't KeyError
     state[key].setdefault("last_predicted_date", None)
+    state[key].setdefault("last_local_bottom_date", None)
     return state[key]
 
 
@@ -747,12 +767,101 @@ def evaluate_tiers(ctx: dict, year_st: dict,
         a["quarter"] = q
         a["suggested_pct_of_annual_budget"] = _base_suggested_pct(a["tier"], q)
 
+    # Tier 6 — Local bottom detector (the TURN, not the depth).
+    # Fires as a standalone alert only when no dip tier fired. When a dip
+    # tier HAS fired today, the local-bottom block is attached to that
+    # alert instead of becoming its own email.
+    lb = ctx.get("local_bottom")
+    lb_cooldown_ok = days_since(year_st.get("last_local_bottom_date"),
+                                date) >= LOCAL_BOTTOM_MIN_GAP_DAYS
+    if lb and not alerts and lb_cooldown_ok:
+        # Only fire standalone when:
+        #   - signal is 'confirmed' (75% 7d hit rate, strong), OR
+        #   - signal is 'watchpoint' AND we're in a meaningful 90d dip
+        #     (ctx["drawdown_90d_pct"] ≤ -3%). A watchpoint during an
+        #     uptrend is too noisy on its own.
+        dd90 = ctx.get("drawdown_90d_pct", 0) or 0
+        fire_standalone = (lb["signal"] == "confirmed"
+                           or (lb["signal"] == "watchpoint" and dd90 <= -3.0))
+        if fire_standalone:
+            if lb["signal"] == "confirmed":
+                subject = "gold: local bottom confirmed — act within 1-2 days"
+                headline = (
+                    f"Yesterday was the floor — gold bounced {lb['bounce_pct']:+.1f}% today")
+                action = "BUY a partial position within 1-2 sessions"
+                confidence = "Medium — historically 3 out of 4 times gold was higher 7 days later"
+                detail = (
+                    f"Yesterday's close of ${lb['low_price']:,.0f} was the lowest "
+                    f"in the last {lb['window']} trading days. Today closed at "
+                    f"${lb['today_price']:,.0f} — the floor is behind you.\n\n"
+                    f"This is a different signal from the usual \"how deep is the "
+                    f"dip\" alerts. It catches the TURN — the moment the bottom "
+                    f"was set and the bounce is starting. Historically these "
+                    f"bounces run quickly, so the window to catch the discount "
+                    f"is 1-2 sessions."
+                )
+            else:  # watchpoint
+                subject = "gold: new 20-day low posted today — watch tomorrow"
+                headline = f"New {lb['window']}-day low today at ${lb['today_price']:,.0f}"
+                action = "WATCH — if tomorrow closes higher, act fast"
+                confidence = "Medium — floor may be being set now, but needs confirmation"
+                detail = (
+                    f"Today's close of ${lb['today_price']:,.0f} is the lowest "
+                    f"in the last {lb['window']} trading days. The floor may be "
+                    f"being set right now.\n\n"
+                    f"We can't confirm until tomorrow. If tomorrow closes higher "
+                    f"than today, the bounce is on and you'll want to act "
+                    f"within the next 1-2 sessions. If it keeps falling, wait."
+                )
+            hist = lb["historical"]
+            hit30 = hist.get("hit_rate_30d")
+            med30 = hist.get("median_return_30d")
+            odds_text = ""
+            if hit30 is not None and med30 is not None:
+                odds_text = (
+                    f"Over 22 years of gold, this same signal has happened "
+                    f"{hist['observations']} times. {hit30:.0f}% of the time "
+                    f"gold was higher 30 days later (median return "
+                    f"{med30:+.1f}%)."
+                )
+            alerts.append({
+                "tier": "local_bottom",
+                "subject": subject,
+                "headline": headline,
+                "detail": detail,
+                "playbook_action": action,
+                "playbook_size": (
+                    "About a quarter to a half of what you planned to spend on "
+                    "gold this year. Keep the rest aside — this catches the turn, "
+                    "but there is still a chance the market rolls over."),
+                "playbook_confidence": confidence,
+                "playbook_odds": odds_text or "Historical calibration unavailable.",
+                "playbook_why": (
+                    "Price-dip alerts answer \"how deep is the discount?\" This "
+                    "alert answers a different question: \"is the floor behind "
+                    "us?\" Catching the turn is a separate signal, and the data "
+                    "shows it works — but partial sizing, not all-in."),
+                "playbook_next": (
+                    "If gold keeps rising, you got a good partial entry. If "
+                    "it rolls back and sets a new low, you still have money "
+                    "aside — a deeper dip alert will come first."),
+                "quarter": ctx["quarter"],
+                "local_bottom": lb,
+            })
+
     # Cultural boost — if today is a shubh diva AND any price-based tier
     # already fired, upgrade those alerts (bigger size, subject prefix,
     # detail lead). Shubh-only (no dip) never fires on its own: the whole
     # point is that price is the primary signal; the shubh diva just
     # makes an existing dip a "golden day".
     _apply_cultural_boost(alerts, ctx["date"])
+
+    # Attach local-bottom enrichment to every dip-tier alert that fires
+    # (except the local_bottom tier itself, which already carries it).
+    if lb:
+        for a in alerts:
+            if a["tier"] != "local_bottom":
+                a["local_bottom"] = lb
 
     # Conviction label — derived from tier + quarter historical performance
     # (and cultural_boost). NOT from size — size is a separate suggestion
@@ -797,6 +906,7 @@ _BASELINE_PCT_BY_TIER: dict = {
     "opportunistic": {1: 45, 2: 5, 3: 25, 4: 55},    # quarter-conditional
     "major":         {1: 75, 2: 0, 3: 20, 4: 100},   # -10% dip, quarter-conditional
     "predicted":     0,                              # heads-up only — price hasn't dropped yet
+    "local_bottom":  35,                             # the turn — partial entry, keep reserves
 }
 
 
@@ -845,6 +955,10 @@ _CONVICTION_BY_TIER_QUARTER: dict = {
     ("predicted", 2):     "HEADS UP ONLY",
     ("predicted", 3):     "HEADS UP ONLY",
     ("predicted", 4):     "HEADS UP ONLY",
+    ("local_bottom", 1):  "CONSIDER BUYING",
+    ("local_bottom", 2):  "CONSIDER BUYING",
+    ("local_bottom", 3):  "CONSIDER BUYING",
+    ("local_bottom", 4):  "CONSIDER BUYING",
 }
 
 
@@ -1102,6 +1216,23 @@ def render_html(alert: dict, ctx: dict, recipient_name: str | None,
     <div style="font-size: 0.9rem; margin-top: 0.35rem; opacity: 0.95;">{pct_line}</div>
   </div>"""
 
+    # Local-bottom block — "was yesterday the floor and is the market
+    # starting to rise?" Complements the dip-depth rarity block.
+    local_bottom_block = ""
+    lb = alert.get("local_bottom")
+    if lb:
+        lb_colors = {
+            "confirmed":  ("#1F8A5F", "#F0F9F4"),  # green — strong signal
+            "watchpoint": ("#4A90E2", "#EAF4FB"),  # blue — heads-up
+        }
+        accent, bg = lb_colors.get(lb["signal"], ("#7F8C8D", "#F4F5F5"))
+        lb_text = format_local_bottom_block(lb)
+        local_bottom_block = f"""
+  <div style="margin: 0.9rem 0; padding: 0.9rem 1rem; background: {bg}; border-left: 3px solid {accent}; border-radius: 3px;">
+    <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px; color: #7F8C8D; margin-bottom: 0.4rem;">Local bottom &middot; the turn, not the depth</div>
+    <div style="font-size: 0.9rem; color: #2C3E50; line-height: 1.55;">{lb_text}</div>
+  </div>"""
+
     # Historical rarity block — "Is this dip genuinely rare, or will it get
     # deeper if I wait?" Answered against 22 years of gold history.
     rarity_block = ""
@@ -1156,6 +1287,7 @@ def render_html(alert: dict, ctx: dict, recipient_name: str | None,
     {golden_badge}
   </div>{cultural_note_block}
   {conviction_badge}
+  {local_bottom_block}
   {rarity_block}
 
   <p>{greeting}</p>
@@ -1390,6 +1522,13 @@ def main() -> int:
     ctx = compute_current_pullback(df)
     print(f"Current gold: ${ctx['price']:.2f} on {ctx['date']} "
           f"(pullback {ctx['pullback_pct']:.2f}% from 20d high ${ctx['roll_20d_high']:.0f}) · Q{ctx['quarter']}")
+    lb = ctx.get("local_bottom")
+    if lb:
+        print(f"Local-bottom signal: {lb['signal'].upper()} "
+              f"— {lb['window']}d low on {lb['low_date']} at ${lb['low_price']:,.0f}"
+              + (f", today {lb['bounce_pct']:+.2f}% above" if lb['signal'] == 'confirmed' else ""))
+    else:
+        print("Local-bottom signal: none (today is neither a 20-day low nor a confirmed bounce)")
 
     # Shubh calendar status — flag runtime if coverage is running low so
     # the owner refreshes configs/shubh_calendar.json before it lapses
@@ -1461,6 +1600,22 @@ def main() -> int:
                 p5_30 = r['conditional'].get('30d', {}).get('5')
                 if p5_30 is not None:
                     print(f"            further 5% drop in 30d historically: {p5_30:.0f}%")
+            lb = a.get('local_bottom')
+            if lb:
+                hist = lb['historical']
+                hit30 = hist.get('hit_rate_30d')
+                med30 = hist.get('median_return_30d')
+                stats_str = (f"30d hit {hit30:.0f}% median {med30:+.1f}%"
+                             if hit30 is not None and med30 is not None
+                             else "no historical data")
+                sig_str = lb['signal'].upper()
+                if lb['signal'] == 'confirmed':
+                    print(f"TURN:       {sig_str:<28} | yesterday {lb['low_date']} "
+                          f"= {lb['window']}d low (${lb['low_price']:,.0f}); "
+                          f"today {lb['bounce_pct']:+.2f}% — {stats_str}")
+                else:
+                    print(f"TURN:       {sig_str:<28} | today = {lb['window']}d low "
+                          f"(${lb['low_price']:,.0f}) — {stats_str}")
             print(f"ACTION: {a.get('playbook_action') or a.get('action', '')}")
             if a.get('playbook_size'):
                 print(f"SIZE:   {a['playbook_size']}")
@@ -1492,7 +1647,8 @@ def main() -> int:
             continue
         name = r.get("name")
         wanted_tiers = set(r.get("tiers") or
-                           ["seasonal", "deadline", "opportunistic", "major", "predicted"])
+                           ["seasonal", "deadline", "opportunistic", "major",
+                            "predicted", "local_bottom"])
 
         # Two modes: `currencies: [list]` shows all in one email as a
         # comparison table; `currency: SINGLE` localizes the body.
@@ -1559,6 +1715,8 @@ def main() -> int:
             yr_st["last_major_date"] = ctx["date"]
         elif a["tier"] == "predicted":
             yr_st["last_predicted_date"] = ctx["date"]
+        elif a["tier"] == "local_bottom":
+            yr_st["last_local_bottom_date"] = ctx["date"]
     save_state(state)
     print(f"State updated → {STATE_FILE}")
 

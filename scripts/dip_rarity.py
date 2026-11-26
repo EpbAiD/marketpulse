@@ -243,8 +243,235 @@ def format_rarity_block(analysis: dict) -> str:
     )
 
 
+# --------------------------------------------------------------------------
+# Local bottom detector — complements the dip-depth tiers by catching the
+# TURN. The depth tiers answer "how far below the peak?"; this answers
+# "was yesterday the floor and is the market starting to rise?"
+#
+# Two signal flavors:
+#   watchpoint — today's close is the lowest in the last `window` days.
+#                The floor may be being set right now. Fires same evening.
+#   confirmed  — yesterday's close was the window low AND today's close
+#                is higher by at least `bounce_min_pct`. The bottom is
+#                behind us; the window to catch the absolute low has
+#                closed, but we're still within the bounce.
+# --------------------------------------------------------------------------
+
+LOCAL_BOTTOM_WINDOW = 20
+LOCAL_BOTTOM_BOUNCE_MIN_PCT = 0.3     # smallest bounce that counts as a turn
+LOCAL_BOTTOM_FWD_WINDOWS = (7, 30, 90)
+
+
+@lru_cache(maxsize=4)
+def _precompute_local_bottom_stats(window: int = LOCAL_BOTTOM_WINDOW) -> dict:
+    """Over 22 years, measure what happened after every N-day low.
+
+    Returns a dict:
+      {
+        'observations': int,         # historical days = N-day low
+        'confirmed_observations': int,  # subset where next-day closed higher
+        'watchpoint': { '7': {hit_rate, median_return}, ... },
+        'confirmed':  { '7': {hit_rate, median_return}, ... },
+      }
+    """
+    df = _fetch_gold_history().copy().sort_values("ds").reset_index(drop=True)
+    df["rolling_min"] = df["price"].rolling(window, min_periods=window).min()
+    df["is_n_day_low"] = df["price"] == df["rolling_min"]
+    lows = df[df["is_n_day_low"]].copy()
+
+    prices = df.set_index("ds")["price"]
+
+    watch_rows = []
+    conf_rows = []
+    for idx, row in lows.iterrows():
+        ds_val = row["ds"]
+        p = row["price"]
+        # Forward slice (excluding today itself)
+        fwd = prices.loc[ds_val:].iloc[1:]
+        if len(fwd) == 0:
+            continue
+        forward_returns = {}
+        for h in LOCAL_BOTTOM_FWD_WINDOWS:
+            w = fwd.iloc[:h]
+            if len(w) == 0:
+                forward_returns[h] = None
+            else:
+                # Return at the END of the horizon (not max/min) — we
+                # want "where did price sit N days later", not "did it
+                # ever cross up/down". A bounce that reverses within the
+                # window should count against the signal.
+                forward_returns[h] = (float(w.iloc[-1]) / p - 1) * 100
+        watch_rows.append(forward_returns)
+
+        # Confirmed: next-day close > this day's close by the threshold
+        if len(fwd) >= 1:
+            next_close = float(fwd.iloc[0])
+            bounce = (next_close / p - 1) * 100
+            if bounce >= LOCAL_BOTTOM_BOUNCE_MIN_PCT:
+                conf_rows.append(forward_returns)
+
+    def summarize(rows):
+        out = {}
+        for h in LOCAL_BOTTOM_FWD_WINDOWS:
+            vals = [r[h] for r in rows if r.get(h) is not None]
+            if not vals:
+                out[str(h)] = {"hit_rate": None, "median_return": None, "n": 0}
+                continue
+            hit = sum(1 for v in vals if v > 0) / len(vals) * 100
+            med = sorted(vals)[len(vals) // 2]
+            out[str(h)] = {
+                "hit_rate": hit,
+                "median_return": med,
+                "n": len(vals),
+            }
+        return out
+
+    return {
+        "observations": len(watch_rows),
+        "confirmed_observations": len(conf_rows),
+        "watchpoint": summarize(watch_rows),
+        "confirmed": summarize(conf_rows),
+    }
+
+
+def local_bottom_analysis(history_df: pd.DataFrame,
+                          window: int = LOCAL_BOTTOM_WINDOW,
+                          bounce_min_pct: float = LOCAL_BOTTOM_BOUNCE_MIN_PCT) -> dict:
+    """Detect whether today or yesterday posted a new N-day low.
+
+    Args:
+      history_df: DataFrame with columns (ds, price), sorted ascending by
+        date. The LAST row is treated as "today".
+      window: lookback length in trading days.
+      bounce_min_pct: minimum next-day bounce (positive pct) that counts
+        as confirming yesterday's low.
+
+    Returns a dict (or None if not enough history):
+      {
+        'signal': 'confirmed' | 'watchpoint' | None,
+        'window': int,
+        'low_date': str,       # ISO date of the N-day low
+        'low_price': float,
+        'today_price': float,
+        'bounce_pct': float,   # positive % from low to today (confirmed only)
+        'historical': {        # from _precompute_local_bottom_stats
+            'observations': int, 'hit_rate_30d': float,
+            'median_return_30d': float, ...
+        },
+      }
+    """
+    if len(history_df) < window + 2:
+        return None
+    df = history_df.sort_values("ds").reset_index(drop=True)
+    today = df.iloc[-1]
+    yesterday = df.iloc[-2]
+
+    # Window for yesterday's N-day-low test = the `window` closes ending with
+    # yesterday (inclusive). For today's test = closes ending with today.
+    yest_window = df.iloc[-(window + 1):-1]["price"]
+    today_window = df.iloc[-window:]["price"]
+
+    signal = None
+    low_date = None
+    low_price = None
+    bounce_pct = 0.0
+
+    # Confirmed takes priority — it's the stronger signal.
+    if (yesterday["price"] <= yest_window.min()
+            and today["price"] > yesterday["price"]):
+        bp = (float(today["price"]) / float(yesterday["price"]) - 1) * 100
+        if bp >= bounce_min_pct:
+            signal = "confirmed"
+            low_date = yesterday["ds"].date().isoformat() \
+                if hasattr(yesterday["ds"], "date") else str(yesterday["ds"])
+            low_price = float(yesterday["price"])
+            bounce_pct = bp
+
+    if signal is None and today["price"] <= today_window.min():
+        signal = "watchpoint"
+        low_date = today["ds"].date().isoformat() \
+            if hasattr(today["ds"], "date") else str(today["ds"])
+        low_price = float(today["price"])
+
+    if signal is None:
+        return None
+
+    stats = _precompute_local_bottom_stats(window=window)
+    bucket = stats[signal]  # 'confirmed' or 'watchpoint'
+    return {
+        "signal": signal,
+        "window": window,
+        "low_date": low_date,
+        "low_price": low_price,
+        "today_price": float(today["price"]),
+        "bounce_pct": bounce_pct,
+        "historical": {
+            "observations": stats["observations"] if signal == "watchpoint"
+                              else stats["confirmed_observations"],
+            "hit_rate_30d": bucket["30"]["hit_rate"],
+            "median_return_30d": bucket["30"]["median_return"],
+            "hit_rate_7d": bucket["7"]["hit_rate"],
+            "median_return_7d": bucket["7"]["median_return"],
+        },
+    }
+
+
+def format_local_bottom_block(analysis: dict) -> str:
+    """One-paragraph HTML block for the alert email."""
+    if not analysis:
+        return ""
+    sig = analysis["signal"]
+    window = analysis["window"]
+    low_date = analysis["low_date"]
+    low_price = analysis["low_price"]
+    today_price = analysis["today_price"]
+    bounce = analysis["bounce_pct"]
+    hist = analysis["historical"]
+    n = hist["observations"]
+    hit30 = hist["hit_rate_30d"]
+    med30 = hist["median_return_30d"]
+
+    stats_line = ""
+    if hit30 is not None and med30 is not None:
+        stats_line = (
+            f"Historically, {hit30:.0f}% of these were positive 30 days later "
+            f"(median return <b>{med30:+.1f}%</b>, n={n}).")
+
+    if sig == "confirmed":
+        return (
+            f"<b>Local bottom confirmed.</b> Yesterday's close "
+            f"(${low_price:,.0f} on {low_date}) was the lowest in {window} "
+            f"trading days. Today's close of ${today_price:,.0f} is "
+            f"<b>{bounce:+.2f}%</b> above that — the floor is behind you. "
+            f"{stats_line} "
+            f"Acting in the next 1-2 sessions still captures most of the "
+            f"discount; waiting risks the bounce running away."
+        )
+    # watchpoint
+    return (
+        f"<b>Watch — new {window}-day low posted today.</b> Today's close of "
+        f"${today_price:,.0f} is the lowest in {window} trading days. "
+        f"This may be the floor being set right now; the next session will "
+        f"tell. {stats_line} "
+        f"If tomorrow closes higher, the bounce is on and the entry window "
+        f"starts closing fast."
+    )
+
+
 if __name__ == "__main__":
     import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "local-bottom":
+        print("Testing local-bottom stats...")
+        s = _precompute_local_bottom_stats()
+        print(f"\nTotal N-day lows over 22yr: {s['observations']}")
+        print(f"Confirmed (bounce next day):  {s['confirmed_observations']}")
+        for h in LOCAL_BOTTOM_FWD_WINDOWS:
+            w = s["watchpoint"][str(h)]
+            c = s["confirmed"][str(h)]
+            print(f"  +{h}d — watchpoint: hit {w['hit_rate']:.1f}%, median {w['median_return']:+.2f}% "
+                  f"| confirmed: hit {c['hit_rate']:.1f}%, median {c['median_return']:+.2f}%"
+                  if w['hit_rate'] is not None and c['hit_rate'] is not None else f"  +{h}d — N/A")
+        sys.exit(0)
     dd = float(sys.argv[1]) if len(sys.argv) > 1 else -8.0
     print(f"Testing rarity analysis for current drawdown = {dd}%")
     out = rarity_analysis(dd)
